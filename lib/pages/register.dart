@@ -1,13 +1,24 @@
+import 'package:classmate/pages/login.dart';
 import 'package:flutter/material.dart';
 
 class RegisterPage extends StatefulWidget {
-  const RegisterPage({super.key});
+  final String role;
+
+  const RegisterPage({super.key,required this.role});
 
   @override
   State<RegisterPage> createState() => _RegisterPageState();
 }
 
 class _RegisterPageState extends State<RegisterPage> {
+
+  @override
+  void initState() {
+    super.initState();
+    // Log the role when the widget is initialized
+    debugPrint("Navigated to RegisterPage with role: ${widget.role}");
+  }
+
   bool _obscurePassword = true; // State to control password visibility
 
   @override
@@ -37,8 +48,8 @@ class _RegisterPageState extends State<RegisterPage> {
                         mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                         children: [
                           Container(width: 100, height: 2, color: Colors.white),
-                          Container(width: 100, height: 2, color: Colors.yellow),
                           Container(width: 100, height: 2, color: Colors.white),
+                          Container(width: 100, height: 2, color: Colors.yellow),
                         ],
                       ),
                     ),
@@ -240,7 +251,12 @@ class _RegisterPageState extends State<RegisterPage> {
             // Already Have an Account
             GestureDetector(
               onTap: () {
-                // Handle sign-up action
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => LoginPage(role: widget.role), // Pass the role
+                  ),
+                );
               },
               child: const Text(
                 "Already have an account?",

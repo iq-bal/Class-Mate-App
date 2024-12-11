@@ -1,13 +1,24 @@
+import 'package:classmate/pages/register.dart';
 import 'package:flutter/material.dart';
 
 class LoginPage extends StatefulWidget {
-  const LoginPage({super.key});
+  final String role;
+
+  const LoginPage({super.key,required this.role});
 
   @override
   State<LoginPage> createState() => _LoginPageState();
 }
 
 class _LoginPageState extends State<LoginPage> {
+
+  @override
+  void initState() {
+    super.initState();
+    // Log the role when the widget is initialized
+    debugPrint("Navigated to LoginPage with role: ${widget.role}");
+  }
+
   bool _isPasswordVisible = false;
 
   @override
@@ -36,9 +47,9 @@ class _LoginPageState extends State<LoginPage> {
                       child: Row(
                         mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                         children: [
-                          Container(width: 100, height: 2, color: Colors.white),
-                          Container(width: 100, height: 2, color: Colors.yellow),
-                          Container(width: 100, height: 2, color: Colors.white),
+                          Container(width: 100, height: 4, color: Colors.white),
+                          Container(width: 100, height: 4, color: Colors.yellow),
+                          Container(width: 100, height: 4, color: Colors.white),
                         ],
                       ),
                     ),
@@ -236,7 +247,12 @@ class _LoginPageState extends State<LoginPage> {
             // Don't Have an Account
             GestureDetector(
               onTap: () {
-                // Handle sign-up action
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => RegisterPage(role: widget.role), // Pass the role
+                  ),
+                );
               },
               child: const Text(
                 "Don’t have an account?",
