@@ -1,16 +1,21 @@
-# classmate
-
-A new Flutter project.
-
-## Getting Started
-
-This project is a starting point for a Flutter application.
-
-A few resources to get you started if this is your first Flutter project:
-
-- [Lab: Write your first Flutter app](https://docs.flutter.dev/get-started/codelab)
-- [Cookbook: Useful Flutter samples](https://docs.flutter.dev/cookbook)
-
-For help getting started with Flutter development, view the
-[online documentation](https://docs.flutter.dev/), which offers tutorials,
-samples, guidance on mobile development, and a full API reference.
+lib/
+│
+├── models/
+│   └── user_model.dart       # Represents data structure for the user.
+│
+├── views/
+│   ├── login_view.dart       # UI for login screen.
+│   ├── logout_view.dart      # UI for logout confirmation or post-logout actions.
+│   └── widgets/              # Reusable widgets for the app.
+│       └── custom_button.dart
+│
+├── controllers/
+│   └── auth_controller.dart  # Handles login and logout logic.
+│
+├── services/
+│   └── auth_service.dart     # Handles API or Firebase calls.
+│
+├── utils/
+│   └── validators.dart       # Reusable input validation logic.
+│
+├── main.dart                 # Entry point of the application.

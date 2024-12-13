@@ -1,6 +1,7 @@
-import 'package:classmate/pages/landing.dart';
-import 'package:classmate/pages/login.dart';
-import 'package:classmate/pages/register.dart';
+
+import 'package:classmate/views/authentication/landing.dart';
+import 'package:classmate/views/authentication/login_view.dart';
+import 'package:classmate/views/course_detail_screen_teacher/course_detail_screen.dart';
 import 'package:flutter/material.dart';
 
 void main() {

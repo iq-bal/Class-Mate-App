@@ -1,4 +1,4 @@
-import 'package:classmate/pages/login.dart';
+import 'package:classmate/views/authentication/login_view.dart';
 import 'package:flutter/material.dart';
 
 class LandingPage extends StatelessWidget {
