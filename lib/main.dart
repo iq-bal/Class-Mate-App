@@ -1,7 +1,7 @@
 
 import 'package:classmate/views/authentication/landing.dart';
 import 'package:classmate/views/authentication/login_view.dart';
-import 'package:classmate/views/course_detail_screen_teacher/course_detail_screen.dart';
+import 'package:classmate/views/course_detail_teacher/course_detail_teacher_view.dart';
 import 'package:flutter/material.dart';
 
 void main() {

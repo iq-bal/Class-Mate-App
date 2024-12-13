@@ -6,7 +6,7 @@ import 'package:classmate/views/authentication/widgets/custom_password_input.dar
 import 'package:classmate/views/authentication/widgets/info_section.dart';
 import 'package:classmate/views/authentication/widgets/or_divider_with_tagline.dart';
 import 'package:classmate/views/authentication/widgets/parent_container.dart';
-import 'package:classmate/views/course_detail_screen_teacher/course_detail_screen.dart';
+import 'package:classmate/views/course_detail_teacher/course_detail_teacher_view.dart';
 import 'package:flutter/material.dart';
 
 class LoginPage extends StatefulWidget {
