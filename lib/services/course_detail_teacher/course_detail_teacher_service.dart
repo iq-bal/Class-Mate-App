@@ -12,6 +12,7 @@ class CourseDetailTeacherService {
     query {
       course(id: "$courseId") {
         title
+        course_code
         enrolled_students {
           uid
           email

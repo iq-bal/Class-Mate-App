@@ -14,9 +14,8 @@ class CourseDetailScreen extends StatelessWidget {
     final CourseDetailTeacherController _courseDetailTeacherController = CourseDetailTeacherController();
 
     void _checkbtn(){
-      const String c_id = "675bdfc573df8e1ac84f0315";
+      const String c_id = "675c910186e75d98dc7c5cae";
       _courseDetailTeacherController.fetchCourseDetails(c_id);
-
     }
 
     final List<Map<String, dynamic>> students = [
