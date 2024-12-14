@@ -1,5 +1,6 @@
 import 'package:classmate/models/assignment_model.dart';
 import 'package:classmate/models/authentication/user_model.dart';
+import 'package:classmate/models/course_detail_teacher/assignment_entity.dart';
 import 'package:classmate/models/schedule_model.dart';
 import 'package:classmate/models/student_model.dart';
 
@@ -7,8 +8,8 @@ class CourseDetailTeacherModel {
   final String title;
   final String courseCode;
   final List<StudentModel> enrolledStudents;
-  final List<AssignmentModel> assignments;
   final ScheduleModel schedule;
+  final List<AssignmentEntity> assignments; 
 
   CourseDetailTeacherModel({
     required this.title,
@@ -26,7 +27,7 @@ class CourseDetailTeacherModel {
           .map((student) => StudentModel.fromJson(student))
           .toList(),
       assignments: (json['assignments'] as List)
-          .map((assignment) => AssignmentModel.fromJson(assignment))
+          .map((assignment) => AssignmentEntity.fromJson(assignment))
           .toList(),
       schedule: ScheduleModel.fromJson(json['schedule'])
     );

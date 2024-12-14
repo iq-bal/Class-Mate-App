@@ -26,6 +26,17 @@ class CourseDetailTeacherService {
           description
           deadline
           created_at
+          submissions{
+             id
+             assignment_id
+             student_id 
+             file_url
+             plagiarism_score
+             teacher_comments
+             grade
+             submitted_at
+             evaluated_at
+          }
         }
         schedule(section: "$section",day:"$day"){
           section
