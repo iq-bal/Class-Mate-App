@@ -63,4 +63,18 @@ class CourseDetailTeacherService {
       throw Exception('Error occurred: $e');
     }
   }
+  Future<void>createAssignment(String courseId, String title,String description,String deadline) async {
+      try{
+        final response = await dioClient.getDio(AppConfig.mainNormalBaseUrl).post(
+            '/create-assignment?courseId=$courseId',
+          data: {
+            'title': title,
+            'description': description,
+            'deadline': deadline
+          }
+        );
+      }catch(e){
+          throw Exception('Error occurred: $e');
+      }
+  }
 }

@@ -17,15 +17,24 @@ class CourseDetailTeacherController {
     stateNotifier.value = CourseDetailState.loading;
     errorMessage = '';
     try {
-
       courseDetail = await _courseDetailTeacherService.getCourseDetails(courseId,section,day);
       stateNotifier.value = CourseDetailState.success;
-      print("yeyyyyyy");
     } catch (e) {
       errorMessage = 'Failed to load course details: $e';
       stateNotifier.value = CourseDetailState.error; // Set error state
-    }finally{
-      stateNotifier.value = CourseDetailState.success;
     }
   }
+
+  Future<void> createAssignment(String courseId, String title,String description, String deadline)async {
+    stateNotifier.value = CourseDetailState.loading;
+    errorMessage = '';
+    try{
+      await _courseDetailTeacherService.createAssignment(courseId, title, description, deadline);
+      stateNotifier.value = CourseDetailState.success;
+    }catch (e){
+      errorMessage = 'Failed to create assignment: $e';
+      stateNotifier.value = CourseDetailState.error;
+    }
+  }
+
 }

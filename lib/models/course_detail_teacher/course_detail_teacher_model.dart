@@ -5,6 +5,7 @@ import 'package:classmate/models/schedule_model.dart';
 import 'package:classmate/models/student_model.dart';
 
 class CourseDetailTeacherModel {
+  final String id;
   final String title;
   final String courseCode;
   final List<StudentModel> enrolledStudents;
@@ -12,6 +13,7 @@ class CourseDetailTeacherModel {
   final List<AssignmentEntity> assignments; 
 
   CourseDetailTeacherModel({
+    required this.id,
     required this.title,
     required this.courseCode,
     required this.enrolledStudents,
@@ -21,6 +23,7 @@ class CourseDetailTeacherModel {
 
   factory CourseDetailTeacherModel.fromJson(Map<String, dynamic> json) {
     return CourseDetailTeacherModel(
+      id: json['id'].toString(),
       title: json['title'].toString(),
       courseCode: json['course_code'].toString(),
       enrolledStudents: (json['enrolled_students'] as List)

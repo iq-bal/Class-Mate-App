@@ -29,7 +29,7 @@ class _CourseDetailScreenState extends State<CourseDetailScreen> {
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
       ),
-      builder: (context) => const CreateAssignmentModal(),
+      builder: (context) => const CreateAssignmentModal(courseId:'675c910186e75d98dc7c5cae'),
     ).whenComplete(() {
       // Reset modal state when closed
       setState(() {
