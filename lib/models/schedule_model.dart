@@ -17,11 +17,11 @@ class ScheduleModel{
   // Factory constructor to create a UserModel object from a JSON map
   factory ScheduleModel.fromJson(Map<String, dynamic> json) {
     return ScheduleModel(
-        section: json['section'], // Extracts 'id' from the JSON map
-        roomNo: json['room_no'], // Extracts 'email' from the JSON map
-        day: json['day'], // Extracts 'name' from the JSON map
-        startTime: json['start_time'], // Extracts 'role' from the JSON map
-        endTime: json['end_time']
+        section: json['section'].toString(), // Extracts 'id' from the JSON map
+        roomNo: json['room_no'].toString(), // Extracts 'email' from the JSON map
+        day: json['day'].toString(), // Extracts 'name' from the JSON map
+        startTime: json['start_time'].toString(), // Extracts 'role' from the JSON map
+        endTime: json['end_time'].toString()
     );
   }
 }

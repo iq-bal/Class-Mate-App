@@ -15,12 +15,13 @@ class AssignmentModel{
 
   // Factory constructor to create a UserModel object from a JSON map
   factory AssignmentModel.fromJson(Map<String, dynamic> json) {
+
     return AssignmentModel(
-      id: json['id'], // Extracts 'id' from the JSON map
-      title: json['title'], // Extracts 'email' from the JSON map
-      description: json['description'], // Extracts 'name' from the JSON map
-      deadline: json['deadline'], // Extracts 'role' from the JSON map
-      createdAt: json['created_at']
+      id: json['id'].toString(), // Extracts 'id' from the JSON map
+      title: json['title'].toString(), // Extracts 'email' from the JSON map
+      description: json['description'].toString(), // Extracts 'name' from the JSON map
+      deadline: json['deadline'].toString(), // Extracts 'role' from the JSON map
+      createdAt: json['created_at'].toString()
     );
   }
 }

@@ -31,4 +31,5 @@ class UserModel {
       'role': role, // Returns the value of 'role'
     };
   }
+
 }

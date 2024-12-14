@@ -7,11 +7,11 @@ class StudentTile extends StatelessWidget {
   final bool isPresent;
 
   const StudentTile({
-    Key? key,
+    super.key,
     required this.name,
     required this.id,
     required this.isPresent,
-  }) : super(key: key);
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -48,12 +48,12 @@ class StudentList extends StatelessWidget {
   final VoidCallback? onViewAllPressed;
 
   const StudentList({
-    Key? key,
+    super.key,
     required this.students,
     this.title = 'Student List',
     this.showViewAll = false,
     this.onViewAllPressed,
-  }) : super(key: key);
+  });
 
   @override
   Widget build(BuildContext context) {

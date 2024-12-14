@@ -1,37 +1,34 @@
 import 'package:classmate/models/assignment_model.dart';
 import 'package:classmate/models/authentication/user_model.dart';
 import 'package:classmate/models/schedule_model.dart';
+import 'package:classmate/models/student_model.dart';
 
 class CourseDetailTeacherModel {
   final String title;
   final String courseCode;
-  final List<UserModel> enrolledStudents;
+  final List<StudentModel> enrolledStudents;
   final List<AssignmentModel> assignments;
-  final List<ScheduleModel> schedules;
+  final ScheduleModel schedule;
 
-  // Constructor for CourseDetailTeacherModel
   CourseDetailTeacherModel({
     required this.title,
     required this.courseCode,
     required this.enrolledStudents,
     required this.assignments,
-    required this.schedules
+    required this.schedule
   });
 
-  // Factory constructor to create a CourseDetailTeacherModel object from a JSON map
   factory CourseDetailTeacherModel.fromJson(Map<String, dynamic> json) {
     return CourseDetailTeacherModel(
-      title: json['title'],
-      courseCode: json['course_code'],
+      title: json['title'].toString(),
+      courseCode: json['course_code'].toString(),
       enrolledStudents: (json['enrolled_students'] as List)
-          .map((student) => UserModel.fromJson(student))
+          .map((student) => StudentModel.fromJson(student))
           .toList(),
       assignments: (json['assignments'] as List)
           .map((assignment) => AssignmentModel.fromJson(assignment))
           .toList(),
-      schedules: (json['schedule'] as List)
-          .map((schedule)=>ScheduleModel.fromJson(schedule))
-          .toList(),
+      schedule: ScheduleModel.fromJson(json['schedule'])
     );
   }
 }
