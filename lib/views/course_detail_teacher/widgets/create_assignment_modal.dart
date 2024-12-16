@@ -3,7 +3,14 @@ import 'package:flutter/material.dart';
 
 class CreateAssignmentModal extends StatelessWidget {
   final String courseId;
-  const CreateAssignmentModal({super.key, required this.courseId});
+  final VoidCallback onAssignmentCreated; // <-- Add this line
+
+  const CreateAssignmentModal({
+    super.key,
+    required this.courseId,
+    required this.onAssignmentCreated, // <-- Add this line
+  });
+
 
   @override
   Widget build(BuildContext context) {
@@ -46,7 +53,7 @@ class CreateAssignmentModal extends StatelessWidget {
 
           // Title Field
           const Text(
-            'title',
+            'Title',
             style: TextStyle(
               fontSize: 14,
               color: Colors.grey,
@@ -68,7 +75,7 @@ class CreateAssignmentModal extends StatelessWidget {
 
           // Description Field
           const Text(
-            'description',
+            'Description',
             style: TextStyle(
               fontSize: 14,
               color: Colors.grey,
@@ -117,7 +124,7 @@ class CreateAssignmentModal extends StatelessWidget {
 
           // Due Date Field with modern design
           const Text(
-            'due date',
+            'Due date',
             style: TextStyle(
               fontSize: 14,
               color: Colors.grey,
@@ -172,6 +179,7 @@ class CreateAssignmentModal extends StatelessWidget {
 
                 // Call createAssignment function if validation is successful
                 createAssignment(courseId, title, description, deadline);
+                onAssignmentCreated();
                 Navigator.pop(context); // Close the modal after assignment creation
               },
               style: ElevatedButton.styleFrom(

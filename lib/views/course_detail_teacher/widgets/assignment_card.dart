@@ -8,23 +8,25 @@ class AssignmentCard extends StatelessWidget {
   final int totalItems;
 
   const AssignmentCard({
-    Key? key,
+    super.key,
     required this.title,
     required this.description,
     required this.dueDate,
     required this.iconText,
     required this.totalItems,
-  }) : super(key: key);
+  });
 
   @override
   Widget build(BuildContext context) {
     return Container(
       decoration: BoxDecoration(
         // color: Colors.white,
-        borderRadius: BorderRadius.circular(0),
+        borderRadius: BorderRadius.circular(8),
         border: const Border(
           top: BorderSide(color: Color(0xFFD9D9D9), width: 1.0), // Top border
           bottom: BorderSide(color: Color(0xFFD9D9D9), width: 1.0), // Bottom border
+          left: BorderSide(color: Color(0xFFD9D9D9), width: 1.0), // Bottom border
+          right: BorderSide(color: Color(0xFFD9D9D9), width: 1.0), // Bottom border
         ),
         // border: Border.all(color: const Color(0xFFD9D9D9), width: 1.0), // Border color and width
       ),

@@ -17,6 +17,17 @@ class CourseDetailScreen extends StatefulWidget {
 
 class _CourseDetailScreenState extends State<CourseDetailScreen> {
   bool _isModalOpen = false;
+  final CourseDetailTeacherController courseDetailTeacherController = CourseDetailTeacherController();
+
+  @override
+  void initState() {
+    super.initState();
+    _fetchCourseDetails();
+  }
+
+  void _fetchCourseDetails() {
+    courseDetailTeacherController.fetchCourseDetails('675c910186e75d98dc7c5cae', "A", "Monday");
+  }
 
   void showCreateAssignmentModal(BuildContext context) {
     setState(() {
@@ -29,7 +40,11 @@ class _CourseDetailScreenState extends State<CourseDetailScreen> {
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
       ),
-      builder: (context) => const CreateAssignmentModal(courseId:'675c910186e75d98dc7c5cae'),
+      builder: (context) => CreateAssignmentModal(courseId: '675c910186e75d98dc7c5cae',
+        onAssignmentCreated: () {
+          _fetchCourseDetails();
+        },
+      ),
     ).whenComplete(() {
       // Reset modal state when closed
       setState(() {
