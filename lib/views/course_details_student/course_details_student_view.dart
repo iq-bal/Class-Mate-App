@@ -1,6 +1,5 @@
 import 'package:classmate/core/helper_function.dart';
 import 'package:classmate/views/course_detail_teacher/widgets/assignment_card.dart';
-import 'package:classmate/views/course_detail_teacher/widgets/course_card.dart';
 import 'package:classmate/views/course_details_student/widgets/attendance_summary.dart';
 import 'package:classmate/views/course_details_student/widgets/course_card_student.dart';
 import 'package:classmate/views/course_details_student/widgets/custom_tab_bar.dart';
@@ -83,52 +82,6 @@ class CourseDetailsStudent extends StatelessWidget {
           ],
         ),
       ),
-    );
-  }
-
-  Widget _buildAttendanceChart() {
-    return SizedBox(
-      height: 80,
-      width: 80,
-      child: Stack(
-        children: [
-          CircularProgressIndicator(
-            value: 0.85,
-            backgroundColor: Colors.red.shade300,
-            color: Colors.teal,
-            strokeWidth: 8,
-          ),
-          const Center(
-            child: Text(
-              '85%',
-              style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildPresenceIndicators() {
-    return Row(
-      children: List.generate(8, (index) {
-        bool isPresent = index < 5 || index == 7; // Mark some boxes as present
-        return Container(
-          margin: const EdgeInsets.only(right: 8),
-          height: 24,
-          width: 24,
-          decoration: BoxDecoration(
-            color: isPresent ? Colors.teal : Colors.red,
-            borderRadius: BorderRadius.circular(4),
-          ),
-          child: Center(
-            child: Text(
-              '${index + 1}',
-              style: const TextStyle(color: Colors.white, fontSize: 12),
-            ),
-          ),
-        );
-      }),
     );
   }
 }

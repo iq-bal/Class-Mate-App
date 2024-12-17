@@ -8,14 +8,13 @@ class AuthController {
   final AuthService _authService = AuthService();
   final ValueNotifier<AuthState> stateNotifier = ValueNotifier<AuthState>(AuthState.idle);
   String? errorMessage; // To store error messages
-
+  UserModel? user;
   Future<void> login(String email, String password) async {
     stateNotifier.value = AuthState.loading;
     try {
-      UserModel user = await _authService.login(email, password);
+      user = await _authService.login(email, password);
       stateNotifier.value = AuthState.success;
     } catch (e) {
-
       errorMessage = e.toString();
       stateNotifier.value = AuthState.error;
     }

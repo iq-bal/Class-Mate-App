@@ -1,4 +1,5 @@
 import 'package:classmate/controllers/authentication/auth_controller.dart';
+import 'package:classmate/models/authentication/user_model.dart';
 import 'package:classmate/views/authentication/register_view.dart';
 import 'package:classmate/views/authentication/widgets/custom_button.dart';
 import 'package:classmate/views/authentication/widgets/custom_input_field.dart';
@@ -7,6 +8,7 @@ import 'package:classmate/views/authentication/widgets/info_section.dart';
 import 'package:classmate/views/authentication/widgets/or_divider_with_tagline.dart';
 import 'package:classmate/views/authentication/widgets/parent_container.dart';
 import 'package:classmate/views/course_detail_teacher/course_detail_teacher_view.dart';
+import 'package:classmate/views/course_details_student/course_details_student_view.dart';
 import 'package:flutter/material.dart';
 
 class LoginPage extends StatefulWidget {
@@ -29,15 +31,21 @@ class _LoginPageState extends State<LoginPage> {
   }
 
   void _login() async {
-    const String email = "iqbal@gmail.com";
+    const String email = "jafrin@gmail.com";
     const String password = "12345";
     await _authController.login(email, password);
-
     if (_authController.stateNotifier.value == AuthState.success && mounted) {
-      if (widget.role.toLowerCase() == "teacher") {
+      final UserModel user = _authController.user!;
+      if (widget.role.toLowerCase() == "teacher" && user.role.toLowerCase()=="teacher") {
         Navigator.pushReplacement(
           context,
           MaterialPageRoute(builder: (context) => const CourseDetailScreen()),
+        );
+      }
+      else if(widget.role.toLowerCase()=="student" && user.role.toLowerCase()=="student"){
+        Navigator.pushReplacement(
+          context,
+          MaterialPageRoute(builder: (context) => const CourseDetailsStudent()),
         );
       }
     } else {
