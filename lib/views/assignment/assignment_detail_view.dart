@@ -1,3 +1,4 @@
+import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
 
 class AssignmentDetailPage extends StatefulWidget {
@@ -54,6 +55,25 @@ class _AssignmentDetailPageState extends State<AssignmentDetailPage> {
       'highlighted': false,
     },
   ];
+
+
+  Future<void> _pickFile() async {
+    final result = await FilePicker.platform.pickFiles(
+      type: FileType.custom,
+      allowedExtensions: ['pdf', 'doc', 'docx'],
+    );
+
+    if (result != null) {
+      final file = result.files.first;
+      print("File picked: ${file.name}");
+      // Perform further actions with the selected file
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text("File Uploaded: ${file.name}")),
+      );
+    } else {
+      print("No file selected");
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -352,20 +372,18 @@ class _AssignmentDetailPageState extends State<AssignmentDetailPage> {
                             borderRadius: BorderRadius.circular(8),
                           ),
                         ),
-                        icon: const Icon(Icons.upload_file, color: Colors.white),
+                        icon: const Icon(Icons.send, color: Colors.white),
                         label: const Text(
                           'Upload Task',
                           style: TextStyle(fontSize: 16, color: Colors.white),
                         ),
-                        onPressed: () {
-                          // Upload task action
-                        },
+                        onPressed: _pickFile,
                       ),
                     ),
+
                   ],
                 ),
               ),
-
               const SizedBox(height: 16),
             ],
           ),

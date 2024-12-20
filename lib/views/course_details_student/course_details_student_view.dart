@@ -1,4 +1,5 @@
 import 'package:classmate/core/helper_function.dart';
+import 'package:classmate/views/assignment/assignment_detail_view.dart';
 import 'package:classmate/views/course_detail_teacher/widgets/assignment_card.dart';
 import 'package:classmate/views/course_details_student/widgets/attendance_summary.dart';
 import 'package:classmate/views/course_details_student/widgets/course_card_student.dart';
@@ -73,6 +74,9 @@ class CourseDetailsStudent extends StatelessWidget {
                     dueDate: "25 Dec 2024",
                     iconText: HelperFunction.getFirstTwoLettersUppercase("Cache Memory Performance Evaluation"),
                     totalItems: 12,
+                    onTap: () {
+                      Navigator.push(context, MaterialPageRoute(builder: (context)=>const AssignmentDetailPage()));
+                    },
                   ),
                 ],
               ),

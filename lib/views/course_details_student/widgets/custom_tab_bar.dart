@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 
 class CustomTabBar extends StatefulWidget {
+  const CustomTabBar({super.key});
+
   @override
   _CustomTabBarState createState() => _CustomTabBarState();
 }
@@ -8,7 +10,7 @@ class CustomTabBar extends StatefulWidget {
 class _CustomTabBarState extends State<CustomTabBar> {
   int _selectedIndex = 0; // Track the currently selected tab
 
-  final List<String> tabs = ['Assignment', 'Forum', 'Student'];
+  final List<String> tabs = ['Assignment', 'Forum', 'Materials'];
 
   @override
   Widget build(BuildContext context) {
