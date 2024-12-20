@@ -16,46 +16,41 @@ class _AssignmentDetailPageState extends State<AssignmentDetailPage> {
   final Color greyTextColor = Colors.grey.shade800;
 
   int selectedIndex = 0; // Track which card is selected
+  String? uploadedFileName; // Holds the uploaded file name
 
-  // Here we define the terms and conditions in a list for easy generation.
+  // Define terms and conditions
   final List<Map<String, dynamic>> terms = [
     {
       'title': 'Plagiarism Detection',
       'description':
       'All submissions will be automatically checked for plagiarism to ensure originality and academic integrity. Submitting copied content may result in disciplinary action as per the institution\'s policies.',
       'icon': Icons.shield,
-      'highlighted': true, // This is the unique styling of the first card
     },
     {
       'title': 'AI-Generated Text Detection',
       'description':
       'Submissions will be analyzed for AI-generated content to maintain fairness and ensure the authenticity of your work. Any detected violations may lead to review and possible rejection of the submission.',
       'icon': Icons.settings,
-      'highlighted': false, // Default style when not selected
     },
     {
       'title': 'Permission to Access Storage',
       'description':
       'We require permission to access your device storage to upload files for assignment submissions. This access is only used for academic purposes and in compliance with privacy guidelines.',
       'icon': Icons.file_copy,
-      'highlighted': false,
     },
     {
       'title': 'Academic Honesty Agreement',
       'description':
       'By submitting your assignment, you agree to adhere to the principles of academic honesty, ensuring that the work is your own and complies with institutional guidelines.',
       'icon': Icons.bookmark,
-      'highlighted': false,
     },
     {
       'title': 'Submission Policy Acknowledgment',
       'description':
       'Please confirm that you understand the submission policies, including checks for plagiarism and AI-generated content, before uploading your assignment.',
       'icon': Icons.check,
-      'highlighted': false,
     },
   ];
-
 
   Future<void> _pickFile() async {
     final result = await FilePicker.platform.pickFiles(
@@ -65,11 +60,9 @@ class _AssignmentDetailPageState extends State<AssignmentDetailPage> {
 
     if (result != null) {
       final file = result.files.first;
-      print("File picked: ${file.name}");
-      // Perform further actions with the selected file
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text("File Uploaded: ${file.name}")),
-      );
+      setState(() {
+        uploadedFileName = file.name; // Update the file name
+      });
     } else {
       print("No file selected");
     }
@@ -89,7 +82,6 @@ class _AssignmentDetailPageState extends State<AssignmentDetailPage> {
                 child: Row(
                   crossAxisAlignment: CrossAxisAlignment.center,
                   children: [
-                    // Back arrow and Course Detail text
                     Row(
                       children: [
                         Icon(Icons.arrow_back_ios, size: 18, color: Colors.black),
@@ -117,8 +109,8 @@ class _AssignmentDetailPageState extends State<AssignmentDetailPage> {
                   borderRadius: BorderRadius.circular(4),
                 ),
                 child: const Row(
-                  mainAxisAlignment: MainAxisAlignment.center, // Centers horizontally
-                  crossAxisAlignment: CrossAxisAlignment.center, // Centers vertically
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  crossAxisAlignment: CrossAxisAlignment.center,
                   children: [
                     Icon(Icons.error, size: 16, color: redWarningColor),
                     SizedBox(width: 4),
@@ -134,7 +126,6 @@ class _AssignmentDetailPageState extends State<AssignmentDetailPage> {
                 ),
               ),
 
-              // Main White Container
               Container(
                 width: double.infinity,
                 margin: const EdgeInsets.symmetric(horizontal: 16),
@@ -142,11 +133,9 @@ class _AssignmentDetailPageState extends State<AssignmentDetailPage> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    // Top Row with icon and title
                     Row(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        // Rounded icon with "CH"
                         Container(
                           height: 48,
                           width: 48,
@@ -195,68 +184,11 @@ class _AssignmentDetailPageState extends State<AssignmentDetailPage> {
 
                     const SizedBox(height: 16),
 
-                    // Start Date Row (two date pickers side by side)
-                    Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 7),
-                      decoration: BoxDecoration(
-                        border: Border.all(color: borderColor),
-                        borderRadius: BorderRadius.circular(16),
-                      ),
-                      child: Row(
-                        children: [
-                          const Expanded(
-                            child: Row(
-                              children: [
-                                Icon(Icons.calendar_today, size: 16, color: Colors.black87),
-                                SizedBox(width: 8),
-                                Text(
-                                  'Start: 05 May 2025',
-                                  style: TextStyle(
-                                    fontSize: 14,
-                                    color: Colors.black87,
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ),
-                          // Vertical separator
-                          Container(
-                            width: 1,
-                            color: Colors.black12,
-                            height: 20,
-                            margin: const EdgeInsets.symmetric(horizontal: 8),
-                          ),
-                          const Expanded(
-                            child: Row(
-                              children: [
-                                Icon(Icons.calendar_today, size: 16, color: Colors.black87),
-                                SizedBox(width: 8),
-                                Text(
-                                  'End: 10 May 2025',
-                                  style: TextStyle(
-                                    fontSize: 14,
-                                    color: Colors.black87,
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-
-                    const SizedBox(height: 16),
-
                     // Terms and conditions cards
-                    // We iterate over the list and build each card
                     Column(
                       children: List.generate(terms.length, (index) {
                         final isSelected = selectedIndex == index;
                         final item = terms[index];
-
-                        // If selected, apply the plagiarism style
-                        final bgColor = isSelected ? lightGreenBackground : Colors.white;
-                        final bColor = isSelected ? Colors.green.shade200 : borderColor;
 
                         return GestureDetector(
                           onTap: () {
@@ -269,9 +201,11 @@ class _AssignmentDetailPageState extends State<AssignmentDetailPage> {
                             margin: const EdgeInsets.only(bottom: 16),
                             padding: const EdgeInsets.all(16),
                             decoration: BoxDecoration(
-                              color: bgColor,
+                              color: isSelected ? lightGreenBackground : Colors.white,
                               borderRadius: BorderRadius.circular(8),
-                              border: Border.all(color: bColor),
+                              border: Border.all(
+                                color: isSelected ? Colors.green.shade200 : borderColor,
+                              ),
                             ),
                             child: Column(
                               crossAxisAlignment: CrossAxisAlignment.start,
@@ -280,7 +214,9 @@ class _AssignmentDetailPageState extends State<AssignmentDetailPage> {
                                   children: [
                                     Container(
                                       decoration: BoxDecoration(
-                                        color: isSelected ? const Color(0xFFA1EDCD) : borderColor,
+                                        color: isSelected
+                                            ? const Color(0xFFA1EDCD)
+                                            : borderColor,
                                         shape: BoxShape.circle,
                                       ),
                                       padding: const EdgeInsets.all(8),
@@ -316,7 +252,6 @@ class _AssignmentDetailPageState extends State<AssignmentDetailPage> {
                       }),
                     ),
 
-                    // Attachment Section
                     const Text(
                       'Attachment',
                       style: TextStyle(
@@ -336,32 +271,35 @@ class _AssignmentDetailPageState extends State<AssignmentDetailPage> {
                       child: Row(
                         mainAxisAlignment: MainAxisAlignment.spaceBetween,
                         children: [
-                          const Row(
+                          Row(
                             children: [
-                              Icon(Icons.attach_file, color: Colors.black87),
-                              SizedBox(width: 8),
+                              const Icon(Icons.attach_file, color: Colors.black87),
+                              const SizedBox(width: 8),
                               Text(
-                                '2007093.pdf',
-                                style: TextStyle(
+                                uploadedFileName ?? 'your_roll.pdf',
+                                style: const TextStyle(
                                   fontSize: 14,
                                   color: Colors.black87,
                                 ),
                               ),
                             ],
                           ),
-                          GestureDetector(
-                            onTap: () {
-                              // Remove attachment action
-                            },
-                            child: const Icon(Icons.close, color: Colors.black54),
-                          ),
+                          if (uploadedFileName != null) // Display the close button only if a file is uploaded
+                            GestureDetector(
+                              onTap: () {
+                                setState(() {
+                                  uploadedFileName = null; // Reset file name
+                                });
+                              },
+                              child: const Icon(Icons.close, color: Colors.black54),
+                            ),
                         ],
                       ),
                     ),
 
+
                     const SizedBox(height: 16),
 
-                    // Upload Task Button
                     SizedBox(
                       width: double.infinity,
                       height: 48,
@@ -372,19 +310,28 @@ class _AssignmentDetailPageState extends State<AssignmentDetailPage> {
                             borderRadius: BorderRadius.circular(8),
                           ),
                         ),
-                        icon: const Icon(Icons.send, color: Colors.white),
-                        label: const Text(
-                          'Upload Task',
-                          style: TextStyle(fontSize: 16, color: Colors.white),
+                        icon: uploadedFileName != null
+                            ? Transform.rotate(
+                          angle: -3.141592653589793 / 4, // pi/4 radians
+                          child: const Icon(
+                            Icons.send,
+                            color: Colors.white,
+                          ),
+                        )
+                            : const Icon(
+                          Icons.upload_file,
+                          color: Colors.white,
+                        ),
+                        label: Text(
+                          uploadedFileName != null ? 'Turn In' : 'Upload Task',
+                          style: const TextStyle(fontSize: 16, color: Colors.white),
                         ),
                         onPressed: _pickFile,
                       ),
                     ),
-
                   ],
                 ),
               ),
-              const SizedBox(height: 16),
             ],
           ),
         ),
