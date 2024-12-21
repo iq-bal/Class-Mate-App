@@ -66,7 +66,7 @@ class CourseDetailTeacherService {
   Future<void>createAssignment(String courseId, String title,String description,String deadline) async {
       try{
         final response = await dioClient.getDio(AppConfig.mainNormalBaseUrl).post(
-            '/create-assignment?courseId=$courseId',
+            '/create/create-assignment?courseId=$courseId',
           data: {
             'title': title,
             'description': description,

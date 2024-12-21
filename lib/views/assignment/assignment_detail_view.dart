@@ -1,3 +1,4 @@
+import 'package:classmate/controllers/assignment/assignment_detail_controller.dart';
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
 
@@ -17,6 +18,9 @@ class _AssignmentDetailPageState extends State<AssignmentDetailPage> {
 
   int selectedIndex = 0; // Track which card is selected
   String? uploadedFileName; // Holds the uploaded file name
+  final AssignmentDetailController _controller = AssignmentDetailController();
+  PlatformFile? selectedFile; // Holds the selected file details
+
 
   // Define terms and conditions
   final List<Map<String, dynamic>> terms = [
@@ -62,6 +66,7 @@ class _AssignmentDetailPageState extends State<AssignmentDetailPage> {
       final file = result.files.first;
       setState(() {
         uploadedFileName = file.name; // Update the file name
+        selectedFile = file; // Save the selected file
       });
     } else {
       print("No file selected");
@@ -300,6 +305,35 @@ class _AssignmentDetailPageState extends State<AssignmentDetailPage> {
 
                     const SizedBox(height: 16),
 
+                    // SizedBox(
+                    //   width: double.infinity,
+                    //   height: 48,
+                    //   child: ElevatedButton.icon(
+                    //     style: ElevatedButton.styleFrom(
+                    //       backgroundColor: primaryTeal,
+                    //       shape: RoundedRectangleBorder(
+                    //         borderRadius: BorderRadius.circular(8),
+                    //       ),
+                    //     ),
+                    //     icon: uploadedFileName != null
+                    //         ? Transform.rotate(
+                    //       angle: -3.141592653589793 / 4, // pi/4 radians
+                    //       child: const Icon(
+                    //         Icons.send,
+                    //         color: Colors.white,
+                    //       ),
+                    //     )
+                    //         : const Icon(
+                    //       Icons.upload_file,
+                    //       color: Colors.white,
+                    //     ),
+                    //     label: Text(
+                    //       uploadedFileName != null ? 'Turn In' : 'Upload Task',
+                    //       style: const TextStyle(fontSize: 16, color: Colors.white),
+                    //     ),
+                    //     onPressed: _pickFile,
+                    //   ),
+                    // ),
                     SizedBox(
                       width: double.infinity,
                       height: 48,
@@ -326,9 +360,29 @@ class _AssignmentDetailPageState extends State<AssignmentDetailPage> {
                           uploadedFileName != null ? 'Turn In' : 'Upload Task',
                           style: const TextStyle(fontSize: 16, color: Colors.white),
                         ),
-                        onPressed: _pickFile,
+                        onPressed: uploadedFileName != null
+                            ? () async {
+                          if (selectedFile != null) {
+                            await _controller.submitAssignment(
+                              "675cba0a097be65e5ced61b9", // Replace with actual assignment ID
+                              selectedFile!.path!, // Path of the selected file
+                            );
+
+                            if (_controller.stateNotifier.value == AssignmentDetailState.success) {
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                const SnackBar(content: Text("Assignment submitted successfully!")),
+                              );
+                            } else if (_controller.stateNotifier.value == AssignmentDetailState.error) {
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                SnackBar(content: Text(_controller.errorMessage ?? "An error occurred")),
+                              );
+                            }
+                          }
+                        }
+                            : _pickFile,
                       ),
                     ),
+
                   ],
                 ),
               ),
