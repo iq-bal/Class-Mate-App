@@ -4,7 +4,7 @@ class SubmissionModel {
   final String? studentId;
   final String? fileUrl;
   final String? plagiarismScore;
-  final String? teacherComment; // Correct name
+  final String? teacherComment;
   final String? grade;
   final String? submittedAt;
 
