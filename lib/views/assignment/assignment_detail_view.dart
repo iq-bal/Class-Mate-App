@@ -1,7 +1,10 @@
 import 'package:classmate/controllers/assignment/assignment_detail_controller.dart';
+import 'package:classmate/services/assignment/assignment_detail_service.dart';
 import 'package:classmate/utils/grid_painter.dart';
 import 'package:classmate/views/assignment/widgets/attachment_section.dart';
+import 'package:classmate/views/assignment/widgets/custom_app_bar.dart';
 import 'package:classmate/views/assignment/widgets/evaluation_bar.dart';
+import 'package:classmate/views/assignment/widgets/evaluation_card.dart';
 import 'package:classmate/views/assignment/widgets/feedback_card.dart';
 import 'package:classmate/views/assignment/widgets/info_card.dart';
 import 'package:classmate/views/assignment/widgets/terms_and_conditions.dart';
@@ -9,6 +12,9 @@ import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
 
 class AssignmentDetailPage extends StatefulWidget {
+
+  final String assignmentId="675cba0a097be65e5ced61b9"; // Assignment ID to fetch details for
+
   const AssignmentDetailPage({super.key});
 
   @override
@@ -29,11 +35,14 @@ class _AssignmentDetailPageState extends State<AssignmentDetailPage> {
   bool isLoading = true; // Tracks loading state for submission check
   bool hasSubmission = false; // Tracks whether submission exists
 
+  final AssignmentDetailService _service = AssignmentDetailService();
+
   @override
   void initState() {
      super.initState();
-    _checkSubmission();
+     _checkSubmission();
   }
+
 
   // Define terms and conditions
   final List<Map<String, dynamic>> terms = [
@@ -72,7 +81,7 @@ class _AssignmentDetailPageState extends State<AssignmentDetailPage> {
 
   Future<void> _checkSubmission() async {
     await _controller.checkAssignmentSubmission("675cba0a097be65e5ced61b9"); // Replace with actual assignment ID
-    if (_controller.stateNotifier.value == AssignmentDetailState.success && _controller.evaluationModel != null) {
+    if (_controller.stateNotifier.value == AssignmentDetailState.success) {
       setState(() {
         hasSubmission = true;
         isLoading = false;
@@ -124,6 +133,7 @@ class _AssignmentDetailPageState extends State<AssignmentDetailPage> {
 
   @override
   Widget build(BuildContext context) {
+
     if (isLoading) {
       return const Scaffold(
         body: Center(child: CircularProgressIndicator()),
@@ -136,29 +146,14 @@ class _AssignmentDetailPageState extends State<AssignmentDetailPage> {
           child: SingleChildScrollView(
             child: Column(
               children: [
-                const Padding(
-                  padding: EdgeInsets.symmetric(horizontal: 16.0, vertical: 8),
-                  child: Row(
-                    crossAxisAlignment: CrossAxisAlignment.center,
-                    children: [
-                      Row(
-                        children: [
-                          Icon(Icons.arrow_back_ios, size: 18, color: Colors.black),
-                          SizedBox(width: 4),
-                          Text(
-                            'Course Detail',
-                            style: TextStyle(
-                              fontSize: 16,
-                              color: Colors.black87,
-                              fontWeight: FontWeight.normal,
-                            ),
-                          ),
-                        ],
-                      ),
-                      Spacer(),
-                      Icon(Icons.more_vert, color: Colors.black54),
-                    ],
-                  ),
+                CustomAppBar(
+                  title: 'Course Detail',
+                  onBackPress: () {
+                    Navigator.pop(context);
+                  },
+                  onMorePress: () {
+                    print("More options clicked");
+                  },
                 ),
                 Container(
                   width: double.infinity,
@@ -175,116 +170,18 @@ class _AssignmentDetailPageState extends State<AssignmentDetailPage> {
                         'Computer Architecture is a fundamental area of computer science that focuses on the design, structure, and organization of computer systems...',
                       ),
                       const SizedBox(height: 16),
-                      Container(
-                        width: double.infinity,
-                        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
-                        decoration: BoxDecoration(
-                          color: Colors.white, // Base background color
-                          borderRadius: BorderRadius.circular(16),
-                          boxShadow: [
-                            BoxShadow(
-                              color: Colors.black.withOpacity(0.1),
-                              blurRadius: 8,
-                              offset: const Offset(0, 2),
-                            ),
-                          ],
-                        ),
-                        child: Stack(
-                          children: [
-                            // Grid Background
-                            Positioned.fill(
-                              child: CustomPaint(
-                                painter: GridPainter(),
-                              ),
-                            ),
-                            // Evaluation Section Content
-                            Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                // Row with Title and Legend
-                                Row(
-                                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                                  children: [
-                                    const Text(
-                                      'Evaluation',
-                                      style: TextStyle(
-                                        fontSize: 20,
-                                        fontWeight: FontWeight.bold,
-                                        fontFamily: 'Georgia',
-                                      ),
-                                    ),
-                                    Column(
-                                      children: [
-                                        Row(
-                                          children: [
-                                            Container(
-                                              width: 12,
-                                              height: 12,
-                                              decoration: BoxDecoration(
-                                                color: const Color(0xFFA1EDCD),
-                                                borderRadius: BorderRadius.circular(6),
-                                              ),
-                                            ),
-                                            const SizedBox(width: 4),
-                                            const Text(
-                                              'greater is good',
-                                              style: TextStyle(fontSize: 12),
-                                            ),
-                                          ],
-                                        ),
-                                        const SizedBox(width: 16),
-                                        Row(
-                                          children: [
-                                            Container(
-                                              width: 12,
-                                              height: 12,
-                                              decoration: BoxDecoration(
-                                                color: const Color(0xFFE57373),
-                                                borderRadius: BorderRadius.circular(6),
-                                              ),
-                                            ),
-                                            const SizedBox(width: 4),
-                                            const Text(
-                                              '  lesser is good',
-                                              style: TextStyle(fontSize: 12),
-                                            ),
-                                          ],
-                                        ),
-                                      ],
-                                    ),
-                                  ],
-                                ),
-                                const SizedBox(height: 16),
-                                // Bar Graph
-                                const Row(
-                                  mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                                  children: [
-                                    EvaluationBar(
-                                      label: 'plagiarism',
-                                      percentage: 75,
-                                      isPositive: false,
-                                    ),
-                                    EvaluationBar(
-                                      label: 'grade',
-                                      percentage: 85,
-                                      isPositive: true,
-                                    ),
-                                    EvaluationBar(
-                                      label: 'ai generated',
-                                      percentage: 40,
-                                      isPositive: false,
-                                    ),
-                                    EvaluationBar(
-                                      label: 'performance',
-                                      percentage: 60,
-                                      isPositive: true,
-                                    ),
-                                  ],
-                                ),
-                              ],
-                            ),
-                          ],
-                        ),
+                      const EvaluationCard(
+                        title: 'Evaluation',
+                        legendItems: [
+                          {'color': Color(0xFFA1EDCD), 'label': 'greater is good'},
+                          {'color': Color(0xFFE57373), 'label': 'lesser is good'},
+                        ],
+                        evaluationBars: [
+                          {'label': 'plagiarism', 'percentage': 75.0, 'isPositive': false}, // Add `.0` to convert to double
+                          {'label': 'grade', 'percentage': 85.0, 'isPositive': true}, // Add `.0` to convert to double
+                          {'label': 'ai generated', 'percentage': 40.0, 'isPositive': false}, // Add `.0` to convert to double
+                          {'label': 'performance', 'percentage': 60.0, 'isPositive': true}, // Add `.0` to convert to double
+                        ],
                       ),
                       const SizedBox(height: 16),
                       const FeedbackCard(
@@ -293,6 +190,12 @@ class _AssignmentDetailPageState extends State<AssignmentDetailPage> {
                         feedback: 'Your works are overall good, but evaluation method could be better. I think your method suggests an alternate approach towards the problem.',
                         author: 'Dr. Al Mahmud',
                       ),
+                      ElevatedButton(
+                        onPressed: () {
+                          _controller.getAssignmentDetails("675cba0a097be65e5ced61b9");
+                        },
+                        child: const Text("Press Me"),
+                      )
                     ],
                   ),
                 ),
