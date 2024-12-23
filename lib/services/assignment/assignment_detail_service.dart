@@ -57,6 +57,7 @@ class AssignmentDetailService{
       const String query = r'''
     query GetAssignmentDetails($id: ID!) {
       assignment(id: $id) {
+        id
         title
         description
         submission {
@@ -94,7 +95,5 @@ class AssignmentDetailService{
       throw Exception('Error fetching assignment details: $e');
     }
   }
-
-
 
 }

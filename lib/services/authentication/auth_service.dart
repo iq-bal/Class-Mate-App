@@ -17,10 +17,15 @@ class AuthService {
   }
   Future<UserModel> login(String email, String password) async {
     try {
+
+
+
       final response = await _dio.post('/login', data: {
         'email': email,
         'password': password,
       });
+
+
       UserModel user = UserModel.fromJson(response.data);
       await _tokenStorage.storeToken(response.data['accessToken'], response.data['refreshToken']);
       return user;

@@ -1,12 +1,11 @@
 
-import 'package:classmate/views/assignment/assignment_detail_view.dart';
+import 'package:classmate/core/helper_function.dart';
 import 'package:classmate/views/authentication/landing.dart';
-import 'package:classmate/views/authentication/login_view.dart';
-import 'package:classmate/views/course_detail_teacher/course_detail_teacher_view.dart';
-import 'package:classmate/views/course_details_student/course_details_student_view.dart';
 import 'package:flutter/material.dart';
 
-void main() {
+void main() async{
+  WidgetsFlutterBinding.ensureInitialized();
+  await initializeNotifications();
   runApp(const MyApp());
 }
 
