@@ -8,7 +8,7 @@ import '../../models/assignment/assignment_model.dart';
 
 class AssignmentDetailPage extends StatefulWidget {
 
-  final String assignmentId="675cba0a097be65e5ced61b9"; // Assignment ID to fetch details for
+  final String assignmentId="6770faec4ba49e91eade309d"; // Assignment ID to fetch details for
 
   const AssignmentDetailPage({super.key});
 
