@@ -1,4 +1,5 @@
 import 'package:classmate/core/helper_function.dart';
+import 'package:classmate/views/explore/explore_course_view.dart';
 import 'package:flutter/material.dart';
 import 'package:classmate/views/authentication/landing.dart';
 

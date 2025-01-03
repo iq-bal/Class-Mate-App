@@ -35,6 +35,14 @@ class HelperFunction {
     return DateFormat('MMM d, yyyy').format(date);
   }
 
+  static String cleanTime(String time) {
+    // Use a regex to remove any alphabets (both uppercase and lowercase)
+    final regex = RegExp(r'[a-zA-Z]');
+    return time.replaceAll(regex, '').trim(); // Trim spaces after removing alphabets
+  }
+
+
+
   static Future<void> showNotification(String title, String body) async {
     try {
       const AndroidNotificationDetails androidNotificationDetails =

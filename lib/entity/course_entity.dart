@@ -6,7 +6,6 @@ class CourseEntity {
   final String? courseCode;
   final String? description;
   final String? teacherId;
-  final List<ScheduleEntity>? schedule;
   final DateTime? createdAt;
 
   const CourseEntity({
@@ -15,7 +14,6 @@ class CourseEntity {
     this.courseCode,
     this.description,
     this.teacherId,
-    this.schedule,
     this.createdAt,
   });
 
@@ -27,9 +25,6 @@ class CourseEntity {
       courseCode: json['course_code'] as String?,
       description: json['description'] as String?,
       teacherId: json['teacher_id'] as String?,
-      schedule: (json['schedule'] as List<dynamic>?)
-          ?.map((schedule) => ScheduleEntity.fromJson(schedule as Map<String, dynamic>))
-          .toList(),
       createdAt: json['created_at'] != null ? DateTime.parse(json['created_at'] as String) : null,
     );
   }
@@ -42,7 +37,6 @@ class CourseEntity {
       'course_code': courseCode,
       'description': description,
       'teacher_id': teacherId,
-      'schedule': schedule?.map((entry) => entry.toJson()).toList(),
       'created_at': createdAt?.toIso8601String(),
     };
   }

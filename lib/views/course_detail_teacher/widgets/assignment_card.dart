@@ -126,7 +126,7 @@ class AssignmentCard extends StatelessWidget {
                       const Icon(Icons.calendar_today, size: 20, color: Colors.black),
                       const SizedBox(width: 8),
                       Text(
-                        dueDate,
+                        "Due: $dueDate",
                         style: const TextStyle(fontSize: 14, color: Colors.black),
                       ),
                     ],

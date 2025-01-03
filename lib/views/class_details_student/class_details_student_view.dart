@@ -1,99 +1,173 @@
 import 'package:flutter/material.dart';
-import 'package:classmate/core/helper_function.dart';
+import 'package:classmate/controllers/class_details_student/class_details_student_controller.dart';
 import 'package:classmate/views/assignment/assignment_detail_view.dart';
-import 'package:classmate/views/course_detail_teacher/widgets/assignment_card.dart';
 import 'package:classmate/views/class_details_student/widgets/attendance_summary.dart';
 import 'package:classmate/views/class_details_student/widgets/course_card_student.dart';
 import 'package:classmate/views/class_details_student/widgets/custom_tab_bar.dart';
 import 'package:classmate/views/assignment/widgets/custom_app_bar.dart';
 
-class ClassDetailsStudent extends StatelessWidget {
-  const ClassDetailsStudent({super.key});
+import '../../core/helper_function.dart';
+import '../course_detail_teacher/widgets/assignment_card.dart';
+
+class ClassDetailsStudent extends StatefulWidget {
+  // final String courseId;
+  // final String day;
+  // final String teacherId;
+
+  const ClassDetailsStudent({
+    super.key,
+    // required this.courseId,
+    // required this.day,
+    // required this.teacherId,
+  });
+
+  @override
+  State<ClassDetailsStudent> createState() => _ClassDetailsStudentState();
+}
+
+class _ClassDetailsStudentState extends State<ClassDetailsStudent> {
+  final ClassDetailsStudentController _controller = ClassDetailsStudentController();
+
+  @override
+  void initState() {
+    super.initState();
+    _fetchClassDetails();
+  }
+
+  void _fetchClassDetails() {
+    const courseId = "675c9104b6f24d432eb28707";
+    const day = "Friday";
+    const teacherId = "67700aaf73eeab1f443ac463";
+    // _controller.fetchClassDetails(widget.courseId, widget.day, widget.teacherId);
+    _controller.fetchClassDetails(courseId, day, teacherId);
+  }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: Colors.white,
       body: SafeArea(
-        child: SingleChildScrollView(
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              // Custom AppBar moved to body
-              CustomAppBar(
-                title: "Class Details",
-                onBackPress: () {
-                  Navigator.pop(context);
-                },
-                onMorePress: () {
-                  print("More options clicked");
-                },
-              ),
-              const Padding(
-                padding: EdgeInsets.symmetric(horizontal: 16.0),
+        child: ValueListenableBuilder<CourseDetailStudentState>(
+          valueListenable: _controller.stateNotifier,
+          builder: (context, state, child) {
+            if (state == CourseDetailStudentState.loading) {
+              return const Center(child: CircularProgressIndicator());
+            } else if (state == CourseDetailStudentState.error) {
+              return Center(
+                child: Text(
+                  _controller.errorMessage ?? "An error occurred while fetching class details.",
+                  style: const TextStyle(color: Colors.red, fontSize: 16),
+                  textAlign: TextAlign.center,
+                ),
+              );
+            } else if (state == CourseDetailStudentState.success) {
+              final details = _controller.classDetails;
+              if (details == null) {
+                return const Center(child: Text("No class details available."));
+              }
+
+              // UI for successful data fetch
+              return SingleChildScrollView(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    CourseCardStudent(
-                      courseCode: "CSE 3202",
-                      className: "B",
-                      day: "Monday",
-                      time: "07-09 AM",
-                      title: "Computer Architecture & Organization",
-                      roomNo: "CSE 502",
+                    CustomAppBar(
+                      title: "Class Details",
+                      onBackPress: () {
+                        Navigator.pop(context);
+                      },
+                      onMorePress: () {
+                        print("More options clicked");
+                      },
                     ),
-                  ],
-                ),
-              ),
-              const SizedBox(height: 16),
-              const AttendanceSummary(
-                attendancePercentage: 0.40, // 85% attendance
-                presenceIndicators: [
-                  true, true, true, true, true, false, false, true, false, true
-                ],
-                feedbackText: 'Your Presence this time is good',
-              ),
-              const SizedBox(height: 16),
-              CustomTabBar(),
-              const SizedBox(height: 20),
-              Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 16.0),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start, // Aligns children to the left
-                  children: [
-                    const Text(
-                      'Today',
-                      style: TextStyle(
-                        fontSize: 16,
-                        fontWeight: FontWeight.bold,
-                        height: 1.2,
+                    Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 16.0),
+                      child: CourseCardStudent(
+                        courseCode: details.course.courseCode ?? "N/A",
+                        className: details.schedule?.section ?? "N/A",
+                        day: details.schedule?.day ?? "N/A",
+                        time: "${HelperFunction.cleanTime(details.schedule?.startTime ?? "")} - ${HelperFunction.cleanTime(details.schedule?.endTime ?? "")}",
+                        title: details.course.title ?? "N/A",
+                        roomNo: details.schedule?.roomNo ?? "N/A",
                       ),
                     ),
                     const SizedBox(height: 16),
-                    AssignmentCard(
-                      title: "Cache Memory Performance Evaluation",
-                      description: "Solve problem 1-10 of chapter 4",
-                      dueDate: "25 Dec 2024",
-                      iconText: HelperFunction.getFirstTwoLettersUppercase(
-                        "Cache Memory Performance Evaluation",
-                      ),
-                      totalItems: 12,
-                      onTap: () {
-                        Navigator.push(
-                          context,
-                          MaterialPageRoute(
-                            builder: (context) =>
-                            const AssignmentDetailPage(),
+
+                    // AttendanceSummary(
+                    //   attendancePercentage: details.attendanceList.isEmpty
+                    //       ? 0.0
+                    //       : details.attendanceList.where((e) => e.status == "present").length /
+                    //       details.attendanceList.length,
+                    //   presenceIndicators: details.attendanceList
+                    //       .map((e) => e.status == "present")
+                    //       .toList(),
+                    //   feedbackText: "Keep up the good attendance!",
+                    // ),
+
+                    AttendanceSummary(
+                      attendancePercentage: details.attendanceList.isEmpty
+                          ? 0.0
+                          : details.attendanceList
+                          .where((e) => e.status?.toLowerCase() == "present")
+                          .length /
+                          details.attendanceList.length,
+                      presenceIndicators: details.attendanceList
+                          .map((e) => e.status?.toLowerCase() == "present" ? true : false)
+                          .toList(),
+                      feedbackText: "Keep up the good attendance!",
+                    ),
+
+
+
+
+                    const SizedBox(height: 16),
+                    const CustomTabBar(),
+                    const SizedBox(height: 20),
+                    Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 16.0),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          const Text(
+                            'Assignments',
+                            style: TextStyle(
+                              fontSize: 16,
+                              fontWeight: FontWeight.bold,
+                              height: 1.2,
+                            ),
                           ),
-                        );
-                      },
+                          const SizedBox(height: 16),
+                          ...details.assignments.map((assignment) {
+                            return AssignmentCard(
+                              title: assignment.title ?? "No Title",
+                              description: assignment.description ?? "No Description",
+                              dueDate: HelperFunction.formatTimestamp(
+                                DateTime.parse(assignment.deadline?.toString() ?? "").millisecondsSinceEpoch.toString(),
+                              ),
+                              iconText: HelperFunction.getFirstTwoLettersUppercase(
+                                assignment.title ?? "",
+                              ),
+                              totalItems: 12, // Placeholder or dynamic count
+                              onTap: () {
+                                Navigator.push(
+                                  context,
+                                  MaterialPageRoute(
+                                    builder: (context) => const AssignmentDetailPage(),
+                                  ),
+                                );
+                              },
+                            );
+                          }).toList(),
+                        ],
+                      ),
                     ),
                   ],
                 ),
-              ),
-              const SizedBox(height: 8),
-            ],
-          ),
+              );
+            } else {
+              return const Center(child: Text("Unexpected state encountered."));
+            }
+          },
         ),
       ),
     );

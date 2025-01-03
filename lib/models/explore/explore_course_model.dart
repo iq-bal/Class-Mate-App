@@ -7,7 +7,6 @@ class ExploreCourseModel extends CourseEntity{
       super.courseCode,
       super.description
   }):super(
-    schedule: null,
     teacherId: null,
     createdAt: null,
   );
