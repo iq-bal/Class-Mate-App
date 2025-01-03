@@ -42,6 +42,20 @@ class HelperFunction {
   }
 
 
+  static String getAttendanceFeedback(double attendancePercentage) {
+    if (attendancePercentage >= 0.9) {
+      return "Excellent attendance! Keep it up!";
+    } else if (attendancePercentage >= 0.75) {
+      return "Great attendance! Try to maintain this level.";
+    } else if (attendancePercentage >= 0.6) {
+      return "You're doing okay, but there's room for improvement.";
+    } else {
+      return "Your attendance is low. Make an effort to attend more classes.";
+    }
+  }
+
+
+
 
   static Future<void> showNotification(String title, String body) async {
     try {

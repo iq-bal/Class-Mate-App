@@ -93,17 +93,6 @@ class _ClassDetailsStudentState extends State<ClassDetailsStudent> {
                     ),
                     const SizedBox(height: 16),
 
-                    // AttendanceSummary(
-                    //   attendancePercentage: details.attendanceList.isEmpty
-                    //       ? 0.0
-                    //       : details.attendanceList.where((e) => e.status == "present").length /
-                    //       details.attendanceList.length,
-                    //   presenceIndicators: details.attendanceList
-                    //       .map((e) => e.status == "present")
-                    //       .toList(),
-                    //   feedbackText: "Keep up the good attendance!",
-                    // ),
-
                     AttendanceSummary(
                       attendancePercentage: details.attendanceList.isEmpty
                           ? 0.0
@@ -114,8 +103,16 @@ class _ClassDetailsStudentState extends State<ClassDetailsStudent> {
                       presenceIndicators: details.attendanceList
                           .map((e) => e.status?.toLowerCase() == "present" ? true : false)
                           .toList(),
-                      feedbackText: "Keep up the good attendance!",
+                      feedbackText: HelperFunction.getAttendanceFeedback(
+                        details.attendanceList.isEmpty
+                            ? 0.0
+                            : details.attendanceList
+                            .where((e) => e.status?.toLowerCase() == "present")
+                            .length /
+                            details.attendanceList.length,
+                      ),
                     ),
+
 
 
 

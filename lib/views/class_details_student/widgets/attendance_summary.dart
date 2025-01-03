@@ -165,6 +165,7 @@ class AttendanceSummary extends StatelessWidget {
           const SizedBox(height: 16),
 
           // Feedback section
+
           Container(
             width: double.infinity,
             padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 16),
@@ -172,30 +173,58 @@ class AttendanceSummary extends StatelessWidget {
             child: Row(
               crossAxisAlignment: CrossAxisAlignment.center,
               children: [
-                Icon(Icons.thumb_up, color: Colors.grey.shade600, size: 20),
+                Icon(Icons.comment, color: Colors.grey.shade600, size: 20),
                 const SizedBox(width: 8),
-                RichText(
-                  text: TextSpan(
-                    text: 'Great! ',
+                Expanded(
+                  child: Text(
+                    feedbackText,
                     style: const TextStyle(
                       fontSize: 14,
-                      fontWeight: FontWeight.bold,
+                      fontWeight: FontWeight.normal,
                       color: Colors.black,
                     ),
-                    children: [
-                      TextSpan(
-                        text: feedbackText,
-                        style: const TextStyle(
-                          fontWeight: FontWeight.normal,
-                          color: Colors.grey,
-                        ),
-                      ),
-                    ],
+                    softWrap: true, // Ensures text wraps to the next line
+                    maxLines: 2, // Optional: Restricts to a maximum of two lines
+                    overflow: TextOverflow.ellipsis, // Optional: Adds ellipsis if text exceeds max lines
                   ),
                 ),
               ],
             ),
-          ),
+          )
+
+
+
+          // Container(
+          //   width: double.infinity,
+          //   padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 16),
+          //   color: Colors.grey.shade100,
+          //   child: Row(
+          //     crossAxisAlignment: CrossAxisAlignment.center,
+          //     children: [
+          //       Icon(Icons.thumb_up, color: Colors.grey.shade600, size: 20),
+          //       const SizedBox(width: 8),
+          //       RichText(
+          //         text: TextSpan(
+          //           text: 'Great! ',
+          //           style: const TextStyle(
+          //             fontSize: 14,
+          //             fontWeight: FontWeight.bold,
+          //             color: Colors.black,
+          //           ),
+          //           children: [
+          //             TextSpan(
+          //               text: feedbackText,
+          //               style: const TextStyle(
+          //                 fontWeight: FontWeight.normal,
+          //                 color: Colors.grey,
+          //               ),
+          //             ),
+          //           ],
+          //         ),
+          //       ),
+          //     ],
+          //   ),
+          // ),
         ],
       ),
     );
