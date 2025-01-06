@@ -10,15 +10,15 @@ import '../../core/helper_function.dart';
 import '../course_detail_teacher/widgets/assignment_card.dart';
 
 class ClassDetailsStudent extends StatefulWidget {
-  // final String courseId;
-  // final String day;
-  // final String teacherId;
+  final String courseId;
+  final String day;
+  final String teacherId;
 
   const ClassDetailsStudent({
     super.key,
-    // required this.courseId,
-    // required this.day,
-    // required this.teacherId,
+    required this.courseId,
+    required this.day,
+    required this.teacherId,
   });
 
   @override
@@ -35,11 +35,7 @@ class _ClassDetailsStudentState extends State<ClassDetailsStudent> {
   }
 
   void _fetchClassDetails() {
-    const courseId = "675c9104b6f24d432eb28707";
-    const day = "Friday";
-    const teacherId = "67700aaf73eeab1f443ac463";
-    // _controller.fetchClassDetails(widget.courseId, widget.day, widget.teacherId);
-    _controller.fetchClassDetails(courseId, day, teacherId);
+    _controller.fetchClassDetails(widget.courseId, widget.day, widget.teacherId);
   }
 
   @override

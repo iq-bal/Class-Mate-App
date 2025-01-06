@@ -12,9 +12,7 @@ class AuthController {
   Future<void> login(String email, String password) async {
     stateNotifier.value = AuthState.loading;
     try {
-
       user = await _authService.login(email, password);
-
       stateNotifier.value = AuthState.success;
     } catch (e) {
       errorMessage = e.toString();

@@ -17,15 +17,10 @@ class AuthService {
   }
   Future<UserModel> login(String email, String password) async {
     try {
-
-
-
       final response = await _dio.post('/login', data: {
         'email': email,
         'password': password,
       });
-
-
       UserModel user = UserModel.fromJson(response.data);
       await _tokenStorage.storeToken(response.data['accessToken'], response.data['refreshToken']);
       return user;
@@ -33,7 +28,6 @@ class AuthService {
       throw Exception('Failed to login. Please try again.');
     }
   }
-
 
   Future<void> register(String email, String name, String password, String role) async {
     try {

@@ -7,8 +7,8 @@ import 'package:classmate/views/authentication/widgets/custom_password_input.dar
 import 'package:classmate/views/authentication/widgets/info_section.dart';
 import 'package:classmate/views/authentication/widgets/or_divider_with_tagline.dart';
 import 'package:classmate/views/authentication/widgets/parent_container.dart';
-import 'package:classmate/views/class_details_student/class_details_student_view.dart';
 import 'package:classmate/views/course_detail_teacher/course_detail_teacher_view.dart';
+import 'package:classmate/views/home/home_view.dart';
 import 'package:flutter/material.dart';
 
 class LoginPage extends StatefulWidget {
@@ -45,7 +45,7 @@ class _LoginPageState extends State<LoginPage> {
       else if(widget.role.toLowerCase()=="student" && user.role.toLowerCase()=="student"){
         Navigator.pushReplacement(
           context,
-          MaterialPageRoute(builder: (context) => const ClassDetailsStudent()),
+          MaterialPageRoute(builder: (context) => const HomeView()),
         );
       }
     } else {

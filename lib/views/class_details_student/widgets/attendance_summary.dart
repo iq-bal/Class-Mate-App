@@ -191,40 +191,6 @@ class AttendanceSummary extends StatelessWidget {
               ],
             ),
           )
-
-
-
-          // Container(
-          //   width: double.infinity,
-          //   padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 16),
-          //   color: Colors.grey.shade100,
-          //   child: Row(
-          //     crossAxisAlignment: CrossAxisAlignment.center,
-          //     children: [
-          //       Icon(Icons.thumb_up, color: Colors.grey.shade600, size: 20),
-          //       const SizedBox(width: 8),
-          //       RichText(
-          //         text: TextSpan(
-          //           text: 'Great! ',
-          //           style: const TextStyle(
-          //             fontSize: 14,
-          //             fontWeight: FontWeight.bold,
-          //             color: Colors.black,
-          //           ),
-          //           children: [
-          //             TextSpan(
-          //               text: feedbackText,
-          //               style: const TextStyle(
-          //                 fontWeight: FontWeight.normal,
-          //                 color: Colors.grey,
-          //               ),
-          //             ),
-          //           ],
-          //         ),
-          //       ),
-          //     ],
-          //   ),
-          // ),
         ],
       ),
     );
@@ -251,7 +217,7 @@ class PieChartPainter extends CustomPainter {
     final radius = math.min(size.width, size.height) / 2;
 
     final paint = Paint()..style = PaintingStyle.stroke..strokeWidth = radius;
-    final startAngle = -math.pi / 2; // Start at top
+    const startAngle = -math.pi / 2; // Start at top
     final attendanceAngle = 2 * math.pi * attendanceRatio;
 
     // Draw absence portion (full circle background)
