@@ -3,9 +3,8 @@ import 'package:flutter/material.dart';
 import 'package:jwt_decoder/jwt_decoder.dart';
 import 'package:provider/provider.dart';
 import 'token_storage.dart';
-import 'package:classmate/views/home_teacher/home_teacher_view.dart';
-import 'package:classmate/views/home/home_view.dart';
 import 'package:classmate/views/authentication/landing.dart';
+import 'package:classmate/views/main_layout/main_layout.dart';
 
 class AuthenticationHandler extends StatefulWidget {
   const AuthenticationHandler({super.key});
@@ -57,13 +56,7 @@ class _AuthenticationHandlerState extends State<AuthenticationHandler> {
       return const LandingPage();
     }
 
-    switch (authProvider.role?.toLowerCase()) {
-      case 'teacher':
-        return const HomeTeacherView();
-      case 'student':
-        return const HomeView();
-      default:
-        return const LandingPage();
-    }
+    // Redirect authenticated users to the MainLayout
+    return MainLayout(role: authProvider.role ?? 'user');
   }
 }

@@ -197,7 +197,7 @@ class HomeView extends StatelessWidget {
                               Navigator.push(
                                 context,
                                 MaterialPageRoute(
-                                  builder: (context) => ClassDetailsStudent(
+                                  builder: (context) => const ClassDetailsStudent(
                                     courseId: "675c9104b6f24d432eb28707",
                                     day: "Friday",
                                     teacherId: "67700aaf73eeab1f443ac463",
