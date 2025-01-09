@@ -13,8 +13,8 @@ class DioClient {
     ));
 
     // Set connectTimeout and receiveTimeout directly in the options
-    _dio.options.connectTimeout = const Duration(seconds: AppConfig.timeoutDuration); // Set connection timeout
-    _dio.options.receiveTimeout = const Duration(seconds: AppConfig.timeoutDuration); // Set receive timeout
+    // _dio.options.connectTimeout = const Duration(seconds: AppConfig.timeoutDuration); // Set connection timeout
+    // _dio.options.receiveTimeout = const Duration(seconds: AppConfig.timeoutDuration); // Set receive timeout
 
     _dio.interceptors.add(InterceptorsWrapper(
       onRequest: (options, handler) async {

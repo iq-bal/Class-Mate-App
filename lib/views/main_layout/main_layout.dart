@@ -1,3 +1,5 @@
+// import 'package:classmate/views/chat/chat_view.dart';
+import 'package:classmate/views/chat/chat_screen_view.dart';
 import 'package:classmate/views/chat/chat_view.dart';
 import 'package:classmate/views/explore/explore_course_view.dart';
 import 'package:classmate/views/home/home_view.dart';
