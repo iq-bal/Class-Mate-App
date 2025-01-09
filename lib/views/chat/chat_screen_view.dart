@@ -1,7 +1,40 @@
+import 'package:classmate/controllers/chat/socket_controller.dart';
 import 'package:flutter/material.dart';
 
-class ChatScreen extends StatelessWidget {
+class ChatScreen extends StatefulWidget {
   const ChatScreen({super.key});
+
+  @override
+  State<ChatScreen> createState() => _ChatScreenState();
+}
+
+class _ChatScreenState extends State<ChatScreen> {
+  final SocketController _socketController = SocketController();
+  final TextEditingController _messageController = TextEditingController();
+
+  @override
+  void initState() {
+    super.initState();
+    _initializeSocket();
+  }
+
+  Future<void> _initializeSocket() async {
+    await _socketController.initializeSocket();
+  }
+
+  @override
+  void dispose() {
+    _socketController.disconnectSocket();
+    _messageController.dispose();
+    super.dispose();
+  }
+
+  void _sendMessage() {
+    if (_messageController.text.isNotEmpty) {
+      _socketController.sendMessage('6761b460591d0a5c3dbaafbc', _messageController.text);
+      _messageController.clear();
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -58,38 +91,22 @@ class ChatScreen extends StatelessWidget {
         children: [
           // Chat Messages Section
           Expanded(
-            child: ListView(
-              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-              children: const [
-                ChatBubble(
-                  isSentByMe: false,
-                  message:
-                  'Hello how is it going down there? are you available for work today? '
-                      'I have a new idea regarding the project. I want to discuss about it in all possible ways.',
-                  time: '10:01 AM',
-                ),
-                ChatBubble(
-                  isSentByMe: true,
-                  message:
-                  'Hello how is it going down there? are you available for work today? '
-                      'I have a new idea regarding the project. I want to discuss about it in all possible ways.',
-                  time: '10:01 AM',
-                ),
-                ChatBubble(
-                  isSentByMe: false,
-                  message:
-                  'Hello how is it going down there? are you available for work today? '
-                      'I have a new idea regarding the project. I want to discuss about it in all possible ways.',
-                  time: '10:01 AM',
-                ),
-                ChatBubble(
-                  isSentByMe: true,
-                  message:
-                  'Hello how is it going down there? are you available for work today? '
-                      'I have a new idea regarding the project. I want to discuss about it in all possible ways.',
-                  time: '10:01 AM',
-                ),
-              ],
+            child: ValueListenableBuilder<List<Map<String, dynamic>>>(
+              valueListenable: _socketController.messagesNotifier,
+              builder: (context, messages, child) {
+                return ListView.builder(
+                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                  itemCount: messages.length,
+                  itemBuilder: (context, index) {
+                    final message = messages[index];
+                    return ChatBubble(
+                      isSentByMe: message.containsKey('to'),
+                      message: message['message'],
+                      time: message['timestamp'] ?? 'Now',
+                    );
+                  },
+                );
+              },
             ),
           ),
           // Input Section
@@ -115,6 +132,7 @@ class ChatScreen extends StatelessWidget {
                 ),
                 Expanded(
                   child: TextField(
+                    controller: _messageController,
                     decoration: InputDecoration(
                       hintText: 'Type Message',
                       hintStyle: TextStyle(color: Colors.grey.shade400),
@@ -134,6 +152,10 @@ class ChatScreen extends StatelessWidget {
                   onPressed: () {
                     // Handle voice input
                   },
+                ),
+                IconButton(
+                  icon: const Icon(Icons.send, color: Colors.blue),
+                  onPressed: _sendMessage,
                 ),
               ],
             ),
