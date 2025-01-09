@@ -2,6 +2,10 @@ import 'package:classmate/services/chat/socket_services.dart';
 
 class SocketController {
   final SocketService _socketService = SocketService();
+  final List<Map<String, dynamic>> _messages = []; // Internal message list
+
+  // Getter to expose messages
+  List<Map<String, dynamic>> get messages => _messages;
 
   // Initialize the socket with the token
   void initialize(String token) {
@@ -37,7 +41,11 @@ class SocketController {
 
   void handlePrivateMessage(dynamic data) {
     // Handle incoming private messages (e.g., save to local storage or update chat)
-    print('Message from ${data['from']}: ${data['content']}');
+    _messages.add({
+      'isSentByMe': false,
+      'message': data['content'],
+      'time': data['timestamp'],
+    });
   }
 
   void handleUnreadMessages(dynamic data) {

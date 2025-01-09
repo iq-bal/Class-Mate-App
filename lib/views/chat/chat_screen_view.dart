@@ -1,142 +1,153 @@
+import 'package:classmate/controllers/chat/socket_controller.dart';
 import 'package:flutter/material.dart';
 
-class ChatScreen extends StatelessWidget {
-  const ChatScreen({super.key});
+class ChatScreen extends StatefulWidget {
+  final String recipientId; // Pass the recipient ID
+  final String token; // Pass the authentication token
+
+  const ChatScreen({super.key, required this.recipientId, required this.token});
+
+  @override
+  State<ChatScreen> createState() => _ChatScreenState();
+}
+
+class _ChatScreenState extends State<ChatScreen> {
+  final SocketController _socketController = SocketController();
+  final TextEditingController _messageController = TextEditingController();
+
+  @override
+  void initState() {
+    super.initState();
+
+    // Initialize SocketController with the token
+    _socketController.initialize(widget.token);
+
+    // Listen for private messages and update the UI
+    _socketController.initialize(widget.token);
+  }
+
+  @override
+  void dispose() {
+    _socketController.disconnect(); // Disconnect the socket
+    _messageController.dispose();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: const Color(0xFFF5F5F5), // Light background
-      appBar: AppBar(
-        elevation: 0,
-        backgroundColor: Colors.blue[900],
-        title: const Row(
-          children: [
-            CircleAvatar(
-              radius: 20,
-              backgroundImage: AssetImage('assets/images/avatar.png'),
-            ),
-            SizedBox(width: 12),
-            Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  'Niloy Das',
-                  style: TextStyle(
-                    fontSize: 18,
-                    fontWeight: FontWeight.bold,
-                    color: Colors.white,
-                  ),
-                ),
-                Text(
-                  'Online',
-                  style: TextStyle(
-                    fontSize: 14,
-                    color: Colors.white70,
-                  ),
-                ),
-              ],
-            ),
-          ],
-        ),
-        leading: IconButton(
-          icon: const Icon(Icons.arrow_back_ios, color: Colors.white),
-          onPressed: () {
-            Navigator.pop(context);
-          },
-        ),
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.more_vert, color: Colors.white),
-            onPressed: () {
-              // Handle options
-            },
-          ),
-        ],
-      ),
+      appBar: _buildAppBar(),
       body: Column(
         children: [
           // Chat Messages Section
           Expanded(
-            child: ListView(
+            child: ListView.builder(
               padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-              children: const [
-                ChatBubble(
-                  isSentByMe: false,
-                  message:
-                  'Hello how is it going down there? are you available for work today? '
-                      'I have a new idea regarding the project. I want to discuss about it in all possible ways.',
-                  time: '10:01 AM',
-                ),
-                ChatBubble(
-                  isSentByMe: true,
-                  message:
-                  'Hello how is it going down there? are you available for work today? '
-                      'I have a new idea regarding the project. I want to discuss about it in all possible ways.',
-                  time: '10:01 AM',
-                ),
-                ChatBubble(
-                  isSentByMe: false,
-                  message:
-                  'Hello how is it going down there? are you available for work today? '
-                      'I have a new idea regarding the project. I want to discuss about it in all possible ways.',
-                  time: '10:01 AM',
-                ),
-                ChatBubble(
-                  isSentByMe: true,
-                  message:
-                  'Hello how is it going down there? are you available for work today? '
-                      'I have a new idea regarding the project. I want to discuss about it in all possible ways.',
-                  time: '10:01 AM',
-                ),
-              ],
+              itemCount: _socketController.messages.length,
+              itemBuilder: (context, index) {
+                final message = _socketController.messages[index];
+                return ChatBubble(
+                  isSentByMe: message['isSentByMe'],
+                  message: message['message'],
+                  time: message['time'],
+                );
+              },
             ),
           ),
           // Input Section
-          Container(
-            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-            decoration: BoxDecoration(
-              color: Colors.white,
-              boxShadow: [
-                BoxShadow(
-                  color: Colors.black.withOpacity(0.05),
-                  blurRadius: 8,
-                  offset: const Offset(0, -4),
+          _buildInputSection(),
+        ],
+      ),
+    );
+  }
+
+  AppBar _buildAppBar() {
+    return AppBar(
+      elevation: 0,
+      backgroundColor: Colors.blue[900],
+      title: const Row(
+        children: [
+          CircleAvatar(
+            radius: 20,
+            backgroundImage: AssetImage('assets/images/avatar.png'),
+          ),
+          SizedBox(width: 12),
+          Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                'Niloy Das',
+                style: TextStyle(
+                  fontSize: 18,
+                  fontWeight: FontWeight.bold,
+                  color: Colors.white,
                 ),
-              ],
+              ),
+              Text(
+                'Online',
+                style: TextStyle(
+                  fontSize: 14,
+                  color: Colors.white70,
+                ),
+              ),
+            ],
+          ),
+        ],
+      ),
+      leading: IconButton(
+        icon: const Icon(Icons.arrow_back_ios, color: Colors.white),
+        onPressed: () {
+          Navigator.pop(context);
+        },
+      ),
+    );
+  }
+
+  Widget _buildInputSection() {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.05),
+            blurRadius: 8,
+            offset: const Offset(0, -4),
+          ),
+        ],
+      ),
+      child: Row(
+        children: [
+          Expanded(
+            child: TextField(
+              controller: _messageController,
+              decoration: InputDecoration(
+                hintText: 'Type a message...',
+                hintStyle: TextStyle(color: Colors.grey.shade400),
+                border: InputBorder.none,
+              ),
             ),
-            child: Row(
-              children: [
-                IconButton(
-                  icon: const Icon(Icons.add, color: Colors.black54),
-                  onPressed: () {
-                    // Handle attachment
-                  },
-                ),
-                Expanded(
-                  child: TextField(
-                    decoration: InputDecoration(
-                      hintText: 'Type Message',
-                      hintStyle: TextStyle(color: Colors.grey.shade400),
-                      border: InputBorder.none,
-                    ),
-                  ),
-                ),
-                IconButton(
-                  icon: const Icon(Icons.emoji_emotions_outlined,
-                      color: Colors.black54),
-                  onPressed: () {
-                    // Handle emojis
-                  },
-                ),
-                IconButton(
-                  icon: const Icon(Icons.mic, color: Color(0xFF346666)),
-                  onPressed: () {
-                    // Handle voice input
-                  },
-                ),
-              ],
-            ),
+          ),
+          IconButton(
+            icon: const Icon(Icons.send, color: Colors.blue),
+            onPressed: () {
+              final message = _messageController.text.trim();
+              if (message.isNotEmpty) {
+                // Send the message through the SocketController
+                _socketController.sendMessage(widget.recipientId, message);
+
+                // Add the message to the local list and clear the input
+                setState(() {
+                  _socketController.messages.add({
+                    'isSentByMe': true,
+                    'message': message,
+                    'time': DateTime.now().toIso8601String(),
+                  });
+                });
+                _messageController.clear();
+              }
+            },
           ),
         ],
       ),
@@ -171,7 +182,7 @@ class ChatBubble extends StatelessWidget {
               maxWidth: MediaQuery.of(context).size.width * 0.7,
             ),
             decoration: BoxDecoration(
-              color: isSentByMe ? Colors.white : const Color(0xFFEDEDED),
+              color: isSentByMe ? Colors.blue[100] : const Color(0xFFEDEDED),
               borderRadius: BorderRadius.only(
                 topLeft: const Radius.circular(16),
                 topRight: const Radius.circular(16),
@@ -182,30 +193,17 @@ class ChatBubble extends StatelessWidget {
                     ? const Radius.circular(0)
                     : const Radius.circular(16),
               ),
-              boxShadow: [
-                BoxShadow(
-                  color: Colors.black.withOpacity(0.05),
-                  blurRadius: 6,
-                  offset: const Offset(0, 3),
-                ),
-              ],
             ),
             child: Text(
               message,
-              style: const TextStyle(
-                fontSize: 14,
-                color: Colors.black87,
-              ),
+              style: const TextStyle(fontSize: 14, color: Colors.black87),
             ),
           ),
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 8),
             child: Text(
               time,
-              style: TextStyle(
-                fontSize: 12,
-                color: Colors.grey.shade500,
-              ),
+              style: TextStyle(fontSize: 12, color: Colors.grey.shade500),
             ),
           ),
         ],
