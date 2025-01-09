@@ -41,4 +41,28 @@ class AuthService {
       throw Exception('Failed to login. Please try again.');
     }
   }
+
+  Future<void> logout() async {
+    try {
+      final refreshToken = await _tokenStorage.retrieveRefreshToken();
+      if (refreshToken == null) {
+        throw Exception('No refresh token found.');
+      }
+
+      // Send logout request to the server
+      final response = await _dio.delete('/logout', data: {
+        'refreshToken': refreshToken,
+      });
+      if (response.statusCode == 200) {
+        await _tokenStorage.clearTokens();
+      } else {
+        throw Exception('Logout failed. Please try again.');
+      }
+    } catch (e) {
+      throw Exception('Failed to logout. Please try again.');
+    }
+  }
+
+
+
 }

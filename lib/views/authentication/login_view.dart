@@ -11,6 +11,8 @@ import 'package:classmate/views/course_detail_teacher/course_detail_teacher_view
 import 'package:classmate/views/home/home_view.dart';
 import 'package:flutter/material.dart';
 
+import '../main_layout/main_layout.dart';
+
 class LoginPage extends StatefulWidget {
   final String role;
 
@@ -22,34 +24,48 @@ class LoginPage extends StatefulWidget {
 
 class _LoginPageState extends State<LoginPage> {
   final AuthController _authController = AuthController();
+  final TextEditingController _emailController = TextEditingController();
+  final TextEditingController _passwordController = TextEditingController();
 
   @override
   void initState() {
     super.initState();
-    // Log the role when the widget is initialized
     debugPrint("Navigated to LoginPage with role: ${widget.role}");
   }
 
   void _login() async {
-    const String email = "jafrin@gmail.com";
-    const String password = "12345";
+    // Fetch input values dynamically
+    final String email = _emailController.text.trim();
+    final String password = _passwordController.text.trim();
+
+    if (email.isEmpty || password.isEmpty) {
+      // Show an error if fields are empty
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Please fill in all fields.'),
+          backgroundColor: Colors.red,
+        ),
+      );
+      return;
+    }
+
+    // Perform login
     await _authController.login(email, password);
     if (_authController.stateNotifier.value == AuthState.success && mounted) {
       final UserModel user = _authController.user!;
-      if (widget.role.toLowerCase() == "teacher" && user.role.toLowerCase()=="teacher") {
+      if (widget.role.toLowerCase() == "teacher" && user.role.toLowerCase() == "teacher") {
         Navigator.pushReplacement(
           context,
           MaterialPageRoute(builder: (context) => const CourseDetailScreen()),
         );
-      }
-      else if(widget.role.toLowerCase()=="student" && user.role.toLowerCase()=="student"){
+      } else if (widget.role.toLowerCase() == "student" && user.role.toLowerCase() == "student") {
         Navigator.pushReplacement(
           context,
-          MaterialPageRoute(builder: (context) => const HomeView()),
+          MaterialPageRoute(builder: (context) => const MainLayout(role: "student")),
         );
       }
     } else {
-      // If login failed, show an error message
+      // Show error message if login failed
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
           content: Text('Login failed. Please check your credentials.'),
@@ -61,9 +77,6 @@ class _LoginPageState extends State<LoginPage> {
 
   @override
   Widget build(BuildContext context) {
-    final TextEditingController _emailController = TextEditingController();
-    final TextEditingController _passwordController = TextEditingController();
-
     return ParentContainer(
       children: [
         const InfoSection(title: "Welcome Back", subtitle: "Enter your details below"),
@@ -75,7 +88,7 @@ class _LoginPageState extends State<LoginPage> {
             // Handle forgot password action
           },
           child: const Text(
-            "forgot your password?",
+            "Forgot your password?",
             style: TextStyle(
               fontFamily: 'Raleway',
               fontSize: 16,

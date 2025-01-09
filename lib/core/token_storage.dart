@@ -30,4 +30,16 @@ class TokenStorage {
       throw Exception('Failed to retrieve refresh token: $e');
     }
   }
+
+
+  // Clear access token and refresh token from secure storage
+  Future<void> clearTokens() async {
+    try {
+      await _secureStorage.delete(key: 'accessToken');
+      await _secureStorage.delete(key: 'refreshToken');
+    } catch (e) {
+      throw Exception('Failed to clear tokens: $e');
+    }
+  }
+
 }

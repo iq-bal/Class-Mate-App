@@ -1,9 +1,53 @@
+import 'package:classmate/services/chat/socket_services.dart';
 import 'package:classmate/views/chat/ai_chat_view.dart';
 import 'package:classmate/views/chat/widgets/message_tile.dart';
 import 'package:flutter/material.dart';
 
-class ChatView extends StatelessWidget {
+class ChatView extends StatefulWidget {
   const ChatView({super.key});
+
+  @override
+  _ChatViewState createState() => _ChatViewState();
+}
+
+class _ChatViewState extends State<ChatView> {
+  final SocketService _socketService = SocketService();
+
+  @override
+  void initState() {
+    super.initState();
+    _initializeSocketConnection();
+  }
+
+  @override
+  void dispose() {
+    _socketService.disconnectSocket(); // Disconnect socket when leaving the page
+    super.dispose();
+  }
+
+  void _initializeSocketConnection() async {
+    try {
+      await _socketService.initializeSocketConnection();
+      _listenToSocketEvents();
+    } catch (e) {
+      print('Error initializing socket connection (Frontend): $e');
+    }
+  }
+
+
+  void _listenToSocketEvents() {
+    // Listen for user online notifications
+    _socketService.socket.on('userOnline', (data) {
+      print('User Online Event: $data');
+      // You can update the UI here with the list of active users
+    });
+
+    // Listen for private messages
+    _socketService.socket.on('privateMessage', (data) {
+      print('New Private Message: $data');
+      // Handle new messages here, such as updating the message list
+    });
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -115,7 +159,6 @@ class ChatView extends StatelessWidget {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   // Tabs Section
-
                   Row(
                     children: [
                       Expanded(
@@ -149,7 +192,8 @@ class ChatView extends StatelessWidget {
                         child: InkWell(
                           onTap: () => Navigator.push(
                             context,
-                            MaterialPageRoute(builder: (context) => const AIChatView()),
+                            MaterialPageRoute(
+                                builder: (context) => const AIChatView()),
                           ),
                           child: Container(
                             padding: const EdgeInsets.symmetric(vertical: 12),
@@ -173,62 +217,6 @@ class ChatView extends StatelessWidget {
                       ),
                     ],
                   ),
-
-
-                  // Row(
-                  //   children: [
-                  //     Expanded(
-                  //       child: Container(
-                  //         padding: const EdgeInsets.symmetric(vertical: 12),
-                  //         decoration: BoxDecoration(
-                  //           color: Colors.blue[700],
-                  //           borderRadius: BorderRadius.circular(16),
-                  //           boxShadow: [
-                  //             BoxShadow(
-                  //               color: Colors.black.withOpacity(0.05),
-                  //               blurRadius: 6,
-                  //               offset: const Offset(0, 3),
-                  //             ),
-                  //           ],
-                  //         ),
-                  //         child: const Center(
-                  //           child: Text(
-                  //             "All Messages",
-                  //             style: TextStyle(
-                  //               fontSize: 16,
-                  //               fontWeight: FontWeight.bold,
-                  //               color: Colors.white,
-                  //             ),
-                  //           ),
-                  //         ),
-                  //       ),
-                  //     ),
-                  //     const SizedBox(width: 12),
-                  //
-                  //
-                  //
-                  //     Expanded(
-                  //       child: Container(
-                  //         padding: const EdgeInsets.symmetric(vertical: 12),
-                  //         decoration: BoxDecoration(
-                  //           color: Colors.white,
-                  //           border: Border.all(color: Colors.black12),
-                  //           borderRadius: BorderRadius.circular(16),
-                  //         ),
-                  //         child: const Center(
-                  //           child: Text(
-                  //             "AI Assistant",
-                  //             style: TextStyle(
-                  //               fontSize: 16,
-                  //               fontWeight: FontWeight.bold,
-                  //               color: Colors.black54,
-                  //             ),
-                  //           ),
-                  //         ),
-                  //       ),
-                  //     ),
-                  //   ],
-                  // ),
                   const SizedBox(height: 24),
 
                   // Pinned Messages Section

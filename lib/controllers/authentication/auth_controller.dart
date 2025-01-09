@@ -31,4 +31,18 @@ class AuthController {
       stateNotifier.value = AuthState.error;
     }
   }
+
+  /// Logout Method
+  Future<void> logout() async {
+    stateNotifier.value = AuthState.loading;
+    try {
+      await _authService.logout();
+      user = null;
+      stateNotifier.value = AuthState.success;
+    } catch (e) {
+      errorMessage = e.toString();
+      stateNotifier.value = AuthState.error;
+    }
+  }
+
 }
