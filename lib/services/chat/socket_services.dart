@@ -57,6 +57,35 @@ class SocketService {
     });
   }
 
+
+
+  void getConversation(String withUserId, int page, int limit, Function(Map<String, dynamic>) onConversationFetched) {
+
+
+
+    // Request conversation history
+    socket.emit('getConversation', {
+      'with_user_id': withUserId,
+      'page': page,
+      'limit': limit,
+    });
+
+
+    print("here");
+
+
+    // Listen for the conversation history response
+    socket.once('conversationHistory', (data) {
+      print('Received conversationHistory: $data');
+      onConversationFetched(Map<String, dynamic>.from(data)); // Notify the caller with the data
+    });
+
+    // Handle errors
+    socket.once('messageError', (error) {
+      print('Error fetching conversation history: $error');
+    });
+  }
+
   void disconnectSocket() {
     socket.disconnect();
   }

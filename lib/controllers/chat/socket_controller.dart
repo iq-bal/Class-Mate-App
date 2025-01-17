@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:classmate/services/chat/socket_services.dart';
+import 'package:socket_io_client/src/socket.dart';
 
 enum SocketState { idle, connecting, connected, error, disconnected }
 
@@ -40,6 +41,32 @@ class SocketController {
         {'to': recipientId, 'message': message, 'isSent': true, 'timestamp': DateTime.now().toString()}
       ];
     } catch (e) {
+      errorMessage = e.toString();
+    }
+  }
+
+
+  void fetchConversation(String withUserId, int page, int limit) {
+    try {
+
+      print('Emitting getConversation event with: $withUserId, page: $page, limit: $limit');
+
+
+      _socketService.getConversation(
+        withUserId,
+        page,
+        limit,
+            (conversationData) {
+              print('Conversation data received: $conversationData');
+          // Update the messagesNotifier with the fetched messages
+          // List<Map<String, dynamic>> fetchedMessages =
+          // List<Map<String, dynamic>>.from(conversationData['messages']);
+          // Merge fetched messages with the existing list
+          // messagesNotifier.value = [...messagesNotifier.value, ...fetchedMessages];
+        },
+      );
+    } catch (e) {
+      print('Error in fetchConversation: $errorMessage');
       errorMessage = e.toString();
     }
   }

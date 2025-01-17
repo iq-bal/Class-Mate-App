@@ -1,6 +1,9 @@
 import 'package:classmate/models/authentication/user_model.dart';
 import 'package:classmate/services/authentication/auth_service.dart';
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
+
+import '../../providers/auth_provider.dart';
 
 enum AuthState { idle, loading, success, error }
 
@@ -33,11 +36,13 @@ class AuthController {
   }
 
   /// Logout Method
-  Future<void> logout() async {
+  Future<void> logout(context) async {
     stateNotifier.value = AuthState.loading;
     try {
       await _authService.logout();
       user = null;
+      final authProvider = Provider.of<AuthProvider>(context, listen: false);
+      authProvider.logout();
       stateNotifier.value = AuthState.success;
     } catch (e) {
       errorMessage = e.toString();

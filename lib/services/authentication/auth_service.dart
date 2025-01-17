@@ -6,6 +6,9 @@ import 'package:classmate/core/token_storage.dart';
 import 'package:classmate/models/authentication/user_model.dart';
 import 'package:dio/dio.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
+import 'package:provider/provider.dart';
+
+import '../../providers/auth_provider.dart';
 
 class AuthService {
   late Dio _dio;
@@ -53,12 +56,14 @@ class AuthService {
       final response = await _dio.delete('/logout', data: {
         'refreshToken': refreshToken,
       });
-      if (response.statusCode == 200) {
+      if (response.statusCode == 200 || response.statusCode == 404) {
         await _tokenStorage.clearTokens();
       } else {
         throw Exception('Logout failed. Please try again.');
       }
+
     } catch (e) {
+      await _tokenStorage.clearTokens();
       throw Exception('Failed to logout. Please try again.');
     }
   }

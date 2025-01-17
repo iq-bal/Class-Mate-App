@@ -15,26 +15,33 @@ class _ChatScreenState extends State<ChatScreen> {
   @override
   void initState() {
     super.initState();
-    _initializeSocket();
-  }
-
-  Future<void> _initializeSocket() async {
-    await _socketController.initializeSocket();
+    _socketController.fetchConversation(
+      '675936fc1222fe79f3386690', // Replace with the actual user ID
+      1, // Page number (start with 1 for initial fetch)
+      20, // Number of messages to fetch per page
+    );
   }
 
   @override
   void dispose() {
-    _socketController.disconnectSocket();
     _messageController.dispose();
     super.dispose();
   }
 
   void _sendMessage() {
     if (_messageController.text.isNotEmpty) {
-      _socketController.sendMessage('6761b460591d0a5c3dbaafbc', _messageController.text);
+      _socketController.sendMessage('675936fc1222fe79f3386690', _messageController.text);
       _messageController.clear();
     }
   }
+
+
+
+  void _loadMoreMessages() {
+    int nextPage = (_socketController.messagesNotifier.value.length ~/ 20) + 1;
+    _socketController.fetchConversation('6761b460591d0a5c3dbaafbc', nextPage, 20);
+  }
+
 
   @override
   Widget build(BuildContext context) {

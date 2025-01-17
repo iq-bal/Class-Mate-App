@@ -25,9 +25,9 @@ class _AuthenticationHandlerState extends State<AuthenticationHandler> {
   Future<void> _checkAuthentication() async {
     try {
       // Retrieve the access token
-      String? accessToken = await _tokenStorage.retrieveAccessToken();
+      String? refreshToken = await _tokenStorage.retrieveRefreshToken();
 
-      if (accessToken == null || JwtDecoder.isExpired(accessToken)) {
+      if (refreshToken == null || JwtDecoder.isExpired(refreshToken)) {
         // No valid token or token expired
         Provider.of<AuthProvider>(context, listen: false)
             .setAuthentication(false, null);
@@ -35,9 +35,8 @@ class _AuthenticationHandlerState extends State<AuthenticationHandler> {
       }
 
       // Decode the token to extract user role
-      Map<String, dynamic> decodedToken = JwtDecoder.decode(accessToken);
+      Map<String, dynamic> decodedToken = JwtDecoder.decode(refreshToken);
       String role = decodedToken['role'] ?? 'user';
-
       Provider.of<AuthProvider>(context, listen: false)
           .setAuthentication(true, role);
     } catch (e) {

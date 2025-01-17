@@ -14,7 +14,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
 
   void _handleLogout() async {
     try {
-      await authController.logout();
+      await authController.logout(context);
       if (authController.stateNotifier.value == AuthState.success) {
         Navigator.pushReplacement(
           context,

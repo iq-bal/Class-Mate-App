@@ -16,37 +16,11 @@ class _ChatViewState extends State<ChatView> {
   @override
   void initState() {
     super.initState();
-    _initializeSocketConnection();
   }
 
   @override
   void dispose() {
-    _socketService.disconnectSocket(); // Disconnect socket when leaving the page
     super.dispose();
-  }
-
-  void _initializeSocketConnection() async {
-    try {
-      await _socketService.initializeSocketConnection();
-      _listenToSocketEvents();
-    } catch (e) {
-      print('Error initializing socket connection (Frontend): $e');
-    }
-  }
-
-
-  void _listenToSocketEvents() {
-    // Listen for user online notifications
-    _socketService.socket.on('userOnline', (data) {
-      print('User Online Event: $data');
-      // You can update the UI here with the list of active users
-    });
-
-    // Listen for private messages
-    _socketService.socket.on('privateMessage', (data) {
-      print('New Private Message: $data');
-      // Handle new messages here, such as updating the message list
-    });
   }
 
   @override

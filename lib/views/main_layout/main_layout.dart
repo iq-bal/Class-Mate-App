@@ -1,3 +1,5 @@
+import 'package:classmate/controllers/chat/socket_controller.dart';
+import 'package:classmate/views/task/task_view.dart';
 import 'package:flutter/material.dart';
 import 'package:classmate/views/home/home_view.dart';
 import 'package:classmate/views/explore/explore_course_view.dart';
@@ -20,11 +22,26 @@ class _MainLayoutState extends State<MainLayout> {
   late List<Widget> _pages;
   late List<BottomNavItem> _navItems;
 
+
+  // final SocketController _socketController = SocketController();
+
+
   @override
   void initState() {
     super.initState();
     _initializeLayout();
+    // _initializeSocket();
   }
+
+  @override
+  void dispose() {
+    // _socketController.disconnectSocket();
+    super.dispose();
+  }
+  //
+  // Future<void> _initializeSocket() async {
+  //   await _socketController.initializeSocket();
+  // }
 
   void _initializeLayout() {
     if (widget.role.toLowerCase() == 'teacher') {
@@ -42,6 +59,7 @@ class _MainLayoutState extends State<MainLayout> {
     } else {
       _pages = [
         const HomeView(),
+        const TaskView(),
         const ExploreCourseView(),
         const ChatView(),
         const ProfileScreen(),
@@ -49,6 +67,7 @@ class _MainLayoutState extends State<MainLayout> {
 
       _navItems = [
         BottomNavItem(icon: Icons.schedule, label: 'Home'),
+        BottomNavItem(icon: Icons.task, label: 'Task'),
         BottomNavItem(icon: Icons.explore, label: 'Explore'),
         BottomNavItem(icon: Icons.chat_bubble_outline, label: 'Chat'),
         BottomNavItem(icon: Icons.person, label: "Profile"),
