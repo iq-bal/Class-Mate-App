@@ -1,9 +1,15 @@
 import 'package:classmate/utils/custom_app_bar.dart';
+import 'package:classmate/views/task/widgets/category_selector.dart';
+import 'package:classmate/views/task/widgets/date_picker_field.dart';
+import 'package:classmate/views/task/widgets/participants_selector.dart';
+import 'package:classmate/views/task/widgets/time_picker_field.dart';
+import 'package:classmate/views/task/widgets/title_input.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 
 class CreateTaskView extends StatefulWidget {
   const CreateTaskView({super.key});
+
   @override
   State<CreateTaskView> createState() => _CreateTaskViewState();
 }
@@ -61,18 +67,6 @@ class _CreateTaskViewState extends State<CreateTaskView> {
         }
       });
     }
-  }
-
-  String formatTimeOfDay(TimeOfDay? time) {
-    if (time == null) return 'Select Time';
-    final now = DateTime.now();
-    final dt = DateTime(now.year, now.month, now.day, time.hour, time.minute);
-    return DateFormat.jm().format(dt); // Format as AM/PM
-  }
-
-  String formatDate(DateTime? date) {
-    if (date == null) return 'Select Date';
-    return DateFormat.yMMMd().format(date); // Format as "Jan 1, 2025"
   }
 
   void _openParticipantSelector() {
@@ -147,222 +141,71 @@ class _CreateTaskViewState extends State<CreateTaskView> {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     const SizedBox(height: 20),
-
-                    // Title Input Section
-                    _buildSection(
-                      title: "Title",
-                      child: TextField(
-                        decoration: InputDecoration(
-                          hintText: "Enter task title",
-                          filled: true,
-                          fillColor: Colors.white,
-                          border: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(16),
-                            borderSide: BorderSide.none,
-                          ),
-                          contentPadding: const EdgeInsets.symmetric(
-                              horizontal: 16, vertical: 14),
-                        ),
-                      ),
-                    ),
+                    _buildSection(title: "Title", child: const TitleInput()),
                     const SizedBox(height: 20),
-
-                    // Date Section
                     _buildSection(
                       title: "Date",
-                      child: GestureDetector(
+                      child: DatePickerField(
+                        selectedDate: selectedDate,
                         onTap: () => _selectDate(context),
-                        child: AbsorbPointer(
-                          child: TextField(
-                            decoration: InputDecoration(
-                              hintText: formatDate(selectedDate),
-                              filled: true,
-                              fillColor: Colors.white,
-                              border: OutlineInputBorder(
-                                borderRadius: BorderRadius.circular(16),
-                                borderSide: BorderSide.none,
-                              ),
-                              prefixIcon: const Icon(Icons.calendar_today,
-                                  color: Colors.teal),
-                              contentPadding: const EdgeInsets.symmetric(
-                                  horizontal: 16, vertical: 14),
-                            ),
-                          ),
-                        ),
                       ),
                     ),
                     const SizedBox(height: 20),
-
-                    // Category Section
                     _buildSection(
                       title: "Category",
-                      child: Wrap(
-                        spacing: 12,
-                        runSpacing: 12,
-                        children: categories.map((category) {
-                          final isSelected = selectedCategory == category;
-                          return ChoiceChip(
-                            label: Text(
-                              category,
-                              style: TextStyle(
-                                color: isSelected
-                                    ? Colors.white
-                                    : Colors.teal.shade800,
-                                fontWeight: FontWeight.w600,
-                              ),
-                            ),
-                            selected: isSelected,
-                            selectedColor: Colors.teal,
-                            backgroundColor: Colors.white,
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(16),
-                              side: BorderSide(
-                                  color: Colors.teal.shade200, width: 1),
-                            ),
-                            onSelected: (bool selected) {
-                              setState(() {
-                                selectedCategory = selected ? category : null;
-                              });
-                            },
-                          );
-                        }).toList(),
+                      child: CategorySelector(
+                        categories: categories,
+                        selectedCategory: selectedCategory,
+                        onSelected: (value) {
+                          setState(() => selectedCategory = value);
+                        },
                       ),
                     ),
                     const SizedBox(height: 20),
-
-                    // Time Section
                     _buildSection(
                       title: "Time",
                       child: Row(
                         children: [
-                          // Start Time
                           Expanded(
-                            child: GestureDetector(
+                            child: TimePickerField(
+                              labelText: "Start Time",
+                              selectedTime: startTime,
                               onTap: () => _selectTime(context, true),
-                              child: AbsorbPointer(
-                                child: TextField(
-                                  decoration: InputDecoration(
-                                    labelText: "Start Time", // Label inside the field
-                                    labelStyle: const TextStyle(
-                                      fontSize: 14,
-                                      fontWeight: FontWeight.bold,
-                                      color: Colors.teal,
-                                    ),
-                                    hintText: formatTimeOfDay(startTime),
-                                    filled: true,
-                                    fillColor: Colors.white,
-                                    border: OutlineInputBorder(
-                                      borderRadius: BorderRadius.circular(16),
-                                      borderSide: BorderSide.none,
-                                    ),
-                                    prefixIcon: const Icon(Icons.access_time, color: Colors.teal),
-                                    contentPadding: const EdgeInsets.symmetric(
-                                      horizontal: 16,
-                                      vertical: 14,
-                                    ),
-                                  ),
-                                ),
-                              ),
                             ),
                           ),
                           const SizedBox(width: 16),
-
-                          // End Time
                           Expanded(
-                            child: GestureDetector(
+                            child: TimePickerField(
+                              labelText: "End Time",
+                              selectedTime: endTime,
                               onTap: () => _selectTime(context, false),
-                              child: AbsorbPointer(
-                                child: TextField(
-                                  decoration: InputDecoration(
-                                    labelText: "End Time", // Label inside the field
-                                    labelStyle: const TextStyle(
-                                      fontSize: 14,
-                                      fontWeight: FontWeight.bold,
-                                      color: Colors.teal,
-                                    ),
-                                    hintText: formatTimeOfDay(endTime),
-                                    filled: true,
-                                    fillColor: Colors.white,
-                                    border: OutlineInputBorder(
-                                      borderRadius: BorderRadius.circular(16),
-                                      borderSide: BorderSide.none,
-                                    ),
-                                    prefixIcon: const Icon(Icons.access_time, color: Colors.teal),
-                                    contentPadding: const EdgeInsets.symmetric(
-                                      horizontal: 16,
-                                      vertical: 14,
-                                    ),
-                                  ),
-                                ),
-                              ),
                             ),
                           ),
                         ],
                       ),
                     ),
                     const SizedBox(height: 20),
-                    // Participants Section
                     _buildSection(
                       title: "Participants",
-                      child: Row(
-                        children: [
-                          GestureDetector(
-                            onTap: _openParticipantSelector,
-                            child: const CircleAvatar(
-                              radius: 24,
-                              backgroundColor: Colors.white,
-                              child: Icon(Icons.add, color: Colors.teal),
-                            ),
-                          ),
-                          const SizedBox(width: 12),
-                          ...selectedParticipants.map((participant) {
-                            return Stack(
-                              clipBehavior: Clip.none,
-                              children: [
-                                Padding(
-                                  padding: const EdgeInsets.only(right: 12.0),
-                                  child: CircleAvatar(
-                                    radius: 24,
-                                    backgroundImage:
-                                    AssetImage(participant["avatar"]!),
-                                  ),
-                                ),
-                                Positioned(
-                                  top: -6,
-                                  right: -6,
-                                  child: GestureDetector(
-                                    onTap: () {
-                                      setState(() {
-                                        selectedParticipants.remove(participant);
-                                      });
-                                    },
-                                    child: const CircleAvatar(
-                                      radius: 12,
-                                      backgroundColor: Colors.red,
-                                      child: Icon(
-                                        Icons.close,
-                                        color: Colors.white,
-                                        size: 14,
-                                      ),
-                                    ),
-                                  ),
-                                ),
-                              ],
-                            );
-                          }).toList(),
-                        ],
+                      child: ParticipantsSelector(
+                        participants: selectedParticipants,
+                        onAddParticipant: () => _openParticipantSelector(),
+                        onRemoveParticipant: (participant) {
+                          setState(() {
+                            selectedParticipants.remove(participant);
+                          });
+                        },
                       ),
                     ),
                     const SizedBox(height: 30),
-                    // Create Task Button
                     Center(
                       child: ElevatedButton(
                         onPressed: () {
                           print("Create Task Pressed");
-                          print("Selected Category: $selectedCategory");
-                          print("Date: ${formatDate(selectedDate)}");
-                          print("Start Time: ${formatTimeOfDay(startTime)}");
-                          print("End Time: ${formatTimeOfDay(endTime)}");
+                          print("Category: $selectedCategory");
+                          print("Date: ${DateFormat.yMMMd().format(selectedDate ?? DateTime.now())}");
+                          print("Start Time: $startTime");
+                          print("End Time: $endTime");
                           print("Participants: $selectedParticipants");
                         },
                         style: ElevatedButton.styleFrom(
@@ -371,16 +214,11 @@ class _CreateTaskViewState extends State<CreateTaskView> {
                           shape: RoundedRectangleBorder(
                             borderRadius: BorderRadius.circular(24),
                           ),
-                          elevation: 5,
                           backgroundColor: Colors.teal,
                         ),
                         child: const Text(
                           "Create Task",
-                          style: TextStyle(
-                            fontSize: 18,
-                            fontWeight: FontWeight.w600,
-                            color: Colors.white,
-                          ),
+                          style: TextStyle(fontSize: 18, color: Colors.white),
                         ),
                       ),
                     ),
@@ -402,7 +240,10 @@ class _CreateTaskViewState extends State<CreateTaskView> {
         Text(
           title,
           style: const TextStyle(
-              fontSize: 18, fontWeight: FontWeight.w600, color: Colors.teal),
+            fontSize: 18,
+            fontWeight: FontWeight.bold,
+            color: Colors.teal,
+          ),
         ),
         const SizedBox(height: 8),
         child,
