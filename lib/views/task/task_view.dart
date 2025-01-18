@@ -1,3 +1,4 @@
+import 'package:classmate/controllers/task/task_controller.dart';
 import 'package:classmate/views/task/create_task_view.dart';
 import 'package:flutter/material.dart';
 
@@ -8,6 +9,16 @@ class TaskView extends StatefulWidget {
 }
 
 class _TaskViewState extends State<TaskView> {
+  final TaskController taskController = TaskController();
+
+  @override
+  void initState() {
+    super.initState();
+    taskController.getTasks();
+  }
+
+
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(

@@ -1,4 +1,5 @@
 import 'package:classmate/controllers/task/task_controller.dart';
+import 'package:classmate/core/helper_function.dart';
 import 'package:classmate/models/task/task_model.dart';
 import 'package:classmate/utils/custom_app_bar.dart';
 import 'package:classmate/views/task/widgets/category_selector.dart';
@@ -218,22 +219,13 @@ class _CreateTaskViewState extends State<CreateTaskView> {
                     const SizedBox(height: 30),
                     Center(
                       child: ElevatedButton(
-                        onPressed: () {
-
-
-                          print("Create Task Pressed");
-                          print("Category: $selectedCategory");
-                          print("Date: ${DateFormat.yMMMd().format(selectedDate ?? DateTime.now())}");
-                          print("Start Time: $startTime");
-                          print("End Time: $endTime");
-                          print("Participants: $selectedParticipants");
-
-                          taskController.createTask(TaskModel(
+                        onPressed: () async {
+                          await taskController.createTask(TaskModel(
                             title: taskTitle!,
                             date: selectedDate,
-                            startTime: startTime?.format(context) ?? "",
-                            endTime: endTime?.format(context) ?? "",
-                            category: selectedCategory,
+                            startTime: startTime?.format(context).toLowerCase(),
+                            endTime: endTime?.format(context).toLowerCase(),
+                            category: selectedCategory?.toLowerCase(),
                             participants: selectedParticipants
                                 .map((participant) => participant["id"] ?? "")
                                 .toList(),
@@ -245,15 +237,19 @@ class _CreateTaskViewState extends State<CreateTaskView> {
                               builder: (_) => const Center(child: CircularProgressIndicator()),
                             );
                           }
-                          else if (taskController.stateNotifier.value == TaskState.success) {  
+                          if (taskController.stateNotifier.value == TaskState.success) {
+                            await HelperFunction.showNotification(
+                                "Task",
+                                "Your task has been created successfully!"
+                            );
                             Navigator.pop(context);
                           }
                           else {
-                              ScaffoldMessenger.of(context).showSnackBar(
-                              SnackBar(content: Text(taskController.errorMessage ?? 'Error fetching users')),
+                            await HelperFunction.showNotification(
+                                "Task",
+                                "Task creation failed"
                             );
-                          } 
-
+                          }
                         },
                         style: ElevatedButton.styleFrom(
                           padding: const EdgeInsets.symmetric(horizontal: 40, vertical: 16),

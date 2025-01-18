@@ -30,11 +30,11 @@ class TaskModel extends TaskEntity {
   Map<String, dynamic> toJson() {
     return {
       'title': title,
-      'date': date?.toIso8601String(),
-      'startTime': startTime,
-      'endTime': endTime,
-      'category': category,
-      'participants': participants,
+      'date': date?.toIso8601String().split('T')[0],
+      'start_time': startTime,
+      'end_time': endTime,
+      'category': category?.toLowerCase(),
+      'participants': participants ?? [],
     };
   }
 }

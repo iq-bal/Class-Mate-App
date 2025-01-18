@@ -28,7 +28,7 @@ class TaskController {
     stateNotifier.value = TaskState.loading;
     errorMessage = '';
     try {
-      // tasks = await _taskService.getTasks();
+      tasks = await _taskService.getTasks();
       stateNotifier.value = TaskState.success;
     } catch (e) {
       errorMessage = 'Failed to get tasks: $e';
@@ -37,17 +37,14 @@ class TaskController {
   }
 
   Future<void> createTask(TaskModel task) async {
-
     stateNotifier.value = TaskState.loading;
     errorMessage = '';
     try {
-      print("tc1");
+      print("Creating task with payload: ${task.toJson()}");
       await _taskService.createTask(task);
-      print("tc2");
       stateNotifier.value = TaskState.success;
-      print("tc3");
     } catch (e) {
-      print("tc4");
+      print("Error creating task: $e");
       errorMessage = 'Failed to create task: $e';
       stateNotifier.value = TaskState.error;
     }
