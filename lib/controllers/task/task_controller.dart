@@ -1,4 +1,5 @@
-import 'package:classmate/services/task/task_service.dart';
+import 'package:classmate/entity/task_entity.dart';
+import 'package:classmate/services/task/task_services.dart';
 import 'package:flutter/material.dart';
 
 enum TaskState { idle, loading, success, error }
@@ -12,7 +13,7 @@ class TaskController {
     stateNotifier.value = TaskState.loading;
     errorMessage = '';
     try {
-      tasks = await _taskService.getTasks();
+      // tasks = await _taskService.getTasks();
       stateNotifier.value = TaskState.success;
     } catch (e) {
       errorMessage = 'Failed to get tasks: $e';
@@ -31,4 +32,6 @@ class TaskController {
       stateNotifier.value = TaskState.error;
     }
   }
+
+
 }

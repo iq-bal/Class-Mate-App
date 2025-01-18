@@ -51,6 +51,7 @@ class _CreateTaskViewState extends State<CreateTaskView> {
     }
   }
 
+
   Future<void> _selectTime(BuildContext context, bool isStartTime) async {
     final TimeOfDay? picked = await showTimePicker(
       context: context,
@@ -70,6 +71,12 @@ class _CreateTaskViewState extends State<CreateTaskView> {
   }
 
 
+  String formatTimeOfDay(TimeOfDay? time) {
+    if (time == null) return 'Select Time';
+    final now = DateTime.now();
+    final dt = DateTime(now.year, now.month, now.day, time.hour, time.minute);
+    return DateFormat.jm().format(dt);
+  }
 
   void _openParticipantSelector() {
     TextEditingController searchController = TextEditingController();
@@ -194,8 +201,6 @@ class _CreateTaskViewState extends State<CreateTaskView> {
   }
 
 
-
-
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -233,13 +238,16 @@ class _CreateTaskViewState extends State<CreateTaskView> {
                       ),
                     ),
                     const SizedBox(height: 20),
+
                     _buildSection(
                       title: "Time",
                       child: Row(
                         children: [
                           Expanded(
                             child: TimePickerField(
-                              labelText: "Start Time",
+                              labelText: startTime != null
+                                  ? "Start: ${formatTimeOfDay(startTime)}"
+                                  : "Start Time",
                               selectedTime: startTime,
                               onTap: () => _selectTime(context, true),
                             ),
@@ -247,7 +255,9 @@ class _CreateTaskViewState extends State<CreateTaskView> {
                           const SizedBox(width: 16),
                           Expanded(
                             child: TimePickerField(
-                              labelText: "End Time",
+                              labelText: endTime != null
+                                  ? "End: ${formatTimeOfDay(endTime)}"
+                                  : "End Time",
                               selectedTime: endTime,
                               onTap: () => _selectTime(context, false),
                             ),
