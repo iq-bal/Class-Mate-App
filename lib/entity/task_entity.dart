@@ -1,3 +1,20 @@
+class TaskParticipant {
+  final String? id;
+  final String? profilePicture;
+
+  TaskParticipant({
+    this.id,
+    this.profilePicture,
+  });
+
+  factory TaskParticipant.fromJson(Map<String, dynamic> json) {
+    return TaskParticipant(
+      id: json['id'] as String?,
+      profilePicture: json['profile_picture'] as String?,
+    );
+  }
+}
+
 class TaskEntity {
   final String? id;
   final String? title;
@@ -5,7 +22,7 @@ class TaskEntity {
   final String? startTime;
   final String? endTime;
   final String? category;
-  final List<String>? participants;
+  final List<TaskParticipant>? participants;
 
   TaskEntity({
     this.id,
@@ -27,7 +44,7 @@ class TaskEntity {
       endTime: json['endTime'] as String?,
       category: json['category'] as String?,
       participants: (json['participants'] as List<dynamic>?)
-          ?.map((participant) => participant as String)
+          ?.map((participant) => TaskParticipant.fromJson(participant as Map<String, dynamic>))
           .toList(),
     );
   }

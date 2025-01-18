@@ -1,5 +1,6 @@
 import 'package:classmate/controllers/task/task_controller.dart';
 import 'package:classmate/core/helper_function.dart';
+import 'package:classmate/entity/task_entity.dart';
 import 'package:classmate/models/task/task_model.dart';
 import 'package:classmate/utils/custom_app_bar.dart';
 import 'package:classmate/views/task/widgets/category_selector.dart';
@@ -227,7 +228,10 @@ class _CreateTaskViewState extends State<CreateTaskView> {
                             endTime: endTime?.format(context).toLowerCase(),
                             category: selectedCategory?.toLowerCase(),
                             participants: selectedParticipants
-                                .map((participant) => participant["id"] ?? "")
+                                .map((participant) => TaskParticipant(
+                                      id: participant["id"],
+                                      profilePicture: participant["avatar"],
+                                    ))
                                 .toList(),
                           )); 
                           

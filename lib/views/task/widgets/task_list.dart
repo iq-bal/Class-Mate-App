@@ -1,4 +1,5 @@
 import 'package:classmate/controllers/task/task_controller.dart';
+import 'package:classmate/views/task/widgets/subtle_grid_background.dart';
 import 'package:classmate/views/task/widgets/task_card.dart';
 import 'package:flutter/material.dart';
 
@@ -9,25 +10,18 @@ class TaskList extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Stack(
-      children: [
-        Positioned.fill(
-          child: Image.asset(
-            'assets/images/background.jpg',
-            fit: BoxFit.cover,
-          ),
-        ),
-        ListView.builder(
-          padding: const EdgeInsets.only(left: 16.0, right: 16.0, top: 16.0),
-          itemCount: 4,
-          itemBuilder: (context, index) {
-            return Padding(
-              padding: const EdgeInsets.only(bottom: 16.0),
-              child: TaskCard(index: index),
-            );
-          },
-        ),
-      ],
+    return SubtleGridBackground(
+      child: ListView.builder(
+        padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
+        itemCount: taskController.tasks?.length ?? 0,
+        itemBuilder: (context, index) {
+          final task = taskController.tasks![index];
+          return TaskCard(
+            task: task,
+            index: index,
+          );
+        },
+      ),
     );
   }
 }

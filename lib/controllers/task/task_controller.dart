@@ -40,7 +40,6 @@ class TaskController {
     stateNotifier.value = TaskState.loading;
     errorMessage = '';
     try {
-      print("Creating task with payload: ${task.toJson()}");
       await _taskService.createTask(task);
       stateNotifier.value = TaskState.success;
     } catch (e) {

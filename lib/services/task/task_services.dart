@@ -73,38 +73,44 @@ class TaskService {
     try {
       final dio = dioClient.getDio(AppConfig.graphqlServer);
       const String query = r'''
-      query getTasks{
-        tasks {
+      query getTasks {
+        tasksByUser {
           id
           title
           date
           start_time
           end_time
           category
-          participants{
+          participants {
             id
-            name
             profile_picture
           }
         }
       }
       ''';
+      
       final response = await dio.post(
         '/',
         data: {
           'query': query,
         },
       );
-      
+
       if (response.statusCode == 200) {
         if (response.data['errors'] != null) {
           throw Exception('GraphQL errors: ${response.data['errors']}');
         }
-        return (response.data['data']['tasks'] as List).map((task) => TaskModel.fromJson(task)).toList();
+        
+        // Debug print to see the response structure
+        print('Response data: ${response.data}');
+        
+        final tasks = response.data['data']['tasksByUser'] as List;  // Changed from 'tasks' to 'tasksByUser'
+        return tasks.map((task) => TaskModel.fromJson(task)).toList();
       } else {
         throw Exception('Failed to get tasks');
       }
     } catch (e) {
+      print('Error in getTasks: $e'); // Debug print
       throw Exception('Failed to get tasks: $e');
     }
   } 
