@@ -1,6 +1,7 @@
 import 'package:classmate/utils/custom_app_bar.dart';
 import 'package:classmate/views/task/widgets/category_selector.dart';
 import 'package:classmate/views/task/widgets/date_picker_field.dart';
+import 'package:classmate/views/task/widgets/participant_selector_modal.dart';
 import 'package:classmate/views/task/widgets/participants_selector.dart';
 import 'package:classmate/views/task/widgets/time_picker_field.dart';
 import 'package:classmate/views/task/widgets/title_input.dart';
@@ -78,128 +79,32 @@ class _CreateTaskViewState extends State<CreateTaskView> {
     return DateFormat.jm().format(dt);
   }
 
+
   void _openParticipantSelector() {
-    TextEditingController searchController = TextEditingController();
-    List<Map<String, String>> filteredUsers = List.from(allUsers);
-
-    showDialog(
+    showModalBottomSheet(
       context: context,
+      isScrollControlled: true,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+      ),
       builder: (context) {
-        return StatefulBuilder(
-          builder: (context, setState) {
-            void _filterUsers(String query) {
-              setState(() {
-                if (query.isEmpty) {
-                  filteredUsers = List.from(allUsers);
-                } else {
-                  filteredUsers = allUsers
-                      .where((user) =>
-                      user["name"]!.toLowerCase().contains(query.toLowerCase()))
-                      .toList();
-                }
-              });
-            }
-
-            return Scaffold(
-              backgroundColor: Colors.white,
-              body: SafeArea(
-                child: Padding(
-                  padding: const EdgeInsets.all(16.0),
-                  child: Column(
-                    children: [
-                      // Header with Close Button
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                        children: [
-                          const Text(
-                            "Select Participants",
-                            style: TextStyle(
-                              fontSize: 18,
-                              fontWeight: FontWeight.bold,
-                              color: Colors.teal,
-                            ),
-                          ),
-                          IconButton(
-                            onPressed: () => Navigator.pop(context),
-                            icon: const Icon(Icons.check, color: Colors.teal),
-                          ),
-                        ],
-                      ),
-                      const Divider(),
-
-                      // Search Field
-                      TextField(
-                        controller: searchController,
-                        onChanged: _filterUsers,
-                        decoration: InputDecoration(
-                          prefixIcon: const Icon(Icons.search, color: Colors.teal),
-                          hintText: "Search participants",
-                          border: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(16),
-                            borderSide: BorderSide.none,
-                          ),
-                          filled: true,
-                          fillColor: Colors.grey.shade200,
-                          contentPadding: const EdgeInsets.symmetric(
-                            horizontal: 16,
-                            vertical: 12,
-                          ),
-                        ),
-                      ),
-                      const SizedBox(height: 16),
-
-                      // Participant List
-                      Expanded(
-                        child: filteredUsers.isNotEmpty
-                            ? ListView.builder(
-                          itemCount: filteredUsers.length,
-                          itemBuilder: (context, index) {
-                            final user = filteredUsers[index];
-                            final isSelected = selectedParticipants.contains(user);
-
-                            return ListTile(
-                              leading: CircleAvatar(
-                                backgroundImage: AssetImage(user["avatar"]!),
-                              ),
-                              title: Text(user["name"]!),
-                              trailing: isSelected
-                                  ? const Icon(Icons.check, color: Colors.teal)
-                                  : null,
-                              onTap: () {
-                                setState(() {
-                                  if (isSelected) {
-                                    selectedParticipants.remove(user);
-                                  } else {
-                                    selectedParticipants.add(user);
-                                  }
-                                });
-                                // Reflect the changes immediately in the parent state
-                                this.setState(() {});
-                              },
-                            );
-                          },
-                        )
-                            : const Center(
-                          child: Text(
-                            "No participants found",
-                            style: TextStyle(
-                              fontSize: 16,
-                              color: Colors.grey,
-                            ),
-                          ),
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-              ),
-            );
+        return ParticipantSelectorModal(
+          allUsers: allUsers,
+          selectedParticipants: selectedParticipants,
+          onParticipantSelected: (user) {
+            setState(() {
+              selectedParticipants.add(user);
+            });
+          },
+          onParticipantRemoved: (user) {
+            setState(() {
+              selectedParticipants.remove(user);
+            });
           },
         );
       },
     );
   }
-
 
   @override
   Widget build(BuildContext context) {
