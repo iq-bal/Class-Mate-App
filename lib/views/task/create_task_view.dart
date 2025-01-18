@@ -1,3 +1,5 @@
+import 'package:classmate/controllers/task/task_controller.dart';
+import 'package:classmate/models/task/task_model.dart';
 import 'package:classmate/utils/custom_app_bar.dart';
 import 'package:classmate/views/task/widgets/category_selector.dart';
 import 'package:classmate/views/task/widgets/date_picker_field.dart';
@@ -21,6 +23,11 @@ class _CreateTaskViewState extends State<CreateTaskView> {
   TimeOfDay? endTime;
   String? selectedCategory;
 
+  String? taskTitle;
+
+
+  final TaskController taskController = TaskController();
+
   final List<String> categories = [
     "Project",
     "Meeting",
@@ -29,13 +36,7 @@ class _CreateTaskViewState extends State<CreateTaskView> {
     "Class Test"
   ];
 
-  final List<Map<String, String>> allUsers = [
-    {"name": "Alice", "avatar": "assets/images/avatar.png"},
-    {"name": "Bob", "avatar": "assets/images/avatar.png"},
-    {"name": "Charlie", "avatar": "assets/images/avatar.png"},
-    {"name": "Diana", "avatar": "assets/images/avatar.png"},
-  ];
-
+  late List<Map<String, String>> fetchedUsers = [];
   final List<Map<String, String>> selectedParticipants = [];
 
   Future<void> _selectDate(BuildContext context) async {
@@ -51,7 +52,6 @@ class _CreateTaskViewState extends State<CreateTaskView> {
       });
     }
   }
-
 
   Future<void> _selectTime(BuildContext context, bool isStartTime) async {
     final TimeOfDay? picked = await showTimePicker(
@@ -71,7 +71,6 @@ class _CreateTaskViewState extends State<CreateTaskView> {
     }
   }
 
-
   String formatTimeOfDay(TimeOfDay? time) {
     if (time == null) return 'Select Time';
     final now = DateTime.now();
@@ -79,8 +78,33 @@ class _CreateTaskViewState extends State<CreateTaskView> {
     return DateFormat.jm().format(dt);
   }
 
+  void _openParticipantSelector() async {
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (_) => const Center(child: CircularProgressIndicator()),
+    );
 
-  void _openParticipantSelector() {
+    await taskController.getUsers();
+
+    Navigator.pop(context);
+
+    if (taskController.stateNotifier.value == TaskState.error) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(taskController.errorMessage ?? 'Error fetching users')),
+      );
+      return;
+    }
+
+    fetchedUsers = taskController.users
+        ?.map((user) => {
+      "id": user.id ?? "",
+      "name": user.name ?? "Unknown",
+      "avatar": user.profilePicture ?? "assets/images/avatar.png",
+    })
+        .toList() ??
+        [];
+
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
@@ -89,7 +113,7 @@ class _CreateTaskViewState extends State<CreateTaskView> {
       ),
       builder: (context) {
         return ParticipantSelectorModal(
-          allUsers: allUsers,
+          allUsers: fetchedUsers,
           selectedParticipants: selectedParticipants,
           onParticipantSelected: (user) {
             setState(() {
@@ -122,7 +146,16 @@ class _CreateTaskViewState extends State<CreateTaskView> {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     const SizedBox(height: 20),
-                    _buildSection(title: "Title", child: const TitleInput()),
+                    _buildSection(
+                      title: "Title",
+                      child: TitleInput(
+                        onChanged: (value) {
+                          setState(() {
+                            taskTitle = value;
+                          });
+                        },
+                      ),
+                    ),
                     const SizedBox(height: 20),
                     _buildSection(
                       title: "Date",
@@ -143,7 +176,6 @@ class _CreateTaskViewState extends State<CreateTaskView> {
                       ),
                     ),
                     const SizedBox(height: 20),
-
                     _buildSection(
                       title: "Time",
                       child: Row(
@@ -187,16 +219,44 @@ class _CreateTaskViewState extends State<CreateTaskView> {
                     Center(
                       child: ElevatedButton(
                         onPressed: () {
+
+
                           print("Create Task Pressed");
                           print("Category: $selectedCategory");
                           print("Date: ${DateFormat.yMMMd().format(selectedDate ?? DateTime.now())}");
                           print("Start Time: $startTime");
                           print("End Time: $endTime");
                           print("Participants: $selectedParticipants");
+
+                          taskController.createTask(TaskModel(
+                            title: taskTitle!,
+                            date: selectedDate,
+                            startTime: startTime?.format(context) ?? "",
+                            endTime: endTime?.format(context) ?? "",
+                            category: selectedCategory,
+                            participants: selectedParticipants
+                                .map((participant) => participant["id"] ?? "")
+                                .toList(),
+                          )); 
+                          
+                          if(taskController.stateNotifier.value == TaskState.loading){
+                            showDialog(
+                              context: context,
+                              builder: (_) => const Center(child: CircularProgressIndicator()),
+                            );
+                          }
+                          else if (taskController.stateNotifier.value == TaskState.success) {  
+                            Navigator.pop(context);
+                          }
+                          else {
+                              ScaffoldMessenger.of(context).showSnackBar(
+                              SnackBar(content: Text(taskController.errorMessage ?? 'Error fetching users')),
+                            );
+                          } 
+
                         },
                         style: ElevatedButton.styleFrom(
-                          padding: const EdgeInsets.symmetric(
-                              horizontal: 40, vertical: 16),
+                          padding: const EdgeInsets.symmetric(horizontal: 40, vertical: 16),
                           shape: RoundedRectangleBorder(
                             borderRadius: BorderRadius.circular(24),
                           ),

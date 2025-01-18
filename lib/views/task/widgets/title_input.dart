@@ -1,11 +1,14 @@
 import 'package:flutter/material.dart';
 
 class TitleInput extends StatelessWidget {
-  const TitleInput({Key? key}) : super(key: key);
+  final ValueChanged<String> onChanged;
+
+  const TitleInput({super.key, required this.onChanged});
 
   @override
   Widget build(BuildContext context) {
     return TextField(
+      onChanged: onChanged,
       decoration: InputDecoration(
         hintText: "Enter task title",
         filled: true,

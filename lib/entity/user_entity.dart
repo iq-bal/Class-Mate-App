@@ -4,6 +4,7 @@ class UserEntity {
   final String? name; // Optional user's name
   final String? email; // Optional user's email address
   final String? role; // Optional user's role (e.g., admin, user, etc.)
+  final String? profilePicture; // Optional user's profile picture
 
   // Constructor with optional named parameters
   UserEntity({
@@ -12,6 +13,7 @@ class UserEntity {
     this.name,
     this.email,
     this.role,
+    this.profilePicture,
   });
 
   // Factory method to create a UserEntity from a JSON object
@@ -22,6 +24,7 @@ class UserEntity {
       name: json['name'] as String?,
       email: json['email'] as String?,
       role: json['role'] as String?,
+      profilePicture: json['profilePicture'] as String?,
     );
   }
 }

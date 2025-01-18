@@ -1,7 +1,6 @@
 import 'package:classmate/config/app_config.dart';
 import 'package:classmate/core/dio_client.dart';
 import 'package:classmate/models/explore/explore_course_model.dart';
-import 'package:dio/dio.dart';
 
 class ExploreCourseService {
   final dioClient = DioClient();

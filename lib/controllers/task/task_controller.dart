@@ -1,4 +1,5 @@
-import 'package:classmate/entity/task_entity.dart';
+import 'package:classmate/models/task/task_model.dart';
+import 'package:classmate/models/task/user_model.dart';
 import 'package:classmate/services/task/task_services.dart';
 import 'package:flutter/material.dart';
 
@@ -7,7 +8,21 @@ class TaskController {
   final TaskService _taskService = TaskService();
   final ValueNotifier<TaskState> stateNotifier = ValueNotifier<TaskState>(TaskState.idle);
   String? errorMessage;
-  List<TaskEntity>? tasks;
+  List<TaskModel>? tasks;
+  List<UserModel>? users;
+
+
+  Future<void> getUsers() async {
+    stateNotifier.value = TaskState.loading;
+    errorMessage = '';
+    try {
+      users = await _taskService.getUsers();
+      stateNotifier.value = TaskState.success;
+    } catch (e) {
+      errorMessage = 'Failed to get users: $e';
+      stateNotifier.value = TaskState.error;
+    }
+  } 
 
   Future<void> getTasks() async {
     stateNotifier.value = TaskState.loading;
@@ -21,13 +36,18 @@ class TaskController {
     }
   }
 
-  Future<void> createTask(TaskEntity task) async {
+  Future<void> createTask(TaskModel task) async {
+
     stateNotifier.value = TaskState.loading;
     errorMessage = '';
     try {
+      print("tc1");
       await _taskService.createTask(task);
+      print("tc2");
       stateNotifier.value = TaskState.success;
+      print("tc3");
     } catch (e) {
+      print("tc4");
       errorMessage = 'Failed to create task: $e';
       stateNotifier.value = TaskState.error;
     }
