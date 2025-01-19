@@ -14,6 +14,10 @@ class TaskView extends StatefulWidget {
 class _TaskViewState extends State<TaskView> {
   final TaskController taskController = TaskController();
 
+
+  DateTime selectedDate = DateTime.now();
+
+
   @override
   void initState() {
     super.initState();
@@ -25,6 +29,14 @@ class _TaskViewState extends State<TaskView> {
     setState(() {}); // Trigger a rebuild to reflect the loaded tasks
   }
 
+
+  void _onDateSelected(DateTime date) {
+    setState(() {
+      selectedDate = date;
+    });
+  }
+
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -32,7 +44,10 @@ class _TaskViewState extends State<TaskView> {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           const TaskHeader(), // Header with date and task summary
-          const DateScroll(), // Horizontal scroll for dates
+          DateScroll(
+            selectedDate: selectedDate,
+            onDateSelected: _onDateSelected,
+          ),
           Expanded(
             child: ValueListenableBuilder(
               valueListenable: taskController.stateNotifier,
