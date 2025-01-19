@@ -113,7 +113,5 @@ class TaskService {
       print('Error in getTasks: $e'); // Debug print
       throw Exception('Failed to get tasks: $e');
     }
-  } 
-
-
+  }
 }
