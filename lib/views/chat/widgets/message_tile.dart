@@ -1,4 +1,3 @@
-import 'package:classmate/core/token_storage.dart';
 import 'package:classmate/views/chat/chat_screen_view.dart';
 import 'package:flutter/material.dart';
 
@@ -16,38 +15,18 @@ class MessageTile extends StatelessWidget {
     this.isPinned = false,
   });
 
-
   @override
   Widget build(BuildContext context) {
-
-    final TokenStorage t = TokenStorage();
-
-
     return GestureDetector(
       onTap: () {
-        // Navigate to your existing ChatScreen
+        // Navigate to ChatScreen with hardcoded data
         Navigator.push(
           context,
           MaterialPageRoute(
-            builder: (context) => FutureBuilder<String?>(
-              future: t.retrieveAccessToken(), // Fetch the token
-              builder: (context, snapshot) {
-                if (snapshot.connectionState == ConnectionState.waiting) {
-                  // Show loading indicator while waiting for the token
-                  return const Center(child: CircularProgressIndicator());
-                } else if (snapshot.hasError || !snapshot.hasData || snapshot.data == null) {
-                  // Handle errors or null token
-                  return const Center(child: Text('Failed to retrieve token'));
-                } else {
-                  // Pass the token to ChatScreen
-                  return ChatScreen(
-                    recipientId: "aa59d0b7-5ec1-4095-b8d2-3015a75a4c70",
-                    token: snapshot.data!,
-                  );
-                }
-              },
+            builder: (context) => const ChatScreen(
+              recipientId: "hardcoded-recipient-id",
+              token: "hardcoded-token",
             ),
-            // builder: (context) => const ChatScreen(recipientId: "675936fc1222fe79f3386690",token: t.retrieveAccessToken(),), // Pass the data
           ),
         );
       },
@@ -107,6 +86,12 @@ class MessageTile extends StatelessWidget {
                     color: Colors.grey,
                   ),
                 ),
+                if (isPinned)
+                  const Icon(
+                    Icons.push_pin,
+                    size: 16,
+                    color: Colors.orange,
+                  ),
                 const Icon(
                   Icons.check_circle,
                   size: 16,
