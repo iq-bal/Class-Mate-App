@@ -1,20 +1,15 @@
 import 'package:classmate/views/authentication/landing.dart';
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 import 'package:classmate/controllers/authentication/auth_controller.dart';
 
-class ProfileScreen extends StatefulWidget {
+class ProfileScreen extends StatelessWidget {
   const ProfileScreen({super.key});
 
-  @override
-  State<ProfileScreen> createState() => _ProfileScreenState();
-}
-
-class _ProfileScreenState extends State<ProfileScreen> {
-  final AuthController authController = AuthController(); // Initialize AuthController
-
-  void _handleLogout() async {
+  void _handleLogout(BuildContext context, AuthController authController) async {
     try {
       await authController.logout(context);
+
       if (authController.stateNotifier.value == AuthState.success) {
         Navigator.pushReplacement(
           context,
@@ -40,6 +35,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final authController = Provider.of<AuthController>(context, listen: false);
+
     return Scaffold(
       appBar: AppBar(
         backgroundColor: Colors.blueAccent,
@@ -52,7 +49,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
       ),
       body: Center(
         child: ElevatedButton.icon(
-          onPressed: _handleLogout,
+          onPressed: () => _handleLogout(context, authController),
           icon: const Icon(Icons.logout, color: Colors.white),
           label: const Text(
             "Logout",

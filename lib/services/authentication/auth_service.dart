@@ -13,6 +13,7 @@ import '../../providers/auth_provider.dart';
 class AuthService {
   late Dio _dio;
   final TokenStorage _tokenStorage = TokenStorage();
+
   AuthService() {
     _dio = Dio(BaseOptions(
       baseUrl: AppConfig.baseUrl,

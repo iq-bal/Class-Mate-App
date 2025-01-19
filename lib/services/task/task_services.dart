@@ -114,4 +114,49 @@ class TaskService {
       throw Exception('Failed to get tasks: $e');
     }
   }
+
+
+  Future<void> respondToInvitation(String taskId, String response) async {
+    try {
+      final dio = dioClient.getDio(AppConfig.graphqlServer);
+      const String mutation = r'''
+        mutation RespondToTaskInvitation($taskId: ID!, $response: String!) {
+          respondToTaskInvitation(taskId: $taskId, response: $response) {
+            id
+            title
+            participants {
+              id
+              status
+            }
+          }
+        }
+      ''';
+
+      final responseResult = await dio.post(
+        '/',
+        data: {
+          'query': mutation,
+          'variables': {
+            'taskId': taskId,
+            'response': response,
+          },
+        },
+      );
+
+      if (responseResult.statusCode == 200) {
+        if (responseResult.data['errors'] != null) {
+          throw Exception('GraphQL errors: ${responseResult.data['errors']}');
+        }
+        // Successfully responded to the task invitation
+        print('Response data: ${responseResult.data}');
+      } else {
+        throw Exception(
+            'Failed to respond to task invitation: ${responseResult.statusCode}');
+      }
+    } catch (e) {
+      print('Error responding to task invitation: $e');
+      rethrow;
+    }
+  }
+
 }

@@ -91,6 +91,8 @@ class _CreateTaskViewState extends State<CreateTaskView> {
 
     Navigator.pop(context);
 
+    await Future.delayed(const Duration(milliseconds: 100)); // Add delay
+
     if (taskController.stateNotifier.value == TaskState.error) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text(taskController.errorMessage ?? 'Error fetching users')),
