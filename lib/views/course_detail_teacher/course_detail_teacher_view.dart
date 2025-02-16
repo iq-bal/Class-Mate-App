@@ -125,13 +125,11 @@ class _CourseDetailScreenState extends State<CourseDetailScreen> {
                             title: assignment.title.toString(),
                             description:
                             assignment.description.toString(),
-                            dueDate:
-                            'Due ${HelperFunction.formatTimestamp(assignment.deadline.toString()).toString()}',
+                            dueDate: HelperFunction.formatTimestamp(assignment.deadline.toString()).toString(),
                             iconText: HelperFunction
                                 .getFirstTwoLettersUppercase(
                                 assignment.title.toString()),
                             totalItems: assignment.submissions.length,
-
                           ))
                               .toList(),
                           onCreateAssignment: () =>
