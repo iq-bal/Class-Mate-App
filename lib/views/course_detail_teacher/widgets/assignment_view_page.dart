@@ -1,14 +1,16 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/cupertino.dart';
-import 'package:pdfx/pdfx.dart';
-import 'package:http/http.dart' as http;
+import 'pdf_viewer_page.dart';
+import 'evaluation_page.dart';
 
 class Student {
+  final String id;
   final String dpUrl;
   final String name;
   final String roll;
   final String submissionUrl;
   Student({
+    required this.id,
     required this.dpUrl,
     required this.name,
     required this.roll,
@@ -18,7 +20,7 @@ class Student {
 
 class AssignmentViewPage extends StatelessWidget {
   final String assignmentId;
-  AssignmentViewPage({super.key, required this.assignmentId});
+  AssignmentViewPage({Key? key, required this.assignmentId}) : super(key: key);
 
   // Hardcoded assignment details (simulate fetching based on assignmentId)
   final String assignmentTitle = "Modern UI Assignment";
@@ -30,6 +32,7 @@ class AssignmentViewPage extends StatelessWidget {
   // Hardcoded student submissions.
   final List<Student> submittedStudents = [
     Student(
+      id: "S1",
       dpUrl: 'https://via.placeholder.com/150',
       name: 'John Doe',
       roll: '2021001',
@@ -37,6 +40,7 @@ class AssignmentViewPage extends StatelessWidget {
       'https://samples.jbpub.com/9781449649005/22183_ch01_pass3.pdf',
     ),
     Student(
+      id: "S2",
       dpUrl: 'https://via.placeholder.com/150',
       name: 'Jane Smith',
       roll: '2021002',
@@ -44,6 +48,7 @@ class AssignmentViewPage extends StatelessWidget {
       'https://www3.nd.edu/~dgalvin1/10120/10120_S17/Topic04_6p4_Galvin_2017_short.pdf',
     ),
     Student(
+      id: "S3",
       dpUrl: 'https://via.placeholder.com/150',
       name: 'Alice Johnson',
       roll: '2021003',
@@ -52,11 +57,24 @@ class AssignmentViewPage extends StatelessWidget {
     ),
   ];
 
-  // Navigate to our in‑app PDF viewer.
-  void openSubmittedWork(String url, BuildContext context) {
+  // Navigates to the in‑app PDF viewer.
+  void openPDFViewer(String url, BuildContext context) {
     Navigator.push(
       context,
       MaterialPageRoute(builder: (context) => PDFViewerPage(url: url)),
+    );
+  }
+
+  // Navigates to the Evaluation Page, passing assignmentId and student roll.
+  void openEvaluationPage(String studentId, BuildContext context) {
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => EvaluationPage(
+          assignmentId: assignmentId,
+          studentId: studentId,
+        ),
+      ),
     );
   }
 
@@ -68,7 +86,8 @@ class AssignmentViewPage extends StatelessWidget {
         backgroundColor: Colors.white,
         elevation: 1,
         leading: IconButton(
-          icon: const Icon(CupertinoIcons.back, color: Colors.black87, size: 28),
+          icon:
+          const Icon(CupertinoIcons.back, color: Colors.black87, size: 28),
           onPressed: () => Navigator.pop(context),
         ),
         title: const Text(
@@ -110,9 +129,9 @@ class AssignmentViewPage extends StatelessWidget {
                 children: [
                   // Assignment title with icon
                   Row(
-                    crossAxisAlignment: CrossAxisAlignment.center,
                     children: [
-                      const Icon(Icons.assignment, color: Colors.indigo, size: 28),
+                      const Icon(Icons.assignment,
+                          color: Colors.indigo, size: 28),
                       const SizedBox(width: 8),
                       Expanded(
                         child: Text(
@@ -131,41 +150,41 @@ class AssignmentViewPage extends StatelessWidget {
                   Text(
                     assignmentDescription,
                     style: TextStyle(
-                      fontSize: 16,
-                      color: Colors.grey[800],
-                      height: 1.4,
-                    ),
+                        fontSize: 16,
+                        color: Colors.grey[800],
+                        height: 1.4),
                   ),
                   const SizedBox(height: 16),
                   // Due date and submission count row
                   Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    mainAxisAlignment:
+                    MainAxisAlignment.spaceBetween,
                     children: [
                       Row(
                         children: [
-                          const Icon(Icons.calendar_today, color: Colors.indigo, size: 20),
+                          const Icon(Icons.calendar_today,
+                              color: Colors.indigo, size: 20),
                           const SizedBox(width: 4),
                           Text(
                             "Due: $dueDate",
                             style: const TextStyle(
-                              fontSize: 16,
-                              fontWeight: FontWeight.w600,
-                              color: Colors.indigo,
-                            ),
+                                fontSize: 16,
+                                fontWeight: FontWeight.w600,
+                                color: Colors.indigo),
                           ),
                         ],
                       ),
                       Row(
                         children: [
-                          const Icon(Icons.people, color: Colors.indigo, size: 20),
+                          const Icon(Icons.people,
+                              color: Colors.indigo, size: 20),
                           const SizedBox(width: 4),
                           Text(
                             "Submissions: $totalSubmissions",
                             style: const TextStyle(
-                              fontSize: 16,
-                              fontWeight: FontWeight.w600,
-                              color: Colors.indigo,
-                            ),
+                                fontSize: 16,
+                                fontWeight: FontWeight.w600,
+                                color: Colors.indigo),
                           ),
                         ],
                       ),
@@ -178,10 +197,9 @@ class AssignmentViewPage extends StatelessWidget {
             const Text(
               "Submitted Students",
               style: TextStyle(
-                fontSize: 20,
-                fontWeight: FontWeight.bold,
-                color: Colors.black87,
-              ),
+                  fontSize: 20,
+                  fontWeight: FontWeight.bold,
+                  color: Colors.black87),
             ),
             const SizedBox(height: 16),
             // Student Submission List
@@ -189,49 +207,64 @@ class AssignmentViewPage extends StatelessWidget {
               physics: const NeverScrollableScrollPhysics(),
               shrinkWrap: true,
               itemCount: submittedStudents.length,
-              separatorBuilder: (context, index) => const SizedBox(height: 16),
+              separatorBuilder: (context, index) =>
+              const SizedBox(height: 16),
               itemBuilder: (context, index) {
                 final student = submittedStudents[index];
-                return Container(
-                  decoration: BoxDecoration(
-                    color: Colors.white,
-                    borderRadius: BorderRadius.circular(16),
-                    boxShadow: [
-                      BoxShadow(
-                        color: Colors.black.withOpacity(0.05),
-                        blurRadius: 8,
-                        offset: const Offset(0, 3),
-                      ),
-                    ],
-                  ),
-                  child: ListTile(
-                    contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-                    leading: CircleAvatar(
-                      radius: 28,
-                      backgroundImage: NetworkImage(student.dpUrl),
-                    ),
-                    title: Text(
-                      student.name,
-                      style: const TextStyle(
-                        fontSize: 18,
-                        fontWeight: FontWeight.bold,
-                        color: Colors.black87,
-                      ),
-                    ),
-                    subtitle: Text(
-                      student.roll,
-                      style: TextStyle(fontSize: 14, color: Colors.grey[600]),
-                    ),
-                    trailing: ElevatedButton.icon(
-                      onPressed: () => openSubmittedWork(student.submissionUrl, context),
-                      icon: const Icon(Icons.picture_as_pdf, color: Colors.white, size: 20),
-                      label: const Text("Open", style: TextStyle(color: Colors.white)),
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: Colors.indigo,
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(12),
+                return InkWell(
+                  onTap: () => openEvaluationPage(student.roll, context),
+                  child: Container(
+                    decoration: BoxDecoration(
+                      color: Colors.white,
+                      borderRadius:
+                      BorderRadius.circular(16),
+                      boxShadow: [
+                        BoxShadow(
+                          color: Colors.black.withOpacity(0.05),
+                          blurRadius: 8,
+                          offset: const Offset(0, 3),
                         ),
-                        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                      ],
+                    ),
+                    child: ListTile(
+                      contentPadding:
+                      const EdgeInsets.symmetric(
+                          horizontal: 16, vertical: 12),
+                      leading: CircleAvatar(
+                        radius: 28,
+                        backgroundImage:
+                        NetworkImage(student.dpUrl),
+                      ),
+                      title: Text(
+                        student.name,
+                        style: const TextStyle(
+                            fontSize: 18,
+                            fontWeight: FontWeight.bold,
+                            color: Colors.black87),
+                      ),
+                      subtitle: Text(
+                        student.roll,
+                        style: TextStyle(
+                            fontSize: 14,
+                            color: Colors.grey[600]),
+                      ),
+                      trailing: ElevatedButton.icon(
+                        onPressed: () =>
+                            openPDFViewer(student.submissionUrl, context),
+                        icon: const Icon(Icons.picture_as_pdf,
+                            color: Colors.white, size: 20),
+                        label: const Text("Open",
+                            style: TextStyle(color: Colors.white)),
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: Colors.indigo,
+                          shape:
+                          RoundedRectangleBorder(
+                            borderRadius:
+                            BorderRadius.circular(12),
+                          ),
+                          padding: const EdgeInsets.symmetric(
+                              horizontal: 12, vertical: 8),
+                        ),
                       ),
                     ),
                   ),
@@ -240,73 +273,6 @@ class AssignmentViewPage extends StatelessWidget {
             ),
           ],
         ),
-      ),
-    );
-  }
-}
-
-// PDF Viewer Page with a color scheme matching the AssignmentViewPage
-class PDFViewerPage extends StatefulWidget {
-  final String url;
-  const PDFViewerPage({super.key, required this.url});
-
-  @override
-  State<PDFViewerPage> createState() => _PDFViewerPageState();
-}
-
-class _PDFViewerPageState extends State<PDFViewerPage> {
-  late Future<PdfDocument> _futureDocument;
-
-  Future<PdfDocument> loadDocument() async {
-    final response = await http.get(Uri.parse(widget.url));
-    if (response.statusCode == 200) {
-      return PdfDocument.openData(response.bodyBytes);
-    } else {
-      throw Exception("Failed to load PDF");
-    }
-  }
-
-  @override
-  void initState() {
-    super.initState();
-    _futureDocument = loadDocument();
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      // Match the color scheme: White app bar, black icons/text, etc.
-      backgroundColor: Colors.grey[50],
-      appBar: AppBar(
-        backgroundColor: Colors.white,
-        elevation: 1,
-        leading: IconButton(
-          icon: const Icon(CupertinoIcons.back, color: Colors.black87, size: 28),
-          onPressed: () => Navigator.pop(context),
-        ),
-        title: const Text(
-          "PDF Viewer",
-          style: TextStyle(
-            color: Colors.black87,
-            fontWeight: FontWeight.bold,
-          ),
-        ),
-        centerTitle: true,
-      ),
-      body: FutureBuilder<PdfDocument>(
-        future: _futureDocument,
-        builder: (context, snapshot) {
-          if (snapshot.hasData) {
-            final document = snapshot.data!;
-            return PdfViewPinch(
-              controller: PdfControllerPinch(document: Future.value(document)),
-            );
-          } else if (snapshot.hasError) {
-            return Center(child: Text('Error: ${snapshot.error}'));
-          } else {
-            return const Center(child: CircularProgressIndicator());
-          }
-        },
       ),
     );
   }
