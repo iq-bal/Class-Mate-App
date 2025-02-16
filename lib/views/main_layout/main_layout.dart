@@ -1,4 +1,6 @@
 import 'package:classmate/controllers/chat/socket_controller.dart';
+import 'package:classmate/views/course_detail_teacher/course_detail_teacher_view.dart';
+import 'package:classmate/views/home_teacher/home_teacher_view.dart';
 import 'package:classmate/views/task/task_view.dart';
 import 'package:flutter/material.dart';
 import 'package:classmate/views/home/home_view.dart';
@@ -47,7 +49,7 @@ class _MainLayoutState extends State<MainLayout> {
     if (widget.role.toLowerCase() == 'teacher') {
       _pages = [
         const Center(child: Text('Teacher Dashboard')),
-        const Center(child: Text('Teacher Resources')),
+        const CourseDetailScreen(),
         const Center(child: Text('Teacher Profile')),
       ];
 

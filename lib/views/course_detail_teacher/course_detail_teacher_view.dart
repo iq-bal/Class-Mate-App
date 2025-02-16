@@ -121,6 +121,7 @@ class _CourseDetailScreenState extends State<CourseDetailScreen> {
                         AssignmentContainer(
                           assignments: course.assignments
                               .map((assignment) => Assignment(
+                            id: assignment.id.toString(),
                             title: assignment.title.toString(),
                             description:
                             assignment.description.toString(),
@@ -130,6 +131,7 @@ class _CourseDetailScreenState extends State<CourseDetailScreen> {
                                 .getFirstTwoLettersUppercase(
                                 assignment.title.toString()),
                             totalItems: assignment.submissions.length,
+
                           ))
                               .toList(),
                           onCreateAssignment: () =>

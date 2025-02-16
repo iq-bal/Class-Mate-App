@@ -1,8 +1,10 @@
+import 'package:classmate/views/course_detail_teacher/widgets/assignment_view_page.dart';
+import 'package:flutter/material.dart';
 import 'package:classmate/views/course_detail_teacher/widgets/assignment_card.dart';
 import 'package:classmate/views/course_detail_teacher/widgets/not_found.dart';
-import 'package:flutter/material.dart';
 
 class Assignment {
+  final String id;
   final String title;
   final String description;
   final String dueDate;
@@ -10,6 +12,7 @@ class Assignment {
   final int totalItems;
 
   Assignment({
+    required this.id,
     required this.title,
     required this.description,
     required this.dueDate,
@@ -60,12 +63,22 @@ class AssignmentContainer extends StatelessWidget {
                       .map(
                         (assignment) => Column(
                       children: [
-                        AssignmentCard(
-                          title: assignment.title,
-                          description: assignment.description,
-                          dueDate: assignment.dueDate,
-                          iconText: assignment.iconText,
-                          totalItems: assignment.totalItems,
+                        GestureDetector(
+                          onTap: () {
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder: (context) => AssignmentViewPage(assignmentId: assignment.id),
+                              ),
+                            );
+                          },
+                          child: AssignmentCard(
+                            title: assignment.title,
+                            description: assignment.description,
+                            dueDate: assignment.dueDate,
+                            iconText: assignment.iconText,
+                            totalItems: assignment.totalItems,
+                          ),
                         ),
                         const SizedBox(height: 8),
                       ],
