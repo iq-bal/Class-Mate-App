@@ -11,6 +11,7 @@ import 'package:classmate/views/main_layout/widgets/bottom_nav_item.dart';
 import 'package:classmate/views/main_layout/widgets/modern_bottom_navbar.dart';
 import 'package:classmate/views/teacher_dashboard/teacher_dashboard_view.dart';
 import 'package:classmate/views/profile/teacher_profile_view.dart';
+import 'package:classmate/views/profile/student_profile_view.dart';
 
 class MainLayout extends StatefulWidget {
   final String role;
@@ -54,6 +55,7 @@ class _MainLayoutState extends State<MainLayout> {
         const ExploreCourseView(),
         const ChatView(),
         const TeacherProfileView(),
+        const StudentProfileView(),
       ];
 
       _navItems = [
@@ -76,6 +78,11 @@ class _MainLayoutState extends State<MainLayout> {
           icon: Icons.person_outline,
           activeIcon: Icons.person,
           label: 'Profile',
+        ),
+        BottomNavItem(
+          icon: Icons.school_outlined,
+          activeIcon: Icons.school,
+          label: 'Student',
         ),
       ];
     } else {
