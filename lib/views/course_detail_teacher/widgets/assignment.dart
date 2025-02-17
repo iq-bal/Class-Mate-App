@@ -1,4 +1,4 @@
-import 'package:classmate/views/course_detail_teacher/widgets/assignment_view_page.dart';
+import 'package:classmate/views/assignment_teacher/assignment_view_page.dart';
 import 'package:flutter/material.dart';
 import 'package:classmate/views/course_detail_teacher/widgets/assignment_card.dart';
 import 'package:classmate/views/course_detail_teacher/widgets/not_found.dart';

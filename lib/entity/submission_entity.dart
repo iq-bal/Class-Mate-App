@@ -25,6 +25,8 @@ class SubmissionEntity {
 
   // Factory method to create a SubmissionEntity from JSON
   factory SubmissionEntity.fromJson(Map<String, dynamic> json) {
+    print(json);
+
     return SubmissionEntity(
       id: json['id'] as String?,
       assignmentId: json['assignment_id'] as String?,
@@ -38,4 +40,5 @@ class SubmissionEntity {
       evaluatedAt: json['evaluated_at'] != null ? DateTime.parse(json['evaluated_at'] as String) : null,
     );
   }
+
 }

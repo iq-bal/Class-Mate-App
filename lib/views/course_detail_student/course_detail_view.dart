@@ -39,8 +39,8 @@ class _CourseDetailScreenState extends State<CourseDetailScreen> {
           children: [
             CustomAppBar(
               title: "Course Details",
-              onMorePress: ()=>{
-                print("More pressed"),
+              onBackPress: () {
+                Navigator.pop(context);
               },
             ),
             Expanded(

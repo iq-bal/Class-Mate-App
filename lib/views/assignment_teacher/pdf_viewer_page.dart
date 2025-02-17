@@ -1,3 +1,4 @@
+import 'package:classmate/config/app_config.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:pdfx/pdfx.dart';
@@ -5,7 +6,7 @@ import 'package:http/http.dart' as http;
 
 class PDFViewerPage extends StatefulWidget {
   final String url;
-  const PDFViewerPage({Key? key, required this.url}) : super(key: key);
+  const PDFViewerPage({super.key, required this.url});
 
   @override
   State<PDFViewerPage> createState() => _PDFViewerPageState();
@@ -15,7 +16,8 @@ class _PDFViewerPageState extends State<PDFViewerPage> {
   late Future<PdfDocument> _futureDocument;
 
   Future<PdfDocument> loadDocument() async {
-    final response = await http.get(Uri.parse(widget.url));
+    final workingUrl = "${AppConfig.mainServerBaseUrl}${widget.url}";
+    final response = await http.get(Uri.parse(workingUrl));
     if (response.statusCode == 200) {
       return PdfDocument.openData(response.bodyBytes);
     } else {

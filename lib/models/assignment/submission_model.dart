@@ -24,4 +24,5 @@ class SubmissionModel extends SubmissionEntity {
       teacherComments: json['teacher_comments'] as String?,
     );
   }
+
 }
