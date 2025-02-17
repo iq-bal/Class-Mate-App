@@ -22,7 +22,7 @@ class AssignmentViewPage extends StatelessWidget {
   final String assignmentId;
   AssignmentViewPage({Key? key, required this.assignmentId}) : super(key: key);
 
-  // Hardcoded assignment details (simulate fetching based on assignmentId)
+  // Hardcoded assignment details.
   final String assignmentTitle = "Modern UI Assignment";
   final String assignmentDescription =
       "Develop an industry-grade assignment submission interface that emphasizes clarity, usability, and sophistication. Every detail—from clean typography to smooth interactions—has been designed for a professional experience.";
@@ -65,7 +65,7 @@ class AssignmentViewPage extends StatelessWidget {
     );
   }
 
-  // Navigates to the Evaluation Page, passing assignmentId and student roll.
+  // Navigates to the Evaluation Page.
   void openEvaluationPage(String studentId, BuildContext context) {
     Navigator.push(
       context,
@@ -81,13 +81,16 @@ class AssignmentViewPage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.grey[50],
+      backgroundColor: Colors.grey.shade50,
       appBar: AppBar(
         backgroundColor: Colors.white,
         elevation: 1,
         leading: IconButton(
-          icon:
-          const Icon(CupertinoIcons.back, color: Colors.black87, size: 28),
+          icon: const Icon(
+            CupertinoIcons.back,
+            color: Colors.black87,
+            size: 28,
+          ),
           onPressed: () => Navigator.pop(context),
         ),
         title: const Text(
@@ -104,7 +107,7 @@ class AssignmentViewPage extends StatelessWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // Custom Assignment Details Section
+            // Assignment Details Section
             Container(
               width: double.infinity,
               padding: const EdgeInsets.all(20),
@@ -127,11 +130,10 @@ class AssignmentViewPage extends StatelessWidget {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  // Assignment title with icon
+                  // Title with icon.
                   Row(
                     children: [
-                      const Icon(Icons.assignment,
-                          color: Colors.indigo, size: 28),
+                      const Icon(Icons.assignment, color: Colors.indigo, size: 28),
                       const SizedBox(width: 8),
                       Expanded(
                         child: Text(
@@ -139,53 +141,47 @@ class AssignmentViewPage extends StatelessWidget {
                           style: TextStyle(
                             fontSize: 22,
                             fontWeight: FontWeight.bold,
-                            color: Colors.indigo[800],
+                            color: Colors.indigo.shade800,
                           ),
                         ),
                       ),
                     ],
                   ),
                   const SizedBox(height: 12),
-                  // Assignment description
+                  // Description.
                   Text(
                     assignmentDescription,
                     style: TextStyle(
-                        fontSize: 16,
-                        color: Colors.grey[800],
-                        height: 1.4),
+                      fontSize: 16,
+                      color: Colors.grey.shade800,
+                      height: 1.4,
+                    ),
                   ),
                   const SizedBox(height: 16),
-                  // Due date and submission count row
+                  // Due date and submissions row.
                   Row(
-                    mainAxisAlignment:
-                    MainAxisAlignment.spaceBetween,
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
                       Row(
                         children: [
-                          const Icon(Icons.calendar_today,
-                              color: Colors.indigo, size: 20),
+                          const Icon(Icons.calendar_today, color: Colors.indigo, size: 20),
                           const SizedBox(width: 4),
-                          Text(
-                            "Due: $dueDate",
-                            style: const TextStyle(
-                                fontSize: 16,
-                                fontWeight: FontWeight.w600,
-                                color: Colors.indigo),
-                          ),
+                          Text("Due: $dueDate",
+                              style: const TextStyle(
+                                  fontSize: 16,
+                                  fontWeight: FontWeight.w600,
+                                  color: Colors.indigo)),
                         ],
                       ),
                       Row(
                         children: [
-                          const Icon(Icons.people,
-                              color: Colors.indigo, size: 20),
+                          const Icon(Icons.people, color: Colors.indigo, size: 20),
                           const SizedBox(width: 4),
-                          Text(
-                            "Submissions: $totalSubmissions",
-                            style: const TextStyle(
-                                fontSize: 16,
-                                fontWeight: FontWeight.w600,
-                                color: Colors.indigo),
-                          ),
+                          Text("Submissions: $totalSubmissions",
+                              style: const TextStyle(
+                                  fontSize: 16,
+                                  fontWeight: FontWeight.w600,
+                                  color: Colors.indigo)),
                         ],
                       ),
                     ],
@@ -193,7 +189,7 @@ class AssignmentViewPage extends StatelessWidget {
                 ],
               ),
             ),
-            // Section header for student submissions.
+            // Section Header.
             const Text(
               "Submitted Students",
               style: TextStyle(
@@ -202,70 +198,90 @@ class AssignmentViewPage extends StatelessWidget {
                   color: Colors.black87),
             ),
             const SizedBox(height: 16),
-            // Student Submission List
+            // Modern Student Card List.
             ListView.separated(
               physics: const NeverScrollableScrollPhysics(),
               shrinkWrap: true,
               itemCount: submittedStudents.length,
-              separatorBuilder: (context, index) =>
-              const SizedBox(height: 16),
+              separatorBuilder: (context, index) => const SizedBox(height: 16),
               itemBuilder: (context, index) {
                 final student = submittedStudents[index];
                 return InkWell(
                   onTap: () => openEvaluationPage(student.roll, context),
                   child: Container(
+                    padding: const EdgeInsets.all(16),
                     decoration: BoxDecoration(
-                      color: Colors.white,
-                      borderRadius:
-                      BorderRadius.circular(16),
+                      // Glassmorphism-inspired semi-transparent background.
+                      color: Colors.white.withOpacity(0.8),
+                      borderRadius: BorderRadius.circular(20),
                       boxShadow: [
                         BoxShadow(
-                          color: Colors.black.withOpacity(0.05),
-                          blurRadius: 8,
-                          offset: const Offset(0, 3),
+                          color: Colors.indigo.withOpacity(0.1),
+                          blurRadius: 12,
+                          offset: const Offset(0, 6),
                         ),
                       ],
                     ),
-                    child: ListTile(
-                      contentPadding:
-                      const EdgeInsets.symmetric(
-                          horizontal: 16, vertical: 12),
-                      leading: CircleAvatar(
-                        radius: 28,
-                        backgroundImage:
-                        NetworkImage(student.dpUrl),
-                      ),
-                      title: Text(
-                        student.name,
-                        style: const TextStyle(
-                            fontSize: 18,
-                            fontWeight: FontWeight.bold,
-                            color: Colors.black87),
-                      ),
-                      subtitle: Text(
-                        student.roll,
-                        style: TextStyle(
-                            fontSize: 14,
-                            color: Colors.grey[600]),
-                      ),
-                      trailing: ElevatedButton.icon(
-                        onPressed: () =>
-                            openPDFViewer(student.submissionUrl, context),
-                        icon: const Icon(Icons.picture_as_pdf,
-                            color: Colors.white, size: 20),
-                        label: const Text("Open",
-                            style: TextStyle(color: Colors.white)),
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: Colors.indigo,
-                          shape:
-                          RoundedRectangleBorder(
-                            borderRadius:
-                            BorderRadius.circular(12),
+                    child: Row(
+                      children: [
+                        // Refined avatar with border and slight shadow.
+                        Container(
+                          decoration: BoxDecoration(
+                            shape: BoxShape.circle,
+                            border: Border.all(
+                                color: Colors.indigo.shade200, width: 2),
+                            boxShadow: [
+                              BoxShadow(
+                                color: Colors.indigo.withOpacity(0.1),
+                                blurRadius: 4,
+                                offset: const Offset(0, 2),
+                              ),
+                            ],
                           ),
-                          padding: const EdgeInsets.symmetric(
-                              horizontal: 12, vertical: 8),
+                          child: CircleAvatar(
+                            radius: 30,
+                            backgroundImage: NetworkImage(student.dpUrl),
+                          ),
                         ),
-                      ),
+                        const SizedBox(width: 16),
+                        // Student details.
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                student.name,
+                                style: const TextStyle(
+                                  fontSize: 18,
+                                  fontWeight: FontWeight.bold,
+                                  color: Colors.black87,
+                                ),
+                              ),
+                              const SizedBox(height: 4),
+                              Text(
+                                student.roll,
+                                style: TextStyle(
+                                  fontSize: 14,
+                                  color: Colors.grey.shade600,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                        // Modern "Open" Button.
+                        ElevatedButton.icon(
+                          onPressed: () => openPDFViewer(student.submissionUrl, context),
+                          icon: const Icon(Icons.picture_as_pdf, color: Colors.white, size: 20),
+                          label: const Text("Open", style: TextStyle(color: Colors.white)),
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: Colors.indigo,
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(20),
+                            ),
+                            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                          ),
+                        ),
+                      ],
                     ),
                   ),
                 );

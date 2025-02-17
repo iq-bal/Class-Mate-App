@@ -4,6 +4,7 @@ import 'package:classmate/views/assignment/widgets/custom_app_bar.dart';
 import 'package:classmate/views/assignment/widgets/info_card.dart';
 import 'package:classmate/views/assignment/widgets/evaluation_card.dart';
 import 'package:classmate/views/assignment/widgets/feedback_card.dart';
+import 'pdf_viewer_page.dart'; // Make sure to implement this accordingly
 
 class EvaluationPage extends StatefulWidget {
   final String assignmentId;
@@ -28,7 +29,7 @@ class _EvaluationPageState extends State<EvaluationPage> {
   @override
   void initState() {
     super.initState();
-    // Pre-fill with example values
+    // Pre-fill with example values.
     _gradeController = TextEditingController(text: "85");
     _commentsController = TextEditingController(
         text:
@@ -45,7 +46,6 @@ class _EvaluationPageState extends State<EvaluationPage> {
   void _submitEvaluation() {
     if (_formKey.currentState!.validate()) {
       _formKey.currentState!.save();
-      // Process the evaluation and display confirmation.
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text(
@@ -53,33 +53,79 @@ class _EvaluationPageState extends State<EvaluationPage> {
           backgroundColor: Colors.indigo,
         ),
       );
-      Navigator.pop(context); // close the bottom sheet
+      Navigator.pop(context); // Close evaluation modal.
     }
   }
 
-  // Function to show the evaluation modal bottom sheet
-  void _showEvaluationModal() {
+  // Show the options modal with "Open PDF Work" and "Evaluate" options.
+  void _showOptionsModal() {
     showModalBottomSheet(
       context: context,
-      isScrollControlled: true, // allows the modal to adjust for keyboard
+      isScrollControlled: true,
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
       ),
       builder: (context) {
-        // Wrap content in Padding to account for keyboard
         return Padding(
-          padding: EdgeInsets.only(
-            bottom: MediaQuery.of(context).viewInsets.bottom,
+          padding: EdgeInsets.only(bottom: MediaQuery.of(context).viewInsets.bottom),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Container(
+                width: 40,
+                height: 4,
+                margin: const EdgeInsets.only(top: 8, bottom: 16),
+                decoration: BoxDecoration(
+                  color: Colors.indigo.shade200,
+                  borderRadius: BorderRadius.circular(2),
+                ),
+              ),
+              ListTile(
+                leading: const Icon(Icons.picture_as_pdf, color: Colors.indigo),
+                title: const Text("Open PDF Work"),
+                onTap: () {
+                  Navigator.pop(context);
+                  // Replace with dynamic URL if needed.
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => PDFViewerPage(
+                        url: "https://samples.jbpub.com/9781449649005/22183_ch01_pass3.pdf",
+                      ),
+                    ),
+                  );
+                },
+              ),
+              ListTile(
+                leading: const Icon(Icons.edit, color: Colors.indigo),
+                title: const Text("Evaluate"),
+                onTap: () {
+                  Navigator.pop(context);
+                  _showEvaluationModal();
+                },
+              ),
+            ],
           ),
+        );
+      },
+    );
+  }
+
+  // Show the evaluation input modal.
+  void _showEvaluationModal() {
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+      ),
+      builder: (context) {
+        return Padding(
+          padding: EdgeInsets.only(bottom: MediaQuery.of(context).viewInsets.bottom),
           child: Container(
             padding: const EdgeInsets.all(20),
-            decoration: BoxDecoration(
-              gradient: LinearGradient(
-                colors: [Colors.indigo.shade50, Colors.indigo.shade100],
-                begin: Alignment.topLeft,
-                end: Alignment.bottomRight,
-              ),
-              borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
+            decoration: const BoxDecoration(
+              borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
             ),
             child: Form(
               key: _formKey,
@@ -219,9 +265,8 @@ class _EvaluationPageState extends State<EvaluationPage> {
     );
   }
 
-  @override
   Widget buildMainContent(BuildContext context) {
-    // Use MediaQuery to dynamically adjust the bottom padding when the keyboard appears.
+    // Use MediaQuery to adjust bottom padding.
     final bottomPadding = MediaQuery.of(context).viewInsets.bottom;
     return SingleChildScrollView(
       padding: EdgeInsets.only(
@@ -231,12 +276,12 @@ class _EvaluationPageState extends State<EvaluationPage> {
           CustomAppBar(
             title: 'Course Detail',
             onBackPress: () => Navigator.pop(context),
-            onMorePress: _showEvaluationModal,
+            onMorePress: _showOptionsModal,
           ),
           Container(
             width: double.infinity,
             margin: const EdgeInsets.symmetric(vertical: 16),
-            child: Column(
+            child: const Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 // Info Card with hardcoded assignment details.
@@ -247,11 +292,11 @@ class _EvaluationPageState extends State<EvaluationPage> {
                   description:
                   "This is a hardcoded assignment description. It provides details about the assignment and its requirements.",
                 ),
-                const SizedBox(height: 16),
+                SizedBox(height: 16),
                 // Evaluation Card with hardcoded evaluation stats.
                 EvaluationCard(
                   title: 'Evaluation',
-                  legendItems: const [
+                  legendItems: [
                     {'color': Color(0xFFA1EDCD), 'label': 'greater is good'},
                     {'color': Color(0xFFE57373), 'label': 'lesser is good'},
                   ],
@@ -261,16 +306,16 @@ class _EvaluationPageState extends State<EvaluationPage> {
                     {'label': 'AI Generated', 'percentage': 40.0, 'isPositive': false},
                   ],
                 ),
-                const SizedBox(height: 16),
+                SizedBox(height: 16),
                 // Feedback Card with sample feedback.
-                const FeedbackCard(
+                FeedbackCard(
                   avatarUrl: 'https://via.placeholder.com/150',
                   date: '15 Nov, 2024',
                   feedback:
                   'Your work is overall good, but evaluation method could be better.',
                   author: 'Dr. Al Mahmud',
                 ),
-                const SizedBox(height: 24),
+                SizedBox(height: 24),
               ],
             ),
           ),
