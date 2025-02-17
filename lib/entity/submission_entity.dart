@@ -7,8 +7,8 @@ class SubmissionEntity {
   final double? aiGenerated;
   final String? teacherComments;
   final double? grade; // Change grade type to double
-  final DateTime? submittedAt;
-  final DateTime? evaluatedAt;
+  final String? submittedAt; // Change to String
+  final String? evaluatedAt; // Change to String
 
   const SubmissionEntity({
     this.id,
@@ -34,8 +34,8 @@ class SubmissionEntity {
       aiGenerated: (json['ai_generated'] as num?)?.toDouble(),
       teacherComments: json['teacher_comments'] as String?,
       grade: (json['grade'] as num?)?.toDouble(), // Convert grade to double
-      submittedAt: json['submitted_at'] != null ? DateTime.parse(json['submitted_at'] as String) : null,
-      evaluatedAt: json['evaluated_at'] != null ? DateTime.parse(json['evaluated_at'] as String) : null,
+      submittedAt: json['submitted_at'] as String?, // Directly assign as String
+      evaluatedAt: json['evaluated_at'] as String?, // Directly assign as String
     );
   }
 }

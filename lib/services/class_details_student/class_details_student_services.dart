@@ -36,24 +36,16 @@ class ClassDetailsStudentServices {
 
     try {
       final variables = {'id': courseId, 'day': day, 'teacherId': teacherId};
-
-
       final response = await dioClient.getDio(AppConfig.graphqlServer).post(
         '/',
         data: {'query': query, 'variables': variables},
       );
-
-      // Print the full response for debugging
-
-
       if (response.statusCode == 200) {
         final data = response.data;
-
         // Check for errors in the response
         if (data['errors'] != null) {
           throw Exception('GraphQL returned errors: ${data['errors']}');
         }
-
         // Ensure data is not null
         if (data['data'] != null) {
           return ClassDetailsStudentModel.fromJson(data['data']);
@@ -61,11 +53,9 @@ class ClassDetailsStudentServices {
           throw Exception('Response data is null');
         }
       } else {
-
         throw Exception('Failed to fetch class details. Status code: ${response.statusCode}');
       }
     } catch (e) {
-
       throw Exception('Error occurred: $e');
     }
   }

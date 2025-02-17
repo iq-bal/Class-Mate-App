@@ -1,4 +1,5 @@
 import 'dart:math';
+import 'package:classmate/core/helper_function.dart';
 import 'package:classmate/views/assignment_teacher/pdf_viewer_page.dart';
 import 'package:flutter/material.dart';
 import 'package:classmate/controllers/assignment_teacher/assignment_teacher_controller.dart';
@@ -338,7 +339,7 @@ class _EvaluationPageState extends State<EvaluationPage> {
                       FeedbackCard(
                         avatarUrl: evaluation.teacher.profilePicture ?? 'https://via.placeholder.com/150',
                         date: evaluation.submission.evaluatedAt != null
-                            ? evaluation.submission.evaluatedAt!.toString().substring(0, 10)
+                            ? HelperFunction.formatTimestamp(evaluation.submission.evaluatedAt!)
                             : 'Not evaluated yet',
                         feedback: evaluation.submission.teacherComments ?? 'No feedback provided yet',
                         author: evaluation.teacher.name ?? 'Unknown Teacher',

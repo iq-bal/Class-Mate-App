@@ -77,6 +77,7 @@ class AssignmentTeacherServices {
         ai_generated
         teacher_comments
         grade
+        evaluated_at
         student {
           id
           name
@@ -99,22 +100,17 @@ class AssignmentTeacherServices {
       }
     }
     ''';
-
     try {
       final variables = {
         'assignmentId': assignmentId,
         'studentId': studentId,
       };
-
       final response = await dioClient
           .getDio(AppConfig.graphqlServer)
           .post(
         '/',
         data: {'query': query, 'variables': variables},
       );
-
-
-
       if (response.statusCode == 200) {
         final data = response.data;
         if (data['errors'] != null) {
