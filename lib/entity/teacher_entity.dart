@@ -7,6 +7,9 @@ class TeacherEntity {
   final DateTime? joiningDate;
   final DateTime? createdAt;
 
+  final String? profilePicture;
+
+
   const TeacherEntity({
     this.id,
     this.userId,
@@ -15,6 +18,8 @@ class TeacherEntity {
     this.designation,
     this.joiningDate,
     this.createdAt,
+    this.profilePicture,
+
   });
 
   // Factory method to create a TeacherEntity from JSON
@@ -31,6 +36,7 @@ class TeacherEntity {
       createdAt: json['created_at'] != null
           ? DateTime.parse(json['created_at'] as String)
           : null,
+      profilePicture: json['profile_picture'] as String?,
     );
   }
 }

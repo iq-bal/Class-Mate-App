@@ -9,6 +9,8 @@ import 'package:classmate/views/chat/chat_view.dart';
 import 'package:classmate/views/profile/profile_view.dart';
 import 'package:classmate/views/main_layout/widgets/bottom_nav_item.dart';
 import 'package:classmate/views/main_layout/widgets/modern_bottom_navbar.dart';
+import 'package:classmate/views/teacher_dashboard/teacher_dashboard_view.dart';
+import 'package:classmate/views/profile/teacher_profile_view.dart';
 
 class MainLayout extends StatefulWidget {
   final String role;
@@ -48,15 +50,33 @@ class _MainLayoutState extends State<MainLayout> {
   void _initializeLayout() {
     if (widget.role.toLowerCase() == 'teacher') {
       _pages = [
-        const Center(child: Text('Teacher Dashboard')),
-        const CourseDetailScreen(),
-        const Center(child: Text('Teacher Profile')),
+        const TeacherDashboardView(),
+        const ExploreCourseView(),
+        const ChatView(),
+        const TeacherProfileView(),
       ];
 
       _navItems = [
-        BottomNavItem(icon: Icons.dashboard, label: 'Dashboard'),
-        BottomNavItem(icon: Icons.book, label: 'Resources'),
-        BottomNavItem(icon: Icons.person, label: 'Profile'),
+        BottomNavItem(
+          icon: Icons.dashboard_outlined,
+          activeIcon: Icons.dashboard,
+          label: 'Dashboard',
+        ),
+        BottomNavItem(
+          icon: Icons.explore_outlined,
+          activeIcon: Icons.explore,
+          label: 'Explore',
+        ),
+        BottomNavItem(
+          icon: Icons.chat_bubble_outline,
+          activeIcon: Icons.chat_bubble,
+          label: 'Chat',
+        ),
+        BottomNavItem(
+          icon: Icons.person_outline,
+          activeIcon: Icons.person,
+          label: 'Profile',
+        ),
       ];
     } else {
       _pages = [
