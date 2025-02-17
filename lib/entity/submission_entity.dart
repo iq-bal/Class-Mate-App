@@ -6,7 +6,7 @@ class SubmissionEntity {
   final double? plagiarismScore;
   final double? aiGenerated;
   final String? teacherComments;
-  final String? grade;
+  final double? grade; // Change grade type to double
   final DateTime? submittedAt;
   final DateTime? evaluatedAt;
 
@@ -25,8 +25,6 @@ class SubmissionEntity {
 
   // Factory method to create a SubmissionEntity from JSON
   factory SubmissionEntity.fromJson(Map<String, dynamic> json) {
-    print(json);
-
     return SubmissionEntity(
       id: json['id'] as String?,
       assignmentId: json['assignment_id'] as String?,
@@ -35,10 +33,9 @@ class SubmissionEntity {
       plagiarismScore: (json['plagiarism_score'] as num?)?.toDouble(),
       aiGenerated: (json['ai_generated'] as num?)?.toDouble(),
       teacherComments: json['teacher_comments'] as String?,
-      grade: json['grade'] as String?,
+      grade: (json['grade'] as num?)?.toDouble(), // Convert grade to double
       submittedAt: json['submitted_at'] != null ? DateTime.parse(json['submitted_at'] as String) : null,
       evaluatedAt: json['evaluated_at'] != null ? DateTime.parse(json['evaluated_at'] as String) : null,
     );
   }
-
 }

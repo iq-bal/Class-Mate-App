@@ -9,7 +9,7 @@ class SubmissionModel extends SubmissionEntity {
     super.plagiarismScore,
     super.aiGenerated,
     super.teacherComments,
-    super.grade,
+    super.grade,  // Ensure grade is a double?
   }) : super(
     submittedAt: null,
     evaluatedAt: null,
@@ -34,7 +34,7 @@ class SubmissionModel extends SubmissionEntity {
       plagiarismScore: (json['plagiarism_score'] as num?)?.toDouble(),
       aiGenerated: (json['ai_generated'] as num?)?.toDouble(),
       teacherComments: json['teacher_comments'] as String?,
-      grade: json['grade'] as String?,
+      grade: (json['grade'] as num?)?.toDouble(),  // Ensure grade is parsed as double
     );
   }
 }

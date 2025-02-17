@@ -1,8 +1,11 @@
+import 'dart:math';
+
 import 'package:flutter/material.dart';
 import 'package:classmate/views/assignment/widgets/info_card.dart';
 import 'package:classmate/views/assignment/widgets/evaluation_card.dart';
 import 'package:classmate/views/assignment/widgets/feedback_card.dart';
-import 'pdf_viewer_page.dart'; // Ensure you have this implemented
+import '../../controllers/assignment_teacher/assignment_teacher_controller.dart';
+import 'pdf_viewer_page.dart';
 import 'package:classmate/utils/custom_app_bar.dart';
 
 class EvaluationPage extends StatefulWidget {
@@ -23,14 +26,13 @@ class _EvaluationPageState extends State<EvaluationPage> {
   final _formKey = GlobalKey<FormState>();
   late TextEditingController _gradeController;
   late TextEditingController _commentsController;
+  late AssignmentTeacherController _controller;
 
   @override
   void initState() {
     super.initState();
-
-    print("Assignment ID: ${widget.assignmentId}");
-    print("Student ID: ${widget.studentId}");
-
+    _controller = AssignmentTeacherController();
+    _controller.fetchSingleSubmission(widget.assignmentId, widget.studentId);
     // Pre-fill with example values.
     _gradeController = TextEditingController(text: "85");
     _commentsController = TextEditingController(
@@ -233,12 +235,12 @@ class _EvaluationPageState extends State<EvaluationPage> {
             onBackPress: () => Navigator.pop(context),
             // Use the onMenuSelected callback for custom menu items.
             onMenuSelected: (value) {
-              if (value == 'open') {
+              if (value == 'open' && _controller.evaluationDetail?.submission.fileUrl != null) {
                 Navigator.push(
                   context,
                   MaterialPageRoute(
-                    builder: (context) => const PDFViewerPage(
-                      url: "https://samples.jbpub.com/9781449649005/22183_ch01_pass3.pdf",
+                    builder: (context) => PDFViewerPage(
+                      url: _controller.evaluationDetail!.submission.fileUrl!,
                     ),
                   ),
                 );
@@ -254,39 +256,53 @@ class _EvaluationPageState extends State<EvaluationPage> {
           Container(
             width: double.infinity,
             margin: const EdgeInsets.symmetric(vertical: 16),
-            child: const Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                InfoCard(
-                  initials: 'CH',
-                  backgroundColor: EvaluationPage.primaryTeal,
-                  title: "Hardcoded Assignment Title",
-                  description:
-                  "This is a hardcoded assignment description. It provides details about the assignment and its requirements.",
-                ),
-                SizedBox(height: 16),
-                EvaluationCard(
-                  title: 'Evaluation',
-                  legendItems: [
-                    {'color': Color(0xFFA1EDCD), 'label': 'greater is good'},
-                    {'color': Color(0xFFE57373), 'label': 'lesser is good'},
-                  ],
-                  evaluationBars: [
-                    {'label': 'Plagiarism', 'percentage': 20.0, 'isPositive': false},
-                    {'label': 'Grade', 'percentage': 85.0, 'isPositive': true},
-                    {'label': 'AI Generated', 'percentage': 40.0, 'isPositive': false},
-                  ],
-                ),
-                SizedBox(height: 16),
-                FeedbackCard(
-                  avatarUrl: 'https://via.placeholder.com/150',
-                  date: '15 Nov, 2024',
-                  feedback:
-                  'Your work is overall good, but evaluation method could be better.',
-                  author: 'Dr. Al Mahmud',
-                ),
-                SizedBox(height: 24),
-              ],
+            child: ValueListenableBuilder<AssignmentTeacherState>(
+              valueListenable: _controller.stateNotifier,
+              builder: (context, state, child) {
+                if (state == AssignmentTeacherState.loading) {
+                  return const Center(child: CircularProgressIndicator());
+                } else if (state == AssignmentTeacherState.error) {
+                  return Center(child: Text(_controller.errorMessage ?? 'An error occurred'));
+                } else if (state == AssignmentTeacherState.success && _controller.evaluationDetail != null) {
+                  final evaluation = _controller.evaluationDetail!;
+                  return Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      InfoCard(
+                        initials: (evaluation.teacher.name ?? 'UN').substring(0, min(2, (evaluation.teacher.name ?? 'UN').length)).toUpperCase(),
+                        backgroundColor: EvaluationPage.primaryTeal,
+                        title: evaluation.assignment.title ?? 'Untitled Assignment',
+                        description: evaluation.assignment.description ?? 'No description provided',
+                      ),
+                      const SizedBox(height: 16),
+                      EvaluationCard(
+                        title: 'Evaluation',
+                        legendItems: const [
+                          {'color': Color(0xFFA1EDCD), 'label': 'greater is good'},
+                          {'color': Color(0xFFE57373), 'label': 'lesser is good'},
+                        ],
+                        evaluationBars: [
+                          {'label': 'Plagiarism', 'percentage': evaluation.submission.plagiarismScore ?? 0.0, 'isPositive': false},
+                          {'label': 'Grade', 'percentage': evaluation.submission.grade ?? 0.0, 'isPositive': true},
+                          {'label': 'AI Generated', 'percentage': evaluation.submission.aiGenerated == true ? 100.0 : 0.0, 'isPositive': false},
+                        ],
+                      ),
+                      const SizedBox(height: 16),
+                      FeedbackCard(
+                        avatarUrl: evaluation.teacher.profilePicture ?? 'https://via.placeholder.com/150',
+                        date: evaluation.submission.evaluatedAt != null 
+                              ? evaluation.submission.evaluatedAt!.toString().substring(0, 10)
+                              : 'Not evaluated yet',
+                        feedback: evaluation.submission.teacherComments ?? 'No feedback provided yet',
+                        author: evaluation.teacher.name ?? 'Unknown Teacher',
+                      ),
+                      const SizedBox(height: 24),
+                    ],
+                  );
+                }
+                // Add a default return case
+                return const Center(child: Text('No data available'));
+              },
             ),
           ),
         ],
