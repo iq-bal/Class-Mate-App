@@ -1,12 +1,12 @@
 import 'dart:math';
-
+import 'package:classmate/views/assignment_teacher/pdf_viewer_page.dart';
 import 'package:flutter/material.dart';
-import 'package:classmate/views/assignment/widgets/info_card.dart';
-import 'package:classmate/views/assignment/widgets/evaluation_card.dart';
-import 'package:classmate/views/assignment/widgets/feedback_card.dart';
-import '../../controllers/assignment_teacher/assignment_teacher_controller.dart';
-import 'pdf_viewer_page.dart';
-import 'package:classmate/utils/custom_app_bar.dart';
+import 'package:classmate/controllers/assignment_teacher/assignment_teacher_controller.dart';
+
+import '../../utils/custom_app_bar.dart';
+import '../assignment/widgets/evaluation_card.dart';
+import '../assignment/widgets/feedback_card.dart';
+import '../assignment/widgets/info_card.dart';
 
 class EvaluationPage extends StatefulWidget {
   final String assignmentId;
@@ -18,6 +18,7 @@ class EvaluationPage extends StatefulWidget {
     required this.assignmentId,
     required this.studentId,
   });
+
   @override
   State<EvaluationPage> createState() => _EvaluationPageState();
 }
@@ -33,11 +34,20 @@ class _EvaluationPageState extends State<EvaluationPage> {
     super.initState();
     _controller = AssignmentTeacherController();
     _controller.fetchSingleSubmission(widget.assignmentId, widget.studentId);
-    // Pre-fill with example values.
-    _gradeController = TextEditingController(text: "85");
-    _commentsController = TextEditingController(
-        text:
-        "Your work is overall good, but the evaluation method could be improved.");
+
+    _gradeController = TextEditingController();
+    _commentsController = TextEditingController();
+
+    // Update controllers when evaluation details are available
+    _controller.stateNotifier.addListener(() {
+      if (_controller.stateNotifier.value == AssignmentTeacherState.success &&
+          _controller.evaluationDetail != null) {
+        setState(() {
+          _gradeController.text = _controller.evaluationDetail!.submission.grade?.toString() ?? '';
+          _commentsController.text = _controller.evaluationDetail!.submission.teacherComments ?? '';
+        });
+      }
+    });
   }
 
   @override
@@ -50,19 +60,56 @@ class _EvaluationPageState extends State<EvaluationPage> {
   void _submitEvaluation() {
     if (_formKey.currentState!.validate()) {
       _formKey.currentState!.save();
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(
-              "Submitted: Grade: ${_gradeController.text}, Comments: ${_commentsController.text}"),
-          backgroundColor: Colors.indigo,
-        ),
-      );
-      Navigator.pop(context); // Closes the evaluation modal.
+
+      // Create submission input map
+      Map<String, dynamic> submissionInput = {
+        'grade': double.parse(_gradeController.text),
+        'teacher_comments': _commentsController.text,
+        'assignment_id': widget.assignmentId,
+        'student_id': widget.studentId
+      };
+
+      // Call updateSubmission with the current submission ID and new data
+      final submissionId = _controller.evaluationDetail?.submission.id;
+      if (submissionId != null) {
+        _controller.updateSubmission(
+            submissionId,
+            submissionInput
+        ).then((_) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text("Evaluation submitted successfully"),
+              backgroundColor: Colors.green,
+            ),
+          );
+          Navigator.pop(context); // Closes the evaluation modal
+        }).catchError((error) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text("Error submitting evaluation: ${error.toString()}"),
+              backgroundColor: Colors.red,
+            ),
+          );
+        });
+      } else {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text("Error: Submission ID not found"),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
     }
   }
 
   // Show the evaluation input modal.
   void _showEvaluationModal() {
+    // Set initial values from evaluationDetail
+    if (_controller.evaluationDetail != null) {
+      _gradeController.text = _controller.evaluationDetail!.submission.grade?.toString() ?? '';
+      _commentsController.text = _controller.evaluationDetail!.submission.teacherComments ?? '';
+    }
+
     showModalBottomSheet(
       context: context,
       isScrollControlled: true, // Adjust for keyboard
@@ -290,9 +337,9 @@ class _EvaluationPageState extends State<EvaluationPage> {
                       const SizedBox(height: 16),
                       FeedbackCard(
                         avatarUrl: evaluation.teacher.profilePicture ?? 'https://via.placeholder.com/150',
-                        date: evaluation.submission.evaluatedAt != null 
-                              ? evaluation.submission.evaluatedAt!.toString().substring(0, 10)
-                              : 'Not evaluated yet',
+                        date: evaluation.submission.evaluatedAt != null
+                            ? evaluation.submission.evaluatedAt!.toString().substring(0, 10)
+                            : 'Not evaluated yet',
                         feedback: evaluation.submission.teacherComments ?? 'No feedback provided yet',
                         author: evaluation.teacher.name ?? 'Unknown Teacher',
                       ),
@@ -300,7 +347,6 @@ class _EvaluationPageState extends State<EvaluationPage> {
                     ],
                   );
                 }
-                // Add a default return case
                 return const Center(child: Text('No data available'));
               },
             ),

@@ -8,14 +8,12 @@ enum AssignmentTeacherState { idle, loading, success, error }
 class AssignmentTeacherController {
   final AssignmentTeacherServices _assignmentTeacherServices = AssignmentTeacherServices();
 
-  // State management using ValueNotifier.
   final ValueNotifier<AssignmentTeacherState> stateNotifier =
   ValueNotifier<AssignmentTeacherState>(AssignmentTeacherState.idle);
 
   String? errorMessage;
   SubmissionDetailModel? submissionDetails;
 
-  // Field for single submission (evaluation) detail.
   EvaluationModel? evaluationDetail;
 
   Future<void> fetchAssignmentSubmissions(String assignmentId) async {
@@ -34,10 +32,6 @@ class AssignmentTeacherController {
     stateNotifier.value = AssignmentTeacherState.loading;
     try {
       evaluationDetail = await _assignmentTeacherServices.getSingleSubmission(assignmentId, studentId);
-
-      // Print evaluationDetail to the console.
-      printEvaluationDetail(evaluationDetail);
-
       stateNotifier.value = AssignmentTeacherState.success;
     } catch (error) {
       errorMessage = error.toString();
@@ -45,42 +39,16 @@ class AssignmentTeacherController {
     }
   }
 
-  // Helper method to print the evaluation detail to console.
-  void printEvaluationDetail(EvaluationModel? eval) {
-    if (eval == null) {
-      print("No evaluation detail available.");
-      return;
+  Future<void> updateSubmission(String submissionId, Map<String, dynamic> submissionInput) async {
+    stateNotifier.value = AssignmentTeacherState.loading;
+    try {
+      await _assignmentTeacherServices.updateSubmission(submissionId, submissionInput);
+      await fetchSingleSubmission(submissionInput['assignment_id'], submissionInput['student_id']);
+      stateNotifier.value = AssignmentTeacherState.success;
+    } catch (error) {
+      errorMessage = error.toString();
+      stateNotifier.value = AssignmentTeacherState.error;
     }
-    print("----- EVALUATION DETAIL -----");
-    print("Submission ID: ${eval.submission.id}");
-    print("Assignment ID (from submission): ${eval.submission.assignmentId}");
-    print("Student ID (from submission): ${eval.submission.studentId}");
-    print("File URL: ${eval.submission.fileUrl}");
-    print("Plagiarism Score: ${eval.submission.plagiarismScore}");
-    print("AI Generated: ${eval.submission.aiGenerated}");
-    print("Teacher Comments: ${eval.submission.teacherComments}");
-    print("Grade: ${eval.submission.grade}");
-    print("Submitted At: ${eval.submission.submittedAt}");
-    print("Evaluated At: ${eval.submission.evaluatedAt}");
-
-    print("----- Student -----");
-    print("Student ID: ${eval.student.id}");
-    print("Name: ${eval.student.name}");
-    print("Email: ${eval.student.email}");
-    print("Roll: ${eval.student.roll}");
-    print("Section: ${eval.student.section}");
-    print("Profile Picture: ${eval.student.profilePicture}");
-
-    print("----- Assignment -----");
-    print("Assignment ID: ${eval.assignment.id}");
-    print("Title: ${eval.assignment.title}");
-    print("Description: ${eval.assignment.description}");
-    print("Deadline: ${eval.assignment.deadline}");
-
-    print("----- Teacher -----");
-    print("Teacher ID: ${eval.teacher.id}");
-    print("Teacher Name: ${eval.teacher.name}");
-    print("Teacher Profile Picture: ${eval.teacher.profilePicture}");
-    print("----- END EVALUATION DETAIL -----");
   }
+
 }

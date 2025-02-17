@@ -134,4 +134,43 @@ class AssignmentTeacherServices {
   }
 
 
+  Future<void> updateSubmission(String submissionId, Map<String, dynamic> submissionInput) async {
+
+    // Only keep 'grade' and 'teacher_comments' from the input
+    final filteredSubmissionInput = {
+      'grade': submissionInput['grade'],
+      'teacher_comments': submissionInput['teacher_comments'],
+    };
+
+
+    const String mutation = '''
+  mutation UpdateSubmission(\$id: ID!, \$submissionInput: UpdateSubmissionInput!) {
+    updateSubmission(id: \$id, submissionInput: \$submissionInput) {
+      id
+    }
+  }
+  ''';
+
+    try {
+      final variables = {
+        'id': submissionId,
+        'submissionInput': filteredSubmissionInput, // Pass only the filtered input
+      };
+
+      final response = await dioClient
+          .getDio(AppConfig.graphqlServer)
+          .post(
+        '/',
+        data: {'query': mutation, 'variables': variables},
+      );
+
+      if (response.statusCode != 200) {
+        throw Exception('Failed to update submission. Status code: ${response.statusCode}');
+      }
+    } catch (e) {
+      throw Exception('Error occurred: $e');
+    }
+  }
+
+
 }
