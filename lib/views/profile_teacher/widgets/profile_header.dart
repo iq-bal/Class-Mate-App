@@ -1,3 +1,4 @@
+import 'package:classmate/views/profile_teacher/widgets/teacher_settings_page.dart';
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 import 'dart:io';
@@ -70,9 +71,17 @@ class ProfileHeader extends StatelessWidget {
                 onPressed: () => _pickAndUpload(context, onCoverPhotoChange),
               ),
               const SizedBox(width: 8),
+              // new (works immediately)
               IconButton(
-                icon: const Icon(Icons.settings, color: Colors.white, size: 28),
-                onPressed: () => Navigator.pushNamed(context, '/settings'),
+                icon: const Icon(Icons.settings, color: Colors.white, size: 28,),
+                onPressed: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (_) => const TeacherSettingsPage(),
+                    ),
+                  );
+                },
               ),
             ],
           ),
