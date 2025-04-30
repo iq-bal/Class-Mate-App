@@ -30,7 +30,10 @@ class ProfileTeacherController {
   Future<void> updateProfilePicture(File imageFile) async {
     stateNotifier.value = ProfileTeacherState.loading;
     try {
-      await _profileTeacherService.updateProfilePicture(imageFile);
+      String url = await _profileTeacherService.updateProfilePicture(imageFile);
+      if (teacherProfile != null) {
+        teacherProfile!.profilePicture = url;
+      }
       stateNotifier.value = ProfileTeacherState.success;
     } catch (error) {
       errorMessage = error.toString();
@@ -42,15 +45,64 @@ class ProfileTeacherController {
   Future<void> updateCoverPhoto(File imageFile) async {
     stateNotifier.value = ProfileTeacherState.loading;
     try {
-
-      await _profileTeacherService.updateCoverPhoto(imageFile);
-
+      String url = await _profileTeacherService.updateCoverPhoto(imageFile);
+      if (teacherProfile != null) {
+        teacherProfile!.coverPicture = url;
+      }
       stateNotifier.value = ProfileTeacherState.success;
     } catch (error) {
       errorMessage = error.toString();
       stateNotifier.value = ProfileTeacherState.error;
     }
   }
+
+
+  /// Updates only the `about` field.
+  Future<void> updateTeacherAbout(String about) async {
+    stateNotifier.value = ProfileTeacherState.loading;
+    try {
+      await _profileTeacherService.updateTeacherAbout(about);
+      // update local model so UI reflects change immediately
+      if (teacherProfile != null) {
+        teacherProfile!.teacher?.about = about;
+      }
+      stateNotifier.value = ProfileTeacherState.success;
+    } catch (error) {
+      errorMessage = error.toString();
+      stateNotifier.value = ProfileTeacherState.error;
+    }
+  }
+
+  /// Updates only the `department` field.
+  Future<void> updateTeacherDepartment(String department) async {
+    stateNotifier.value = ProfileTeacherState.loading;
+    try {
+      await _profileTeacherService.updateTeacherDepartment(department);
+      if (teacherProfile != null) {
+        teacherProfile!.teacher?.department = department;
+      }
+      stateNotifier.value = ProfileTeacherState.success;
+    } catch (error) {
+      errorMessage = error.toString();
+      stateNotifier.value = ProfileTeacherState.error;
+    }
+  }
+
+  /// Updates only the `designation` field.
+  Future<void> updateTeacherDesignation(String designation) async {
+    stateNotifier.value = ProfileTeacherState.loading;
+    try {
+      await _profileTeacherService.updateTeacherDesignation(designation);
+      if (teacherProfile != null) {
+        teacherProfile!.teacher?.designation = designation;
+      }
+      stateNotifier.value = ProfileTeacherState.success;
+    } catch (error) {
+      errorMessage = error.toString();
+      stateNotifier.value = ProfileTeacherState.error;
+    }
+  }
+
 
 
 }

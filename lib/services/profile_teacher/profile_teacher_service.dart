@@ -60,11 +60,12 @@ class ProfileTeacherService {
     }
   }
 
-  Future<void> updateProfilePicture(File imageFile) async {
+  Future<String> updateProfilePicture(File imageFile) async {
     const String mutation = '''
   mutation UpdateProfilePicture(\$image: Upload!) {
     updateProfilePicture(image: \$image) {
       id
+      profile_picture
     }
   }
   ''';
@@ -90,9 +91,19 @@ class ProfileTeacherService {
 
       if (response.statusCode == 200) {
         final data = response.data;
+
         if (data['errors'] != null) {
           throw Exception('GraphQL returned errors: ${data['errors']}');
         }
+
+        // Extract the new URL from the response
+        final updated = data['data']['updateProfilePicture'];
+        final newUrl = updated['profile_picture'] as String?;
+        if (newUrl == null) {
+          throw Exception('Profile picture field missing in response');
+        }
+
+        return newUrl;
       } else {
         throw Exception('Failed to update profile picture. Status code: ${response.statusCode}');
       }
@@ -102,11 +113,12 @@ class ProfileTeacherService {
   }
 
 
-  Future<void> updateCoverPhoto(File imageFile) async {
+  Future<String> updateCoverPhoto(File imageFile) async {
     const String mutation = '''
   mutation UpdateCoverPicture(\$image: Upload!) {
     updateCoverPicture(image: \$image) {
       id
+      cover_picture
     }
   }
   ''';
@@ -131,6 +143,12 @@ class ProfileTeacherService {
         if (data['errors'] != null) {
           throw Exception('GraphQL returned errors: ${data['errors']}');
         }
+        final updated = data['data']['updateCoverPicture'];
+        final newUrl = updated['cover_picture'] as String?;
+        if (newUrl == null) {
+          throw Exception('Profile picture field missing in response');
+        }
+        return newUrl;
       } else {
         throw Exception('Failed to update cover photo. Status code: ${response.statusCode}');
       }
@@ -138,6 +156,99 @@ class ProfileTeacherService {
       throw Exception('Error occurred: $e');
     }
   }
+
+
+
+  /// Updates only the `about` field of the teacher.
+  Future<void> updateTeacherAbout(String about) async {
+    const String mutation = '''
+    mutation UpdateTeacher(\$teacherInput: TeacherInput!) {
+      updateTeacher(teacherInput: \$teacherInput) {
+        id
+      }
+    }
+  ''';
+
+    final variables = {
+      'teacherInput': {
+        'about': about,
+      },
+    };
+
+    final response = await dioClient
+        .getDio(AppConfig.graphqlServer)
+        .post('/', data: {
+      'query': mutation,
+      'variables': variables,
+    });
+
+    if (response.statusCode != 200 || response.data['errors'] != null) {
+      throw Exception(
+        'Failed to update about: ${response.data['errors'] ?? response.statusCode}',
+      );
+    }
+  }
+
+  /// Updates only the `department` field of the teacher.
+  Future<void> updateTeacherDepartment(String department) async {
+    const String mutation = '''
+    mutation UpdateTeacher(\$teacherInput: TeacherInput!) {
+      updateTeacher(teacherInput: \$teacherInput) {
+        id
+      }
+    }
+  ''';
+
+    final variables = {
+      'teacherInput': {
+        'department': department,
+      },
+    };
+
+    final response = await dioClient
+        .getDio(AppConfig.graphqlServer)
+        .post('/', data: {
+      'query': mutation,
+      'variables': variables,
+    });
+
+    if (response.statusCode != 200 || response.data['errors'] != null) {
+      throw Exception(
+        'Failed to update department: ${response.data['errors'] ?? response.statusCode}',
+      );
+    }
+  }
+
+  /// Updates only the `designation` field of the teacher.
+  Future<void> updateTeacherDesignation(String designation) async {
+    const String mutation = '''
+    mutation UpdateTeacher(\$teacherInput: TeacherInput!) {
+      updateTeacher(teacherInput: \$teacherInput) {
+        id
+      }
+    }
+  ''';
+
+    final variables = {
+      'teacherInput': {
+        'designation': designation,
+      },
+    };
+
+    final response = await dioClient
+        .getDio(AppConfig.graphqlServer)
+        .post('/', data: {
+      'query': mutation,
+      'variables': variables,
+    });
+
+    if (response.statusCode != 200 || response.data['errors'] != null) {
+      throw Exception(
+        'Failed to update designation: ${response.data['errors'] ?? response.statusCode}',
+      );
+    }
+  }
+
 
 
 

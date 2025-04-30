@@ -1,11 +1,11 @@
 class ProfileTeacherModel {
-  final String id;
-  final String name;
-  final String email;
-  final String? profilePicture;  // Nullable field
-  final String? coverPicture;    // Nullable field
-  final Teacher? teacher;
-  final List<Course>? courses;
+  String id;
+  String name;
+  String email;
+  String? profilePicture;  // Nullable and mutable
+  String? coverPicture;    // Nullable and mutable
+  Teacher? teacher;        // Nullable and mutable reference
+  List<Course>? courses;   // Nullable and mutable
 
   ProfileTeacherModel({
     required this.id,
@@ -17,27 +17,31 @@ class ProfileTeacherModel {
     this.courses,
   });
 
-  // Factory constructor to create ProfileTeacherModel from JSON
   factory ProfileTeacherModel.fromJson(Map<String, dynamic> json) {
     return ProfileTeacherModel(
       id: json['id'] as String,
       name: json['name'] as String,
       email: json['email'] as String,
-      profilePicture: json['profile_picture'] as String?,  // Make nullable
-      coverPicture: json['cover_picture'] as String?,      // Make nullable
-      teacher: json['teacher'] != null ? Teacher.fromJson(json['teacher']) : null,
+      profilePicture: json['profile_picture'] as String?,
+      coverPicture: json['cover_picture'] as String?,
+      teacher: json['teacher'] != null
+          ? Teacher.fromJson(json['teacher'] as Map<String, dynamic>)
+          : null,
       courses: json['courses'] != null
-          ? List<Course>.from(json['courses'].map((course) => Course.fromJson(course)))
-          : [],
+          ? List<Course>.from(
+        (json['courses'] as List<dynamic>)
+            .map((e) => Course.fromJson(e as Map<String, dynamic>)),
+      )
+          : <Course>[],
     );
   }
 }
 
 class Teacher {
-  final String id;
-  final String about;
-  final String designation;
-  final String department;
+  String id;
+  String about;
+  String designation;
+  String department;
 
   Teacher({
     required this.id,
@@ -46,7 +50,6 @@ class Teacher {
     required this.department,
   });
 
-  // Factory constructor to create Teacher from JSON
   factory Teacher.fromJson(Map<String, dynamic> json) {
     return Teacher(
       id: json['id'] as String,
@@ -68,7 +71,6 @@ class Course {
     required this.image,
   });
 
-  // Factory constructor to create Course from JSON
   factory Course.fromJson(Map<String, dynamic> json) {
     return Course(
       id: json['id'] as String,
