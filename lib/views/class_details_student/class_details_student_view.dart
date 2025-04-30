@@ -110,9 +110,6 @@ class _ClassDetailsStudentState extends State<ClassDetailsStudent> {
                     ),
 
 
-
-
-
                     const SizedBox(height: 16),
                     const CustomTabBar(),
                     const SizedBox(height: 20),

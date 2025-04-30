@@ -1,0 +1,56 @@
+import 'dart:io';
+
+import 'package:classmate/models/profile_teacher/profile_teacher_model.dart';
+import 'package:classmate/services/profile_teacher/profile_teacher_service.dart';
+import 'package:flutter/material.dart';
+
+enum ProfileTeacherState { idle, loading, success, error }
+
+class ProfileTeacherController {
+  final ProfileTeacherService _profileTeacherService = ProfileTeacherService();
+
+  final ValueNotifier<ProfileTeacherState> stateNotifier =
+  ValueNotifier<ProfileTeacherState>(ProfileTeacherState.idle);
+
+  String? errorMessage;
+  ProfileTeacherModel? teacherProfile;
+
+  Future<void> fetchTeacherProfile() async {
+    stateNotifier.value = ProfileTeacherState.loading;
+    try {
+      teacherProfile = await _profileTeacherService.fetchTeacherProfile();
+      stateNotifier.value = ProfileTeacherState.success;
+    } catch (error) {
+      errorMessage = error.toString();
+      stateNotifier.value = ProfileTeacherState.error;
+    }
+  }
+
+
+  Future<void> updateProfilePicture(File imageFile) async {
+    stateNotifier.value = ProfileTeacherState.loading;
+    try {
+      await _profileTeacherService.updateProfilePicture(imageFile);
+      stateNotifier.value = ProfileTeacherState.success;
+    } catch (error) {
+      errorMessage = error.toString();
+      stateNotifier.value = ProfileTeacherState.error;
+    }
+  }
+
+
+  Future<void> updateCoverPhoto(File imageFile) async {
+    stateNotifier.value = ProfileTeacherState.loading;
+    try {
+
+      await _profileTeacherService.updateCoverPhoto(imageFile);
+
+      stateNotifier.value = ProfileTeacherState.success;
+    } catch (error) {
+      errorMessage = error.toString();
+      stateNotifier.value = ProfileTeacherState.error;
+    }
+  }
+
+
+}

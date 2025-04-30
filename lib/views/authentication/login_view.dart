@@ -108,17 +108,17 @@ class _LoginPageState extends State<LoginPage> {
           ),
         ),
         const SizedBox(height: 20),
-        // OrDividerWithTagline(
-        //   tagline: "Don't have an account?",
-        //   onTap: () {
-        //     Navigator.push(
-        //       context,
-        //       MaterialPageRoute(
-        //         builder: (context) => RegisterPage(role: widget.role),
-        //       ),
-        //     );
-        //   },
-        // ),
+        OrDividerWithTagline(
+          tagline: "Don't have an account?",
+          onTap: () {
+            Navigator.push(
+              context,
+              MaterialPageRoute(
+                builder: (context) => RegisterPage(role: widget.role),
+              ),
+            );
+          },
+        ),
       ],
     );
   }

@@ -1,3 +1,4 @@
+import 'package:classmate/core/helper_function.dart';
 import 'package:flutter/material.dart';
 import 'package:classmate/models/assignment/assignment_detail_model.dart';
 import 'package:classmate/views/assignment/widgets/custom_app_bar.dart';
@@ -41,7 +42,7 @@ class AssessmentsView extends StatelessWidget {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     InfoCard(
-                      initials: 'CH', // Example initials, adjust as needed
+                      initials: HelperFunction.getFirstTwoLettersUppercase(assignmentDetail.assignment?.title ?? 'No Title'), // Example initials, adjust as needed
                       backgroundColor: primaryTeal,
                       title: assignmentDetail.assignment?.title ?? 'No Title',
                       description: assignmentDetail.assignment?.description ?? 'No Description',

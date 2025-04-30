@@ -93,17 +93,6 @@ class _RegisterPageState extends State<RegisterPage> {
             );
           },
         ),
-        OrDividerWithTagline(
-          tagline: "Already have an account?",
-          onTap: () {
-            Navigator.pushReplacement(
-              context,
-              MaterialPageRoute(
-                builder: (context) => LoginPage(role: widget.role),
-              ),
-            );
-          },
-        ),
       ],
     );
   }

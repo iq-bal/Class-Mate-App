@@ -4,7 +4,6 @@ import 'package:classmate/providers/auth_provider.dart';
 import 'package:classmate/services/authentication/auth_service.dart';
 import 'package:classmate/services/fcm_token_service.dart';
 import 'package:classmate/services/notification_service.dart';
-import 'package:classmate/views/authentication/landing.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
