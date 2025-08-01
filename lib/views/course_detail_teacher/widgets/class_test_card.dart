@@ -1,0 +1,161 @@
+import 'package:flutter/material.dart';
+
+class ClassTestCard extends StatelessWidget {
+  final String title;
+  final String description;
+  final String date;
+  final String iconText; // Text inside the icon
+  final int duration; // Duration in minutes
+  final int totalMarks;
+  final VoidCallback? onTap; // Callback for tap action
+
+  const ClassTestCard({
+    super.key,
+    required this.title,
+    required this.description,
+    required this.date,
+    required this.iconText,
+    required this.duration,
+    required this.totalMarks,
+    this.onTap,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return GestureDetector(
+      onTap: onTap, // Handles tap gestures
+      child: Container(
+        decoration: BoxDecoration(
+          borderRadius: BorderRadius.circular(8),
+          border: const Border(
+            top: BorderSide(color: Color(0xFFD9D9D9), width: 1.0),
+            bottom: BorderSide(color: Color(0xFFD9D9D9), width: 1.0),
+            left: BorderSide(color: Color(0xFFD9D9D9), width: 1.0),
+            right: BorderSide(color: Color(0xFFD9D9D9), width: 1.0),
+          ),
+        ),
+        child: Padding(
+          padding: const EdgeInsets.all(16.0), // Padding inside the card
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              // Top Title Row
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Expanded(
+                    child: Text(
+                      title,
+                      style: const TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.bold,
+                        color: Colors.orange,
+                      ),
+                      overflow: TextOverflow.ellipsis, // Add ellipsis for long text
+                      maxLines: 1, // Limit to a single line
+                    ),
+                  ),
+                  const Icon(Icons.arrow_forward, color: Colors.black),
+                ],
+              ),
+              const SizedBox(height: 8), // Add spacing between the row and the border
+              Container(
+                width: double.infinity, // Full width
+                height: 1.0, // Border thickness
+                color: const Color(0xFFD9D9D9), // Border color
+              ),
+
+              const SizedBox(height: 16),
+              // Middle Section
+              Row(
+                children: [
+                  // Icon Container
+                  Container(
+                    height: 48,
+                    width: 48,
+                    decoration: BoxDecoration(
+                      color: Colors.orange,
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                    child: Center(
+                      child: Text(
+                        iconText,
+                        style: const TextStyle(
+                          color: Colors.white,
+                          fontWeight: FontWeight.bold,
+                          fontSize: 18,
+                        ),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(width: 16),
+                  // Texts
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          title,
+                          style: const TextStyle(
+                            fontWeight: FontWeight.bold,
+                            fontSize: 16,
+                          ),
+                          overflow: TextOverflow.ellipsis, // Add ellipsis
+                          maxLines: 1, // Limit to a single line
+                        ),
+                        const SizedBox(height: 4),
+                        Text(
+                          description,
+                          style: const TextStyle(
+                            color: Colors.grey,
+                            fontSize: 14,
+                          ),
+                          overflow: TextOverflow.ellipsis, // Add ellipsis
+                          maxLines: 2, // Limit to two lines
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 16),
+              // Bottom Row
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Row(
+                    children: [
+                      const Icon(Icons.calendar_today, size: 20, color: Colors.black),
+                      const SizedBox(width: 8),
+                      Text(
+                        "Date: $date",
+                        style: const TextStyle(fontSize: 14, color: Colors.black),
+                      ),
+                    ],
+                  ),
+                  Row(
+                    children: [
+                      const Icon(Icons.timer, size: 20, color: Colors.black),
+                      const SizedBox(width: 4),
+                      Text(
+                        "${duration}min",
+                        style: const TextStyle(fontSize: 14, color: Colors.black),
+                      ),
+                      const SizedBox(width: 16),
+                      const Icon(Icons.grade, size: 20, color: Colors.black),
+                      const SizedBox(width: 4),
+                      Text(
+                        "${totalMarks}pts",
+                        style: const TextStyle(fontSize: 14, color: Colors.black),
+                      ),
+                    ],
+                  ),
+                ],
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}

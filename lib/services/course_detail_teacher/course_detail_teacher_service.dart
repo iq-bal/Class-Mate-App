@@ -38,6 +38,15 @@ class CourseDetailTeacherService {
              evaluated_at
           }
         }
+        classTests {
+          id
+          title
+          description
+          date
+          duration
+          total_marks
+          created_at
+        }
         schedule(section: "$section", day: "$day") {
           section
           room_number
@@ -79,17 +88,86 @@ class CourseDetailTeacherService {
     }
   }
   Future<void>createAssignment(String courseId, String title,String description,String deadline) async {
-      try{
-        final response = await dioClient.getDio(AppConfig.mainNormalBaseUrl).post(
-            '/create/create-assignment?courseId=$courseId',
-          data: {
-            'title': title,
-            'description': description,
-            'deadline': deadline
-          }
-        );
-      }catch(e){
-          throw Exception('Error occurred: $e');
+    final String mutation = '''
+    mutation {
+      createAssignment(assignmentInput: {
+        course_id: "$courseId"
+        title: "$title"
+        description: "$description"
+        deadline: "$deadline"
+      }) {
+        id
+        title
+        description
+        deadline
+        created_at
+        course {
+          title
+          course_code
+        }
       }
+    }
+    ''';
+    
+    try {
+      final response = await dioClient.getDio(AppConfig.graphqlServer).post(
+        '/',
+        data: {'query': mutation},
+      );
+      
+      if (response.statusCode == 200 && response.data != null) {
+        final data = response.data;
+        
+        if (data['errors'] != null) {
+          throw Exception('GraphQL errors: ${data['errors']}');
+        }
+      } else {
+        throw Exception('Failed to create assignment. Status: ${response.statusCode}');
+      }
+    } catch (e) {
+      throw Exception('Error occurred: $e');
+    }
+  }
+
+  Future<void> createClassTest(String courseId, String title, String description, String date, int duration, int totalMarks) async {
+    final String mutation = '''
+    mutation {
+      createClassTest(classTestInput: {
+        course_id: "$courseId"
+        title: "$title"
+        description: "$description"
+        date: "$date"
+        duration: $duration
+        total_marks: $totalMarks
+      }) {
+        id
+        title
+        description
+        date
+        duration
+        total_marks
+        created_at
+      }
+    }
+    ''';
+    
+    try {
+      final response = await dioClient.getDio(AppConfig.graphqlServer).post(
+        '/',
+        data: {'query': mutation},
+      );
+      
+      if (response.statusCode == 200 && response.data != null) {
+        final data = response.data;
+        
+        if (data['errors'] != null) {
+          throw Exception('GraphQL errors: ${data['errors']}');
+        }
+      } else {
+        throw Exception('Failed to create class test. Status: ${response.statusCode}');
+      }
+    } catch (e) {
+      throw Exception('Error occurred: $e');
+    }
   }
 }

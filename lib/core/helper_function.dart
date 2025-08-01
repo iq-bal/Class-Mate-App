@@ -35,6 +35,15 @@ class HelperFunction {
     return DateFormat('MMM d, yyyy').format(date);
   }
 
+  static String formatISODate(String isoDateString) {
+    try {
+      DateTime date = DateTime.parse(isoDateString);
+      return DateFormat('MMM d, yyyy').format(date);
+    } catch (e) {
+      return 'Invalid Date';
+    }
+  }
+
   static String cleanTime(String time) {
     // Use a regex to remove any alphabets (both uppercase and lowercase)
     final regex = RegExp(r'[a-zA-Z]');

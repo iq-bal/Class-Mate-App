@@ -37,4 +37,16 @@ class CourseDetailTeacherController {
     }
   }
 
+  Future<void> createClassTest(String courseId, String title, String description, String date, int duration, int totalMarks) async {
+    stateNotifier.value = CourseDetailState.loading;
+    errorMessage = '';
+    try {
+      await _courseDetailTeacherService.createClassTest(courseId, title, description, date, duration, totalMarks);
+      stateNotifier.value = CourseDetailState.success;
+    } catch (e) {
+      errorMessage = 'Failed to create class test: $e';
+      stateNotifier.value = CourseDetailState.error;
+    }
+  }
+
 }

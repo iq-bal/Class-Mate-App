@@ -3,8 +3,10 @@ import 'package:flutter/material.dart';
 import 'package:classmate/controllers/course_detail_teacher/course_detail_teacher_controller.dart';
 import 'package:classmate/core/helper_function.dart';
 import 'package:classmate/views/course_detail_teacher/widgets/assignment.dart';
+import 'package:classmate/views/course_detail_teacher/widgets/class_test.dart';
 import 'package:classmate/views/course_detail_teacher/widgets/course_card.dart';
 import 'package:classmate/views/course_detail_teacher/widgets/create_assignment_modal.dart';
+import 'package:classmate/views/course_detail_teacher/widgets/create_class_test_modal.dart';
 import 'package:classmate/views/course_detail_teacher/widgets/custom_app_bar.dart';
 import 'package:classmate/views/course_detail_teacher/widgets/student_list.dart';
 import 'package:classmate/views/course_detail_teacher/enrollment_management_view.dart';
@@ -27,7 +29,7 @@ class _CourseDetailScreenState extends State<CourseDetailScreen> {
   }
 
   void _fetchCourseDetails() {
-    courseDetailTeacherController.fetchCourseDetails('688c897cbc0e48abbbd88fc7', "A", "Sunday");
+    courseDetailTeacherController.fetchCourseDetails('688d0a23c0d300664cba2d43', "A", "Saturday");
   }
 
   void showCreateAssignmentModal(BuildContext context) {
@@ -41,7 +43,7 @@ class _CourseDetailScreenState extends State<CourseDetailScreen> {
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
       ),
-      builder: (context) => CreateAssignmentModal(courseId: '688c897cbc0e48abbbd88fc7',
+      builder: (context) => CreateAssignmentModal(courseId: '688d0a23c0d300664cba2d43',
         onAssignmentCreated: () {
           _fetchCourseDetails();
         },
@@ -52,6 +54,54 @@ class _CourseDetailScreenState extends State<CourseDetailScreen> {
         _isModalOpen = false;
       });
     });
+  }
+
+  void showCreateClassTestModal(BuildContext context) {
+    setState(() {
+      _isModalOpen = true;
+    });
+
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+      ),
+      builder: (context) => CreateClassTestModal(
+        courseId: '688d0a23c0d300664cba2d43',
+        onClassTestCreated: () {
+          _fetchCourseDetails();
+        },
+      ),
+    ).whenComplete(() {
+      // Reset modal state when closed
+      setState(() {
+        _isModalOpen = false;
+      });
+    });
+  }
+
+  String _formatClassTestDate(String dateString) {
+    try {
+      DateTime date;
+      // Check if the dateString is a timestamp (all digits)
+      if (RegExp(r'^\d+$').hasMatch(dateString)) {
+        // Convert timestamp to DateTime
+        final timestamp = int.parse(dateString);
+        date = DateTime.fromMillisecondsSinceEpoch(timestamp);
+      } else {
+        // Parse as ISO date string
+        date = DateTime.parse(dateString);
+      }
+      
+      const months = [
+        'Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun',
+        'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'
+      ];
+      return '${months[date.month - 1]} ${date.day}, ${date.year}';
+    } catch (e) {
+      return dateString;
+    }
   }
 
   @override
@@ -116,7 +166,7 @@ class _CourseDetailScreenState extends State<CourseDetailScreen> {
                               context,
                               MaterialPageRoute(
                                 builder: (context) => EnrollmentManagementView(
-                                  courseId: '688c897cbc0e48abbbd88fc7',
+                                  courseId: '688d0a23c0d300664cba2d43',
                                 ),
                               ),
                             );
@@ -129,7 +179,7 @@ class _CourseDetailScreenState extends State<CourseDetailScreen> {
                             title: assignment.title?.toString() ?? 'No Title',
                             description: assignment.description?.toString() ?? 'No Description',
                             dueDate: assignment.deadline != null 
-                                ? HelperFunction.formatTimestamp(assignment.deadline.toString()).toString()
+                                ? HelperFunction.formatISODate(assignment.deadline.toString())
                                 : 'No Due Date',
                             iconText: assignment.title != null
                                 ? HelperFunction.getFirstTwoLettersUppercase(assignment.title.toString())
@@ -139,6 +189,26 @@ class _CourseDetailScreenState extends State<CourseDetailScreen> {
                               .toList(),
                           onCreateAssignment: () =>
                               showCreateAssignmentModal(context),
+                        ),
+                        const SizedBox(height: 24),
+                        ClassTestContainer(
+                          classTests: course.classTests
+                              .map((classTest) => ClassTest(
+                            id: classTest.id,
+                            title: classTest.title,
+                            description: classTest.description,
+                            date: classTest.date.isNotEmpty 
+                                ? _formatClassTestDate(classTest.date)
+                                : 'No Date',
+                            iconText: classTest.title.isNotEmpty
+                                ? HelperFunction.getFirstTwoLettersUppercase(classTest.title)
+                                : 'CT',
+                            duration: classTest.duration,
+                            totalMarks: classTest.totalMarks,
+                          ))
+                              .toList(),
+                          onCreateClassTest: () =>
+                              showCreateClassTestModal(context),
                         ),
                       ],
                     ),

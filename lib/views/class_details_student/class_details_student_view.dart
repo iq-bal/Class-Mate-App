@@ -131,9 +131,9 @@ class _ClassDetailsStudentState extends State<ClassDetailsStudent> {
                             return AssignmentCard(
                               title: assignment.title ?? "No Title",
                               description: assignment.description ?? "No Description",
-                              dueDate: HelperFunction.formatTimestamp(
-                                DateTime.parse(assignment.deadline?.toString() ?? "").millisecondsSinceEpoch.toString(),
-                              ),
+                              dueDate: assignment.deadline != null
+                                  ? HelperFunction.formatISODate(assignment.deadline.toString())
+                                  : 'No Due Date',
                               iconText: HelperFunction.getFirstTwoLettersUppercase(
                                 assignment.title ?? "",
                               ),
