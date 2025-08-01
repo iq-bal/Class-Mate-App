@@ -249,19 +249,51 @@ class ProfileTeacherService {
     }
   }
 
+  /// Deletes a course with the given ID
+  Future<void> deleteCourse(String courseId) async {
+    const String mutation = '''
+    mutation DeleteCourse(\$id: ID!) {
+      deleteCourse(id: \$id) {
+        id
+        title
+        course_code
+      }
+    }
+    ''';
 
+    try {
+      final response = await dioClient.getDio(AppConfig.graphqlServer).post(
+        '/',
+        data: {
+          'query': mutation,
+          'variables': {'id': courseId},
+        },
+      );
 
+      final data = response.data;
+      if (data == null) {
+        throw Exception('No response data received');
+      }
 
+      if (data['errors'] != null) {
+        final errors = data['errors'] as List<dynamic>;
+        final errorMessage = errors.map((e) => e['message']).join(', ');
+        throw Exception('GraphQL errors: $errorMessage');
+      }
 
+      if (!data.containsKey('data') || data['data'] == null || !data['data'].containsKey('deleteCourse')) {
+        throw Exception('Invalid response format: Missing deleteCourse data');
+      }
 
-
-
-
-
-
-
-
-
-
-
+      final deletedCourse = data['data']['deleteCourse'];
+      if (deletedCourse == null) {
+        throw Exception('Course deletion failed: No course data returned');
+      }
+    } catch (e) {
+      if (e.toString().contains('DioException')) {
+        throw Exception('Network error while deleting course. Please check your connection and try again.');
+      }
+      throw Exception('Error deleting course: $e');
+    }
+  }
 }

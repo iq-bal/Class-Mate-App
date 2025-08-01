@@ -22,7 +22,7 @@ class InstructorInfo extends StatelessWidget {
           Row(
             children: [
               CircleAvatar(
-                backgroundImage: NetworkImage(imageUrl),
+                backgroundImage: NetworkImage('http://localhost:4001$imageUrl'),
                 radius: 18,
               ),
               const SizedBox(width: 8),

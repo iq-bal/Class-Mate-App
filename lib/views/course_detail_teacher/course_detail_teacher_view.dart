@@ -26,7 +26,7 @@ class _CourseDetailScreenState extends State<CourseDetailScreen> {
   }
 
   void _fetchCourseDetails() {
-    courseDetailTeacherController.fetchCourseDetails('675c910186e75d98dc7c5cae', "A", "Monday");
+    courseDetailTeacherController.fetchCourseDetails('6811b4110cc219f150935c0f', "A", "Sunday");
   }
 
   void showCreateAssignmentModal(BuildContext context) {
@@ -40,7 +40,7 @@ class _CourseDetailScreenState extends State<CourseDetailScreen> {
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
       ),
-      builder: (context) => CreateAssignmentModal(courseId: '675c910186e75d98dc7c5cae',
+      builder: (context) => CreateAssignmentModal(courseId: '6811b4110cc219f150935c0f',
         onAssignmentCreated: () {
           _fetchCourseDetails();
         },
@@ -58,7 +58,7 @@ class _CourseDetailScreenState extends State<CourseDetailScreen> {
     final CourseDetailTeacherController courseDetailTeacherController =
     CourseDetailTeacherController();
     courseDetailTeacherController.fetchCourseDetails(
-        '675c910186e75d98dc7c5cae', "A", "Monday"); // Fetch details on load
+        '6811b4110cc219f150935c0f', "A", "Sunday"); // Fetch details on load
 
     return Stack(
       children: [

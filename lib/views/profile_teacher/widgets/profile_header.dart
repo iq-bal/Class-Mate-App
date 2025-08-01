@@ -86,7 +86,6 @@ class ProfileHeader extends StatelessWidget {
             ],
           ),
         ),
-
         // Profile avatar + edit icon
         Positioned(
           bottom: -60,

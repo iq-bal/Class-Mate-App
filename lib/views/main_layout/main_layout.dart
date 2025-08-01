@@ -1,13 +1,13 @@
 import 'package:classmate/controllers/chat/socket_controller.dart';
 import 'package:classmate/views/course_detail_teacher/course_detail_teacher_view.dart';
 import 'package:classmate/views/home_teacher/home_teacher_view.dart';
+import 'package:classmate/views/profile/profile_student_view.dart';
 import 'package:classmate/views/profile_teacher/teacher_profile_page.dart';
 import 'package:classmate/views/task/task_view.dart';
 import 'package:flutter/material.dart';
 import 'package:classmate/views/home/home_view.dart';
 import 'package:classmate/views/explore/explore_course_view.dart';
 import 'package:classmate/views/chat/chat_view.dart';
-import 'package:classmate/views/profile/profile_view.dart';
 import 'package:classmate/views/main_layout/widgets/bottom_nav_item.dart';
 import 'package:classmate/views/main_layout/widgets/modern_bottom_navbar.dart';
 
@@ -65,13 +65,13 @@ class _MainLayoutState extends State<MainLayout> {
         const TaskView(),
         const ExploreCourseView(),
         const ChatView(),
-        const ProfileScreen(),
+        const ProfileStudentView(),
       ];
 
       _navItems = [
         BottomNavItem(icon: Icons.schedule, label: 'Home'),
         BottomNavItem(icon: Icons.task, label: 'Task'),
-        BottomNavItem(icon: Icons.explore, label: 'Explore'),
+        BottomNavItem(icon: Icons.explore, label: 'E'),
         BottomNavItem(icon: Icons.chat_bubble_outline, label: 'Chat'),
         BottomNavItem(icon: Icons.person, label: "Profile"),
       ];

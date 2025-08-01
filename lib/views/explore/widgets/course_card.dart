@@ -1,4 +1,4 @@
-import 'package:classmate/views/course_detail_student/course_detail_view.dart';
+import 'package:classmate/views/course_overview_student/course_overview_view.dart';
 import 'package:flutter/material.dart';
 
 class CourseCard extends StatelessWidget {
@@ -8,7 +8,7 @@ class CourseCard extends StatelessWidget {
   final String description;
   final Color backgroundColor;
   final bool isHighlighted;
-  final String courseId; // Added courseId parameter
+  final String courseId;
 
   const CourseCard({
     super.key,
@@ -23,13 +23,20 @@ class CourseCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return GestureDetector(
+    return GestureDetector( 
       onTap: () {
         // Navigate to the CourseDetailScreen and pass the courseId
+        // Navigator.push(
+        //   context,
+        //   MaterialPageRoute(
+        //     builder: (context) => CourseDetailScreen(courseId: courseId),
+        //   ),
+        // );
+
         Navigator.push(
           context,
           MaterialPageRoute(
-            builder: (context) => CourseDetailScreen(courseId: courseId),
+            builder: (context) => CourseOverviewView(courseId: courseId),
           ),
         );
       },

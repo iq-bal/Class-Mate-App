@@ -54,6 +54,8 @@ class CourseDetailTeacherService {
         data: {'query': query},
       );
 
+      // print(response);
+
       if (response.statusCode == 200 && response.data != null) {
         return CourseDetailTeacherModel.fromJson(response.data['data']['course']);
       } else {

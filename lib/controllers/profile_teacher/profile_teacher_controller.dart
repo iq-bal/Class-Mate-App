@@ -103,6 +103,18 @@ class ProfileTeacherController {
     }
   }
 
-
-
+  /// Deletes a course and updates the local state
+  Future<void> deleteCourse(String courseId) async {
+    stateNotifier.value = ProfileTeacherState.loading;
+    try {
+      await _profileTeacherService.deleteCourse(courseId);
+      if (teacherProfile != null && teacherProfile!.courses != null) {
+        teacherProfile!.courses!.removeWhere((course) => course.id == courseId);
+      }
+      stateNotifier.value = ProfileTeacherState.success;
+    } catch (error) {
+      errorMessage = error.toString();
+      stateNotifier.value = ProfileTeacherState.error;
+    }
+  }
 }

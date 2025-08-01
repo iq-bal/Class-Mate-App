@@ -72,9 +72,55 @@ class _TeacherProfilePageState extends State<TeacherProfilePage> {
 
                 CoursesSection(
                   courses: profile.courses
-                      ?.map((c) => UICourse(title: c.title, imagePath: c.image))
+                      ?.map((c) => UICourse(
+                            id: c.id,
+                            title: c.title,
+                            imagePath: c.image,
+                          ))
                       .toList() ??
                       [],
+                  onDeleteCourse: (courseId) async {
+                    final confirmed = await showDialog<bool>(
+                      context: context,
+                      builder: (context) => AlertDialog(
+                        title: const Text('Delete Course'),
+                        content: const Text('Are you sure you want to delete this course?'),
+                        actions: [
+                          TextButton(
+                            onPressed: () => Navigator.pop(context, false),
+                            child: const Text('Cancel'),
+                          ),
+                          TextButton(
+                            onPressed: () => Navigator.pop(context, true),
+                            child: const Text('Delete'),
+                          ),
+                        ],
+                      ),
+                    );
+
+                    if (confirmed == true) {
+                      try {
+                        await _controller.deleteCourse(courseId);
+                        if (mounted) {
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            const SnackBar(
+                              content: Text('Course deleted successfully'),
+                              backgroundColor: Colors.green,
+                            ),
+                          );
+                        }
+                      } catch (e) {
+                        if (mounted) {
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            SnackBar(
+                              content: Text(e.toString().replaceAll('Exception: ', '')),
+                              backgroundColor: Colors.red,
+                            ),
+                          );
+                        }
+                      }
+                    }
+                  },
                 ),
 
                 const SizedBox(height: 30),
