@@ -1,3 +1,4 @@
+import 'package:classmate/views/assignment/assignment_detail_view.dart';
 import 'package:classmate/views/class_details_student/class_details_student_view.dart';
 import 'package:classmate/views/home/widgets/home_header.dart';
 import 'package:classmate/views/home/widgets/next_class_card.dart';
@@ -16,7 +17,13 @@ class HomeView extends StatelessWidget {
       body: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const HomeHeader(),
+          HomeHeader(
+            userName: "Iqbal",
+            currentClass: "Machine Learning",
+            currentInstructor: "Dr. Al-Mahmud",
+            onJoinClass: () => print("Joining class..."),
+            onNotificationTap: () => print("Notification clicked"),
+          ),
 
           const SizedBox(height: 16),
 
@@ -68,7 +75,14 @@ class HomeView extends StatelessWidget {
                     padding: const EdgeInsets.symmetric(horizontal: 16),
                     itemCount: 3,
                     itemBuilder: (context, index) {
-                      return const AssignmentCard();
+                      return AssignmentCard(
+                        title: "Profit and Loss",
+                        subject: "Accounting",
+                        dueText: "Due tomorrow",
+                        onViewTask: () {
+                          Navigator.push(context, MaterialPageRoute(builder: (_) => const AssignmentDetailPage(assignmentId: '6770faec4ba49e91eade309d')));
+                        },
+                      );
                     },
                   ),
 

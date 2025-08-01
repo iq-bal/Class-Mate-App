@@ -7,6 +7,7 @@ import 'package:classmate/views/course_detail_teacher/widgets/course_card.dart';
 import 'package:classmate/views/course_detail_teacher/widgets/create_assignment_modal.dart';
 import 'package:classmate/views/course_detail_teacher/widgets/custom_app_bar.dart';
 import 'package:classmate/views/course_detail_teacher/widgets/student_list.dart';
+import 'package:classmate/views/course_detail_teacher/enrollment_management_view.dart';
 
 class CourseDetailScreen extends StatefulWidget {
   const CourseDetailScreen({super.key});
@@ -26,7 +27,7 @@ class _CourseDetailScreenState extends State<CourseDetailScreen> {
   }
 
   void _fetchCourseDetails() {
-    courseDetailTeacherController.fetchCourseDetails('6811b4110cc219f150935c0f', "A", "Sunday");
+    courseDetailTeacherController.fetchCourseDetails('688c897cbc0e48abbbd88fc7', "A", "Sunday");
   }
 
   void showCreateAssignmentModal(BuildContext context) {
@@ -40,7 +41,7 @@ class _CourseDetailScreenState extends State<CourseDetailScreen> {
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
       ),
-      builder: (context) => CreateAssignmentModal(courseId: '6811b4110cc219f150935c0f',
+      builder: (context) => CreateAssignmentModal(courseId: '688c897cbc0e48abbbd88fc7',
         onAssignmentCreated: () {
           _fetchCourseDetails();
         },
@@ -55,11 +56,6 @@ class _CourseDetailScreenState extends State<CourseDetailScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final CourseDetailTeacherController courseDetailTeacherController =
-    CourseDetailTeacherController();
-    courseDetailTeacherController.fetchCourseDetails(
-        '6811b4110cc219f150935c0f', "A", "Sunday"); // Fetch details on load
-
     return Stack(
       children: [
         Scaffold(
@@ -83,20 +79,21 @@ class _CourseDetailScreenState extends State<CourseDetailScreen> {
                         'Error occurred'));
               } else if (state == CourseDetailState.success &&
                   courseDetailTeacherController.courseDetail != null) {
-                final course = courseDetailTeacherController.courseDetail!;
-                return SingleChildScrollView(
+                try {
+                  final course = courseDetailTeacherController.courseDetail!;
+                  return SingleChildScrollView(
                   child: Padding(
                     padding: const EdgeInsets.all(16.0),
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         CourseCard(
-                          courseCode: course.courseCode,
-                          className: 'Class ${course.schedule.section}',
-                          day: course.schedule.day,
-                          time: course.schedule.startTime,
-                          title: course.title,
-                          roomNo: course.schedule.roomNo,
+                          courseCode: course.courseCode ?? 'No Code',
+                          className: 'Class ${course.schedule.section ?? 'Unknown'}',
+                          day: course.schedule.day ?? 'No Day',
+                          time: course.schedule.startTime ?? 'No Time',
+                          title: course.title ?? 'No Title',
+                          roomNo: course.schedule.roomNo ?? 'No Room',
                           onAttend: () {
                             print('Attend button pressed');
                           },
@@ -108,28 +105,36 @@ class _CourseDetailScreenState extends State<CourseDetailScreen> {
                         StudentList(
                           students: course.enrolledStudents
                               .map((user) => {
-                            'name': user.name,
-                            'id': user.id,
+                            'name': user.name ?? 'Unknown Student',
+                            'id': user.id ?? '',
                             'isPresent': false,
                           })
                               .toList(),
                           showViewAll: true,
                           onViewAllPressed: () {
-                            debugPrint('View All Pressed');
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder: (context) => EnrollmentManagementView(
+                                  courseId: '688c897cbc0e48abbbd88fc7',
+                                ),
+                              ),
+                            );
                           },
                         ),
                         AssignmentContainer(
                           assignments: course.assignments
                               .map((assignment) => Assignment(
-                            id: assignment.id.toString(),
-                            title: assignment.title.toString(),
-                            description:
-                            assignment.description.toString(),
-                            dueDate: HelperFunction.formatTimestamp(assignment.deadline.toString()).toString(),
-                            iconText: HelperFunction
-                                .getFirstTwoLettersUppercase(
-                                assignment.title.toString()),
-                            totalItems: assignment.submissions.length,
+                            id: assignment.id?.toString() ?? '',
+                            title: assignment.title?.toString() ?? 'No Title',
+                            description: assignment.description?.toString() ?? 'No Description',
+                            dueDate: assignment.deadline != null 
+                                ? HelperFunction.formatTimestamp(assignment.deadline.toString()).toString()
+                                : 'No Due Date',
+                            iconText: assignment.title != null
+                                ? HelperFunction.getFirstTwoLettersUppercase(assignment.title.toString())
+                                : 'NA',
+                            totalItems: assignment.submissions?.length ?? 0,
                           ))
                               .toList(),
                           onCreateAssignment: () =>
@@ -139,6 +144,11 @@ class _CourseDetailScreenState extends State<CourseDetailScreen> {
                     ),
                   ),
                 );
+                } catch (e) {
+                  return Center(
+                    child: Text('Error displaying course data: $e')
+                  );
+                }
               }
               return const Center(child: Text('No data available'));
             },

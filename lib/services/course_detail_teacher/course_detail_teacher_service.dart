@@ -38,9 +38,9 @@ class CourseDetailTeacherService {
              evaluated_at
           }
         }
-        schedule(section: "$section",day:"$day"){
+        schedule(section: "$section", day: "$day") {
           section
-          room_no
+          room_number
           day
           start_time
           end_time
@@ -49,17 +49,30 @@ class CourseDetailTeacherService {
     }
     ''';
     try {
-      final response = await dioClient.getDio(AppConfig.mainServerBaseUrl).post(
-        '/graphql',
+      
+      final response = await dioClient.getDio(AppConfig.graphqlServer).post(
+        '/',
         data: {'query': query},
       );
 
-      // print(response);
+      print(response);
 
       if (response.statusCode == 200 && response.data != null) {
-        return CourseDetailTeacherModel.fromJson(response.data['data']['course']);
+        final data = response.data;
+        
+        // Check for GraphQL errors
+        if (data['errors'] != null) {
+          throw Exception('GraphQL errors: ${data['errors']}');
+        }
+        
+        // Check if data and course exist
+        if (data['data'] != null && data['data']['course'] != null) {
+          return CourseDetailTeacherModel.fromJson(data['data']['course'] as Map<String, dynamic>);
+        } else {
+          throw Exception('Course data is null or missing');
+        }
       } else {
-        throw Exception('Failed to load course details');
+        throw Exception('Failed to load course details. Status: ${response.statusCode}');
       }
     } catch (e) {
       throw Exception('Error occurred: $e');

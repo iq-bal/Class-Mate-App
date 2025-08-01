@@ -23,16 +23,24 @@ class CourseDetailTeacherModel {
 
   factory CourseDetailTeacherModel.fromJson(Map<String, dynamic> json) {
     return CourseDetailTeacherModel(
-      id: json['id'].toString(),
-      title: json['title'].toString(),
-      courseCode: json['course_code'].toString(),
-      enrolledStudents: (json['enrolled_students'] as List)
-          .map((student) => StudentModel.fromJson(student))
+      id: json['id']?.toString() ?? '',
+      title: json['title']?.toString() ?? '',
+      courseCode: json['course_code']?.toString() ?? '',
+      enrolledStudents: (json['enrolled_students'] as List<dynamic>? ?? [])
+          .map((student) => StudentModel.fromJson(student as Map<String, dynamic>))
           .toList(),
-      assignments: (json['assignments'] as List)
-          .map((assignment) => AssignmentEntity.fromJson(assignment))
+      assignments: (json['assignments'] as List<dynamic>? ?? [])
+          .map((assignment) => AssignmentEntity.fromJson(assignment as Map<String, dynamic>))
           .toList(),
-      schedule: ScheduleModel.fromJson(json['schedule'])
+      schedule: json['schedule'] != null 
+          ? ScheduleModel.fromJson(json['schedule'] as Map<String, dynamic>)
+          : ScheduleModel(
+              section: '',
+              roomNo: '',
+              day: '',
+              startTime: '',
+              endTime: ''
+            )
     );
   }
 }

@@ -7,10 +7,12 @@ import '../../models/assignment/assignment_detail_model.dart';
 import '../../models/assignment/assignment_model.dart';
 
 class AssignmentDetailPage extends StatefulWidget {
+  final String assignmentId; // Assignment ID passed from parent
 
-  final String assignmentId="6770faec4ba49e91eade309d"; // Assignment ID to fetch details for
-
-  const AssignmentDetailPage({super.key});
+  const AssignmentDetailPage({
+    super.key,
+    required this.assignmentId,
+  });
 
   @override
   State<AssignmentDetailPage> createState() => _AssignmentDetailPageState();
@@ -18,13 +20,13 @@ class AssignmentDetailPage extends StatefulWidget {
 
 class _AssignmentDetailPageState extends State<AssignmentDetailPage> {
   final AssignmentDetailController _controller = AssignmentDetailController();
-  bool isLoading = true; // Tracks loading state for submission check
-  bool hasSubmission = false; // Tracks whether submission exists
+  bool isLoading = true;
+  bool hasSubmission = false;
 
   @override
   void initState() {
-     super.initState();
-     _fetchAssignmentDetails();
+    super.initState();
+    _fetchAssignmentDetails();
   }
 
   Future<void> _fetchAssignmentDetails() async {
@@ -37,7 +39,6 @@ class _AssignmentDetailPageState extends State<AssignmentDetailPage> {
 
   @override
   Widget build(BuildContext context) {
-
     if (isLoading) {
       return const Scaffold(
         body: Center(child: CircularProgressIndicator()),
@@ -45,7 +46,9 @@ class _AssignmentDetailPageState extends State<AssignmentDetailPage> {
     }
 
     if (hasSubmission) {
-      return AssessmentsView(assignmentDetail: _controller.assignmentDetail??const AssignmentDetailModel());
+      return AssessmentsView(
+        assignmentDetail: _controller.assignmentDetail ?? const AssignmentDetailModel(),
+      );
     }
 
     return const CreateAssignmentView(

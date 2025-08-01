@@ -1,7 +1,18 @@
 import 'package:flutter/material.dart';
 
 class AssignmentCard extends StatelessWidget {
-  const AssignmentCard({super.key});
+  final String title;
+  final String subject;
+  final String dueText;
+  final VoidCallback? onViewTask;
+
+  const AssignmentCard({
+    super.key,
+    required this.title,
+    required this.subject,
+    required this.dueText,
+    this.onViewTask,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -28,7 +39,7 @@ class AssignmentCard extends StatelessWidget {
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
               Text(
-                "Calculate Comparison",
+                title,
                 style: TextStyle(
                   fontSize: 18,
                   fontWeight: FontWeight.w600,
@@ -36,9 +47,7 @@ class AssignmentCard extends StatelessWidget {
                 ),
               ),
               GestureDetector(
-                onTap: () {
-                  print("View Task clicked");
-                },
+                onTap: onViewTask,
                 child: Container(
                   padding: const EdgeInsets.symmetric(vertical: 6, horizontal: 12),
                   decoration: BoxDecoration(
@@ -78,7 +87,7 @@ class AssignmentCard extends StatelessWidget {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    "Accounting",
+                    subject,
                     style: TextStyle(
                       fontSize: 14,
                       color: Colors.black.withOpacity(0.6),
@@ -90,7 +99,7 @@ class AssignmentCard extends StatelessWidget {
                       const Icon(Icons.calendar_today, size: 14, color: Colors.red),
                       const SizedBox(width: 6),
                       Text(
-                        "Due tomorrow",
+                        dueText,
                         style: TextStyle(
                           fontSize: 12,
                           color: Colors.red.withOpacity(0.8),

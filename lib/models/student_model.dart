@@ -14,13 +14,12 @@ class StudentModel {
   });
 
   factory StudentModel.fromJson(Map<String, dynamic> json) {
-
     return StudentModel(
-      id: json['id'].toString(),
-      roll: json['roll'].toString(),
-      name: json['name'].toString(),
-      email: json['email'].toString(),
-      section: json['section'].toString(),
+      id: json['id']?.toString() ?? '',
+      roll: json['roll']?.toString() ?? '',
+      name: json['name']?.toString() ?? '',
+      email: json['email']?.toString() ?? '',
+      section: json['section']?.toString() ?? '',
     );
   }
   Map<String, dynamic> toJson() {

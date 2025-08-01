@@ -14,14 +14,14 @@ class ScheduleModel{
     required this.endTime
   });
 
-  // Factory constructor to create a UserModel object from a JSON map
+  // Factory constructor to create a ScheduleModel object from a JSON map
   factory ScheduleModel.fromJson(Map<String, dynamic> json) {
     return ScheduleModel(
-        section: json['section'].toString(), // Extracts 'id' from the JSON map
-        roomNo: json['room_no'].toString(), // Extracts 'email' from the JSON map
-        day: json['day'].toString(), // Extracts 'name' from the JSON map
-        startTime: json['start_time'].toString(), // Extracts 'role' from the JSON map
-        endTime: json['end_time'].toString()
+        section: json['section']?.toString() ?? '',
+        roomNo: json['room_number']?.toString() ?? '',
+        day: json['day']?.toString() ?? '',
+        startTime: json['start_time']?.toString() ?? '',
+        endTime: json['end_time']?.toString() ?? ''
     );
   }
 }

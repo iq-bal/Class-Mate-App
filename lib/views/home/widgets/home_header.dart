@@ -1,10 +1,40 @@
 import 'package:flutter/material.dart';
+import 'package:intl/intl.dart';
 
 class HomeHeader extends StatelessWidget {
-  const HomeHeader({super.key});
+  final String userName;
+  final String currentClass;
+  final String currentInstructor;
+  final VoidCallback onJoinClass;
+  final VoidCallback onNotificationTap;
+
+  const HomeHeader({
+    super.key,
+    required this.userName,
+    required this.currentClass,
+    required this.currentInstructor,
+    required this.onJoinClass,
+    required this.onNotificationTap,
+  });
+
+  List<DateTime> _generateWeekDates() {
+    final today = DateTime.now();
+    return List.generate(7, (index) => today.add(Duration(days: index)));
+  }
+
+  String _generateGreetingMessage() {
+    final hour = DateTime.now().hour;
+    if (hour < 12) return "Ready for your morning classes?";
+    if (hour < 17) return "All set for the afternoon sessions?";
+    return "Prepared for your evening studies?";
+  }
 
   @override
   Widget build(BuildContext context) {
+    final weekDates = _generateWeekDates();
+    final today = DateTime.now();
+    final subtitle = _generateGreetingMessage();
+
     return Container(
       decoration: BoxDecoration(
         color: Colors.blue[900],
@@ -26,22 +56,22 @@ class HomeHeader extends StatelessWidget {
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              const Column(
+              Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    "Hello, Iqbal!",
-                    style: TextStyle(
+                    "Hello, $userName!",
+                    style: const TextStyle(
                       fontSize: 24,
                       fontWeight: FontWeight.bold,
                       color: Colors.white,
                       fontFamily: 'Georgia',
                     ),
                   ),
-                  SizedBox(height: 4),
+                  const SizedBox(height: 4),
                   Text(
-                    "Ready for today classes?",
-                    style: TextStyle(
+                    subtitle,
+                    style: const TextStyle(
                       fontSize: 16,
                       color: Colors.white70,
                       fontFamily: 'Arial',
@@ -57,9 +87,7 @@ class HomeHeader extends StatelessWidget {
                   shape: BoxShape.circle,
                 ),
                 child: IconButton(
-                  onPressed: () {
-                    print("Notification bell pressed");
-                  },
+                  onPressed: onNotificationTap,
                   icon: const Icon(
                     Icons.notifications_none,
                     color: Colors.white,
@@ -71,37 +99,38 @@ class HomeHeader extends StatelessWidget {
           ),
           const SizedBox(height: 16),
 
-          // Date Selector
+          // Dynamic Date Selector
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: List.generate(7, (index) {
-              final dates = ["12", "13", "14", "16", "17", "18", "19"];
-              final days = ["Mon", "Tue", "Wed", "Fri", "Sat", "Sun", "Mon"];
-              final isSelected = index == 2; // Wednesday highlighted
+            children: weekDates.map((date) {
+              final isToday = date.day == today.day &&
+                  date.month == today.month &&
+                  date.year == today.year;
+
               return Column(
                 children: [
                   CircleAvatar(
-                    backgroundColor: isSelected ? Colors.green : Colors.white,
+                    backgroundColor: isToday ? Colors.green : Colors.white,
                     radius: 18,
                     child: Text(
-                      dates[index],
+                      DateFormat.d().format(date), // e.g. 12
                       style: TextStyle(
-                        color: isSelected ? Colors.white : Colors.blue[900],
+                        color: isToday ? Colors.white : Colors.blue[900],
                         fontWeight: FontWeight.bold,
                       ),
                     ),
                   ),
                   const SizedBox(height: 4),
                   Text(
-                    days[index],
+                    DateFormat.E().format(date), // e.g. Mon
                     style: TextStyle(
                       color: Colors.white,
-                      fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
+                      fontWeight: isToday ? FontWeight.bold : FontWeight.normal,
                     ),
                   ),
                 ],
               );
-            }),
+            }).toList(),
           ),
           const SizedBox(height: 16),
 
@@ -115,21 +144,21 @@ class HomeHeader extends StatelessWidget {
             child: Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                const Column(
+                Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      "Machine Learning",
-                      style: TextStyle(
+                      currentClass,
+                      style: const TextStyle(
                         fontSize: 18,
                         fontWeight: FontWeight.bold,
                         color: Colors.black,
                       ),
                     ),
-                    SizedBox(height: 4),
+                    const SizedBox(height: 4),
                     Text(
-                      "Dr. Al-Mahmud",
-                      style: TextStyle(
+                      currentInstructor,
+                      style: const TextStyle(
                         fontSize: 14,
                         color: Colors.black54,
                       ),
@@ -137,7 +166,7 @@ class HomeHeader extends StatelessWidget {
                   ],
                 ),
                 ElevatedButton(
-                  onPressed: () {},
+                  onPressed: onJoinClass,
                   style: ElevatedButton.styleFrom(
                     backgroundColor: Colors.blue[900],
                     shape: RoundedRectangleBorder(

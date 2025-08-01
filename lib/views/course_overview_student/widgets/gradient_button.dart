@@ -12,19 +12,29 @@ class GradientButton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final bool isDisabled = onPressed == null;
+    
     return Padding(
       padding: const EdgeInsets.all(16),
       child: Container(
         decoration: BoxDecoration(
           borderRadius: BorderRadius.circular(30), // Smooth rounded corners
-          gradient: const LinearGradient(
-            colors: [Color(0xFF56ab2f), Color(0xFFA8E063)], // Green gradient
-            begin: Alignment.topLeft,
-            end: Alignment.bottomRight,
-          ),
+          gradient: isDisabled
+              ? const LinearGradient(
+                  colors: [Colors.grey, Colors.grey], // Grey gradient when disabled
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
+                )
+              : const LinearGradient(
+                  colors: [Color(0xFF56ab2f), Color(0xFFA8E063)], // Green gradient
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
+                ),
           boxShadow: [
             BoxShadow(
-              color: Colors.green.withOpacity(0.3), // Subtle shadow
+              color: isDisabled
+                  ? Colors.grey.withOpacity(0.3)
+                  : Colors.green.withOpacity(0.3), // Subtle shadow
               blurRadius: 8,
               offset: const Offset(0, 4),
             ),
@@ -43,10 +53,10 @@ class GradientButton extends StatelessWidget {
           ),
           child: Text(
             buttonText,
-            style: const TextStyle(
+            style: TextStyle(
               fontSize: 18,
               fontWeight: FontWeight.bold,
-              color: Colors.white, // Contrast with the green gradient
+              color: isDisabled ? Colors.white.withOpacity(0.7) : Colors.white, // Contrast with the gradient
               letterSpacing: 1.2, // Subtle letter spacing
             ),
           ),

@@ -142,7 +142,7 @@ class _ClassDetailsStudentState extends State<ClassDetailsStudent> {
                                 Navigator.push(
                                   context,
                                   MaterialPageRoute(
-                                    builder: (context) => const AssignmentDetailPage(),
+                                    builder: (context) => const AssignmentDetailPage(assignmentId: '6770faec4ba49e91eade309d',),
                                   ),
                                 );
                               },
