@@ -28,6 +28,7 @@ class ClassDetailsStudent extends StatefulWidget {
 class _ClassDetailsStudentState extends State<ClassDetailsStudent> {
   final ClassDetailsStudentController _controller = ClassDetailsStudentController();
 
+
   @override
   void initState() {
     super.initState();
@@ -35,8 +36,14 @@ class _ClassDetailsStudentState extends State<ClassDetailsStudent> {
   }
 
   void _fetchClassDetails() {
+    print("------------------");
+    print(widget.courseId);
+    print(widget.day);
+    print(widget.teacherId);
+    print("------------------");
     _controller.fetchClassDetails(widget.courseId, widget.day, widget.teacherId);
   }
+
 
   @override
   Widget build(BuildContext context) {
@@ -142,7 +149,7 @@ class _ClassDetailsStudentState extends State<ClassDetailsStudent> {
                                 Navigator.push(
                                   context,
                                   MaterialPageRoute(
-                                    builder: (context) => const AssignmentDetailPage(assignmentId: '6770faec4ba49e91eade309d',),
+                                    builder: (context) => AssignmentDetailPage(assignmentId: assignment.id ?? ''),
                                   ),
                                 );
                               },
