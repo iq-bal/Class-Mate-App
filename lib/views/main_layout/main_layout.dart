@@ -71,7 +71,7 @@ class _MainLayoutState extends State<MainLayout> {
       _navItems = [
         BottomNavItem(icon: Icons.schedule, label: 'Home'),
         BottomNavItem(icon: Icons.task, label: 'Task'),
-        BottomNavItem(icon: Icons.explore, label: 'E'),
+        BottomNavItem(icon: Icons.explore, label: 'Browse'),
         BottomNavItem(icon: Icons.chat_bubble_outline, label: 'Chat'),
         BottomNavItem(icon: Icons.person, label: "Profile"),
       ];
