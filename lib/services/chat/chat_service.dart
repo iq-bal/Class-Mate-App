@@ -34,6 +34,10 @@ class ChatService extends ChangeNotifier {
     socket.onConnect((_) {
       isConnected = true;
       print('Connected to chat server');
+      
+      // Request missed messages when connecting
+      socket.emit('getMissedMessages', {'userId': userId});
+      
       notifyListeners();
     });
 
@@ -52,6 +56,16 @@ class ChatService extends ChangeNotifier {
     socket.on('message', (data) {
       final message = Message.fromJson(data);
       _addMessageToConversation(message);
+      notifyListeners();
+    });
+
+    // Missed messages received when coming online
+    socket.on('missedMessages', (data) {
+      final List<dynamic> messagesData = data['messages'] ?? [];
+      for (final messageData in messagesData) {
+        final message = Message.fromJson(messageData);
+        _addMessageToConversation(message);
+      }
       notifyListeners();
     });
 
@@ -182,6 +196,9 @@ class ChatService extends ChangeNotifier {
     Message? replyTo,
     bool isForwarded = false,
     String? forwardedFrom,
+    String? replyToId,
+    bool forward = false,
+    String? forwardFromId,
   }) async {
     String? fileUrl;
     String? fileName;
@@ -190,55 +207,88 @@ class ChatService extends ChangeNotifier {
     String? thumbnailUrl;
     int? duration;
 
+    Map<String, dynamic> message = {
+      'to': receiverId,
+      'content': content,
+      'type': type,
+      'senderId': userId,
+      'receiverId': receiverId,
+      'messageType': type,
+      'replyTo': replyTo?.id ?? replyToId,
+      'forwarded': isForwarded || forward,
+      'forwardedFrom': forwardedFrom ?? forwardFromId,
+      if (replyToId != null) 'replyTo': replyToId,
+      'forward': forward,
+      if (forwardFromId != null) 'forwardFrom': forwardFromId,
+    };
+    
     // Handle file upload if present
     if (file != null) {
       final uploadResult = await _uploadFile(file, type);
-      fileUrl = uploadResult['fileUrl'];
-      fileName = path.basename(file.path);
-      fileSize = await file.length();
-      fileType = uploadResult['fileType'];
-      thumbnailUrl = uploadResult['thumbnailUrl'];
-      duration = uploadResult['duration'];
+      
+      message.addAll({
+        'file': {
+          'buffer': uploadResult['buffer'], // Send ArrayBuffer directly
+          'name': uploadResult['name'],
+          'size': uploadResult['size'],
+          'type': uploadResult['type'],
+        }
+      });
     }
-
-    final message = {
-      'senderId': userId,
-      'receiverId': receiverId,
-      'content': content,
-      'messageType': type,
-      'fileUrl': fileUrl,
-      'fileName': fileName,
-      'fileSize': fileSize,
-      'fileType': fileType,
-      'thumbnailUrl': thumbnailUrl,
-      'duration': duration,
-      'replyTo': replyTo?.id,
-      'forwarded': isForwarded,
-      'forwardedFrom': forwardedFrom,
-    };
 
     socket.emit('message', message);
   }
 
   Future<Map<String, dynamic>> _uploadFile(File file, String type) async {
     try {
-      final uri = Uri.parse('$baseUrl/upload');
-      final request = http.MultipartRequest('POST', uri)
-        ..headers['Authorization'] = 'Bearer $token'
-        ..files.add(await http.MultipartFile.fromPath('file', file.path));
-
-      final response = await request.send();
-      final responseData = await response.stream.bytesToString();
-      final jsonResponse = json.decode(responseData);
-
-      if (response.statusCode != 200) {
-        throw Exception('Failed to upload file: ${jsonResponse['message']}');
+      // Read file as bytes (equivalent to ArrayBuffer in JavaScript)
+      final bytes = await file.readAsBytes();
+      final fileName = path.basename(file.path);
+      final fileSize = bytes.length;
+      
+      // Determine file type based on extension
+      String fileType = 'application/octet-stream'; // default
+      final extension = path.extension(fileName).toLowerCase();
+      
+      switch (extension) {
+        case '.jpg':
+        case '.jpeg':
+          fileType = 'image/jpeg';
+          break;
+        case '.png':
+          fileType = 'image/png';
+          break;
+        case '.gif':
+          fileType = 'image/gif';
+          break;
+        case '.webp':
+          fileType = 'image/webp';
+          break;
+        case '.mp4':
+          fileType = 'video/mp4';
+          break;
+        case '.webm':
+          fileType = 'video/webm';
+          break;
+        case '.mp3':
+          fileType = 'audio/mpeg';
+          break;
+        case '.wav':
+          fileType = 'audio/wav';
+          break;
+        case '.pdf':
+          fileType = 'application/pdf';
+          break;
       }
-
-      return jsonResponse;
+      
+      return {
+        'buffer': bytes, // Send bytes directly as buffer
+        'name': fileName,
+        'size': fileSize,
+        'type': fileType,
+      };
     } catch (e) {
-      print('Error uploading file: $e');
-      rethrow;
+      throw Exception('Failed to prepare file: $e');
     }
   }
 
@@ -329,7 +379,123 @@ class ChatService extends ChangeNotifier {
     super.dispose();
   }
 
-  void sendTypingIndicator(String receiverId) {}
+  // Additional methods for ChatController compatibility
+  void sendFileMessage({
+    required String receiverId,
+    required String content,
+    required File file,
+    String? replyToId,
+  }) {
+    sendMessage(
+      receiverId: receiverId,
+      content: content,
+      type: _getFileType(file),
+      file: file,
+      replyTo: replyToId != null ? _findMessageById(replyToId) : null,
+    );
+  }
 
-  void sendStopTypingIndicator(String receiverId) {}
+  String _getFileType(File file) {
+    final extension = path.extension(file.path).toLowerCase();
+    if (['.jpg', '.jpeg', '.png', '.gif'].contains(extension)) {
+      return 'image';
+    } else if (['.mp4', '.mov', '.avi'].contains(extension)) {
+      return 'video';
+    } else if (['.mp3', '.wav', '.m4a'].contains(extension)) {
+      return 'voice';
+    }
+    return 'file';
+  }
+
+  Message? _findMessageById(String messageId) {
+    for (final messages in conversations.values) {
+      final message = messages.firstWhere(
+        (m) => m.id == messageId,
+        orElse: () => throw StateError('Message not found'),
+      );
+      if (message.id == messageId) return message;
+    }
+    return null;
+  }
+
+
+
+  void forwardMessage(String messageId, List<String> toUserIds) {
+    socket.emit('forwardMessage', {
+      'messageId': messageId,
+      'toUserIds': toUserIds,
+    });
+  }
+
+  void getConversation(String withUserId, int page, int limit) {
+    socket.emit('getConversation', {
+      'with_user_id': withUserId,
+      'page': page,
+      'limit': limit,
+    });
+  }
+
+  // Delete entire conversation
+  void deleteConversation(String withUserId) {
+    socket.emit('deleteConversation', {
+      'with_user_id': withUserId,
+    });
+  }
+
+  void markMessagesAsRead(String withUserId) {
+    socket.emit('markMessagesAsRead', {
+      'with_user_id': withUserId,
+    });
+  }
+
+  void startTyping(String toUserId) {
+    socket.emit('typing', {
+      'to': toUserId,
+    });
+  }
+
+  void stopTyping(String toUserId) {
+    socket.emit('stopTyping', {
+      'to': toUserId,
+    });
+  }
+
+  void initiateCall(String toUserId, String callType, dynamic signalData) {
+    socket.emit('callUser', {
+      'to': toUserId,
+      'signalData': signalData,
+      'callType': callType,
+    });
+  }
+
+  void answerCall(String toUserId, dynamic signalData) {
+    socket.emit('answerCall', {
+      'to': toUserId,
+      'signalData': signalData,
+    });
+  }
+
+  void rejectCall(String toUserId) {
+    socket.emit('rejectCall', {
+      'to': toUserId,
+    });
+  }
+
+  void endCall(String toUserId) {
+    socket.emit('endCall', {
+      'to': toUserId,
+    });
+  }
+
+  void disconnect() {
+    socket.disconnect();
+  }
+
+  void sendTypingIndicator(String receiverId) {
+    startTyping(receiverId);
+  }
+
+  void sendStopTypingIndicator(String receiverId) {
+    stopTyping(receiverId);
+  }
 }

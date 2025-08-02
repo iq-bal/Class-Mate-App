@@ -50,61 +50,69 @@ class _ChatScreenState extends State<ChatScreen> {
   }
 
   void _handleNewMessage(dynamic data) {
-    setState(() {
-      _messages.add(Message.fromJson(data));
-      _scrollToBottom();
-    });
+    if (mounted) {
+      setState(() {
+        _messages.add(Message.fromJson(data));
+        _scrollToBottom();
+      });
+    }
   }
 
   void _handleMessageReaction(dynamic data) {
-    setState(() {
-      final index = _messages.indexWhere((m) => m.id == data['messageId']);
-      if (index != -1) {
-        final message = _messages[index];
-        message.reactions
-          ..removeWhere((r) => r.userId == data['userId'])
-          ..add(MessageReaction.fromJson(data));
-        _messages[index] = message.copyWith(reactions: message.reactions);
-      }
-    });
-  }
-
-  void _handleMessageDeletion(dynamic data) {
-    setState(() {
-      if (data['forEveryone']) {
-        _messages.removeWhere((m) => m.id == data['messageId']);
-      } else {
+    if (mounted) {
+      setState(() {
         final index = _messages.indexWhere((m) => m.id == data['messageId']);
         if (index != -1) {
           final message = _messages[index];
-          final deletedFor = [...message.deletedFor, _chatService.userId];
-          _messages[index] = message.copyWith(deletedFor: deletedFor);
+          message.reactions
+            ..removeWhere((r) => r.userId == data['userId'])
+            ..add(MessageReaction.fromJson(data));
+          _messages[index] = message.copyWith(reactions: message.reactions);
         }
-      }
-    });
+      });
+    }
+  }
+
+  void _handleMessageDeletion(dynamic data) {
+    if (mounted) {
+      setState(() {
+        if (data['forEveryone']) {
+          _messages.removeWhere((m) => m.id == data['messageId']);
+        } else {
+          final index = _messages.indexWhere((m) => m.id == data['messageId']);
+          if (index != -1) {
+            final message = _messages[index];
+            final deletedFor = [...message.deletedFor, _chatService.userId];
+            _messages[index] = message.copyWith(deletedFor: deletedFor);
+          }
+        }
+      });
+    }
   }
 
   void _handleMessageEdit(dynamic data) {
-    setState(() {
-      final index = _messages.indexWhere((m) => m.id == data['messageId']);
-      if (index != -1) {
-        _messages[index] = _messages[index].copyWith(
-          content: data['newContent'],
-          edited: true,
-          editedAt: DateTime.now(),
-        );
-      }
-    });
+    if (mounted) {
+      setState(() {
+        final index = _messages.indexWhere((m) => m.id == data['messageId']);
+        if (index != -1) {
+          _messages[index] = _messages[index].copyWith(
+            content: data['newContent'],
+            edited: true,
+            editedAt: DateTime.now(),
+          );
+        }
+      });
+    }
   }
 
   void _handleTypingIndicator(dynamic data) {
-    if (data['userId'] == widget.receiverId) {
+    if (data['userId'] == widget.receiverId && mounted) {
       setState(() => _isTyping = true);
     }
   }
 
   void _handleStopTyping(dynamic data) {
-    if (data['userId'] == widget.receiverId) {
+    if (data['userId'] == widget.receiverId && mounted) {
       setState(() => _isTyping = false);
     }
   }

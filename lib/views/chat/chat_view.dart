@@ -1,7 +1,15 @@
-import 'package:classmate/services/chat/socket_services.dart';
-import 'package:classmate/views/chat/ai_chat_view.dart';
-import 'package:classmate/views/chat/widgets/message_tile.dart';
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
+import 'package:classmate/controllers/chat/chat_controller.dart';
+import 'package:classmate/controllers/authentication/auth_controller.dart';
+import 'package:classmate/core/token_storage.dart';
+import 'package:classmate/config/app_config.dart';
+import 'package:classmate/views/chat/widgets/conversation_tile.dart';
+import 'package:classmate/views/chat/widgets/user_search_dialog.dart';
+import 'package:classmate/views/chat/chat_screen_view.dart';
+import 'package:classmate/views/chat/ai_chat_view.dart';
+import 'package:classmate/views/authentication/landing.dart';
+import 'package:classmate/services/profile_student/profile_student_service.dart';
 
 class ChatView extends StatefulWidget {
   const ChatView({super.key});
@@ -11,260 +19,318 @@ class ChatView extends StatefulWidget {
 }
 
 class _ChatViewState extends State<ChatView> {
-  final SocketService _socketService = SocketService();
+  ChatController? _chatController;
+  final TokenStorage _tokenStorage = TokenStorage();
+  bool _isLoading = true;
+  String? _currentUserId;
 
   @override
   void initState() {
     super.initState();
+    _initializeChat();
+  }
+
+  Future<void> _initializeChat() async {
+    try {
+      final token = await _tokenStorage.retrieveAccessToken();
+      if (token != null) {
+        // Extract user ID from token storage
+        final userId = await _tokenStorage.retrieveUserId();
+        if (userId != null) {
+          _currentUserId = userId;
+          
+          // Fetch current user's profile to get MongoDB ObjectId and profile picture
+          String? currentUserProfilePicture;
+          String? mongoUserId;
+          try {
+            final profileService = ProfileStudentService();
+            final profile = await profileService.fetchStudentProfile();
+            currentUserProfilePicture = profile.profilePicture;
+            mongoUserId = profile.id; // This is the MongoDB ObjectId used in chat
+          } catch (e) {
+            // Continue without profile picture and use UUID as fallback
+          }
+          
+          _chatController = ChatController(
+            userId: mongoUserId ?? _currentUserId!, // Use MongoDB ObjectId if available
+            baseUrl: AppConfig.socketBaseUrl,
+            token: token,
+            currentUserProfilePicture: currentUserProfilePicture,
+          );
+          
+          await _chatController!.loadConversations();
+          await _chatController!.loadUnreadMessages();
+          
+          if (mounted) {
+            setState(() {
+              _isLoading = false;
+            });
+          }
+        } else {
+          throw Exception('Please log out and log back in to use chat features');
+        }
+      } else {
+        throw Exception('Access token not found');
+      }
+    } catch (e) {
+      print('Error initializing chat: $e');
+      if (mounted) {
+        setState(() {
+          _isLoading = false;
+        });
+      }
+    }
   }
 
   @override
   void dispose() {
+    _chatController?.dispose();
     super.dispose();
   }
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: const Color(0xFFF9F9F9), // Light background
-      body: SingleChildScrollView(
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            // Header Section
-            Container(
-              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 32),
-              decoration: BoxDecoration(
-                color: Colors.blue[900],
-                boxShadow: [
-                  BoxShadow(
-                    color: Colors.black.withOpacity(0.1),
-                    blurRadius: 12,
-                    offset: const Offset(0, 4),
-                  ),
-                ],
-                borderRadius: const BorderRadius.only(
-                  bottomLeft: Radius.circular(24),
-                  bottomRight: Radius.circular(24),
-                ),
-              ),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  const SizedBox(height: 40),
-                  const Text(
-                    "Hi, Iqbal!",
-                    style: TextStyle(
-                      fontSize: 28,
-                      fontWeight: FontWeight.bold,
-                      color: Colors.white,
-                    ),
-                  ),
-                  const SizedBox(height: 4),
-                  const Text(
-                    "You have received",
-                    style: TextStyle(
-                      fontSize: 18,
-                      color: Colors.white70,
-                    ),
-                  ),
-                  const Text(
-                    "48 Messages",
-                    style: TextStyle(
-                      fontSize: 22,
-                      fontWeight: FontWeight.bold,
-                      color: Colors.white,
-                    ),
-                  ),
-                  const SizedBox(height: 24),
-                  const Text(
-                    "Contact List",
-                    style: TextStyle(
-                      fontSize: 18,
-                      fontWeight: FontWeight.bold,
-                      color: Colors.white,
-                    ),
-                  ),
-                  const SizedBox(height: 12),
-                  SizedBox(
-                    height: 80,
-                    child: ListView.builder(
-                      scrollDirection: Axis.horizontal,
-                      itemCount: 6,
-                      itemBuilder: (context, index) => Container(
-                        margin: const EdgeInsets.only(right: 12),
-                        child: Stack(
-                          children: [
-                            CircleAvatar(
-                              radius: 30,
-                              backgroundImage:
-                              const AssetImage('assets/images/avatar.png'),
-                              backgroundColor: Colors.grey[300],
-                            ),
-                            Positioned(
-                              bottom: 20,
-                              right: 0,
-                              child: Container(
-                                decoration: BoxDecoration(
-                                  color: Colors.green,
-                                  shape: BoxShape.circle,
-                                  border: Border.all(
-                                    color: Colors.white,
-                                    width: 2,
-                                  ),
-                                ),
-                                width: 14,
-                                height: 14,
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-            ),
+    if (_isLoading) {
+      return const Scaffold(
+        body: Center(
+          child: CircularProgressIndicator(),
+        ),
+      );
+    }
 
-            // Body Section
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
+    if (_chatController == null) {
+      return Scaffold(
+        body: Center(
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              const Icon(Icons.error, size: 64, color: Colors.red),
+              const SizedBox(height: 16),
+              const Text(
+                'Failed to initialize chat',
+                style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+              ),
+              const SizedBox(height: 8),
+              const Text(
+                'Please log out and log back in to use chat features',
+                style: TextStyle(color: Colors.grey),
+                textAlign: TextAlign.center,
+              ),
+              const SizedBox(height: 16),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  // Tabs Section
-                  Row(
+                  ElevatedButton(
+                    onPressed: _initializeChat,
+                    child: const Text('Retry'),
+                  ),
+                  const SizedBox(width: 16),
+                  ElevatedButton(
+                    onPressed: () async {
+                      final authController = Provider.of<AuthController>(context, listen: false);
+                      await authController.logout(context);
+                      if (authController.stateNotifier.value == AuthState.success) {
+                        Navigator.pushAndRemoveUntil(
+                          context,
+                          MaterialPageRoute(builder: (_) => const LandingPage()),
+                          (route) => false,
+                        );
+                      }
+                    },
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: Colors.orange,
+                    ),
+                    child: const Text('Log Out'),
+                  ),
+                ],
+              ),
+            ],
+          ),
+        ),
+      );
+    }
+
+    return Scaffold(
+      backgroundColor: Colors.grey[50],
+      appBar: AppBar(
+        backgroundColor: Colors.white,
+        elevation: 1,
+        title: const Text(
+          'Messages',
+          style: TextStyle(
+            fontSize: 20,
+            fontWeight: FontWeight.bold,
+            color: Colors.black87,
+          ),
+        ),
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.search, color: Colors.black87),
+            onPressed: () {
+              // Implement search functionality
+            },
+          ),
+          IconButton(
+            icon: const Icon(Icons.more_vert, color: Colors.black87),
+            onPressed: () {
+              // Implement more options
+            },
+          ),
+        ],
+      ),
+      body: Column(
+        children: [
+          // AI Chat Section
+          Container(
+            margin: const EdgeInsets.all(16),
+            padding: const EdgeInsets.all(16),
+            decoration: BoxDecoration(
+              gradient: LinearGradient(
+                colors: [Colors.blue[800]!, Colors.blue[600]!],
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+              ),
+              borderRadius: BorderRadius.circular(16),
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.blue.withOpacity(0.3),
+                  blurRadius: 8,
+                  offset: const Offset(0, 4),
+                ),
+              ],
+            ),
+            child: Row(
+              children: [
+                Container(
+                  padding: const EdgeInsets.all(12),
+                  decoration: BoxDecoration(
+                    color: Colors.white.withOpacity(0.2),
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  child: const Icon(
+                    Icons.smart_toy,
+                    color: Colors.white,
+                    size: 28,
+                  ),
+                ),
+                const SizedBox(width: 16),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Expanded(
-                        child: Container(
-                          padding: const EdgeInsets.symmetric(vertical: 12),
-                          decoration: BoxDecoration(
-                            color: Colors.blue[700],
-                            borderRadius: BorderRadius.circular(16),
-                            boxShadow: [
-                              BoxShadow(
-                                color: Colors.black.withOpacity(0.05),
-                                blurRadius: 6,
-                                offset: const Offset(0, 3),
-                              ),
-                            ],
-                          ),
-                          child: const Center(
-                            child: Text(
-                              "All Messages",
-                              style: TextStyle(
-                                fontSize: 16,
-                                fontWeight: FontWeight.bold,
-                                color: Colors.white,
-                              ),
-                            ),
-                          ),
+                      const Text(
+                        'AI Assistant',
+                        style: TextStyle(
+                          fontSize: 18,
+                          fontWeight: FontWeight.bold,
+                          color: Colors.white,
                         ),
                       ),
-                      const SizedBox(width: 12),
-                      Expanded(
-                        child: InkWell(
-                          onTap: () => Navigator.push(
-                            context,
-                            MaterialPageRoute(
-                                builder: (context) => const AIChatView()),
-                          ),
-                          child: Container(
-                            padding: const EdgeInsets.symmetric(vertical: 12),
-                            decoration: BoxDecoration(
-                              color: Colors.white,
-                              border: Border.all(color: Colors.black12),
-                              borderRadius: BorderRadius.circular(16),
-                            ),
-                            child: const Center(
-                              child: Text(
-                                "AI Assistant",
-                                style: TextStyle(
-                                  fontSize: 16,
-                                  fontWeight: FontWeight.bold,
-                                  color: Colors.black54,
-                                ),
-                              ),
-                            ),
-                          ),
+                      const SizedBox(height: 4),
+                      Text(
+                        'Get instant help with your studies',
+                        style: TextStyle(
+                          fontSize: 14,
+                          color: Colors.white.withOpacity(0.8),
                         ),
                       ),
                     ],
                   ),
-                  const SizedBox(height: 24),
-
-                  // Pinned Messages Section
-                  const Text(
-                    "Pinned Messages (2)",
-                    style: TextStyle(
-                      fontSize: 18,
-                      fontWeight: FontWeight.bold,
-                      color: Color(0xFF3A6073),
-                    ),
-                  ),
-                  const SizedBox(height: 12),
-                  Column(
-                    children: List.generate(
-                      2,
-                          (index) => const MessageTile(
-                        name: 'Niloy Das',
-                        message: 'Kita khobor, gom achoni ...',
-                        time: '10:00 AM',
-                        isPinned: true,
+                ),
+                GestureDetector(
+                  onTap: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => const AIChatView(),
                       ),
+                    );
+                  },
+                  child: Container(
+                    padding: const EdgeInsets.all(8),
+                    decoration: BoxDecoration(
+                      color: Colors.white,
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                    child: Icon(
+                      Icons.arrow_forward_ios,
+                      color: Colors.blue[800],
+                      size: 16,
                     ),
                   ),
-                  const SizedBox(height: 24),
-
-                  // All Messages Section
-                  const Text(
-                    "All Messages (8)",
-                    style: TextStyle(
-                      fontSize: 18,
-                      fontWeight: FontWeight.bold,
-                      color: Color(0xFF3A6073),
-                    ),
-                  ),
-                  const SizedBox(height: 12),
-                  Column(
-                    children: List.generate(
-                      8,
-                          (index) => const MessageTile(
-                        name: 'Niloy Das',
-                        message: 'Kita khobor, gom achoni ...',
-                        time: '10:00 AM',
-                        isPinned: false,
-                      ),
-                    ),
-                  ),
-                ],
-              ),
+                ),
+              ],
             ),
-          ],
-        ),
+          ),
+
+          // Conversations List
+          Expanded(
+            child: ValueListenableBuilder<List<Conversation>>(
+              valueListenable: _chatController!.conversationsNotifier,
+              builder: (context, conversations, _) {
+                if (conversations.isEmpty) {
+                  return const Center(
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Icon(
+                          Icons.chat_bubble_outline,
+                          size: 64,
+                          color: Colors.grey,
+                        ),
+                        SizedBox(height: 16),
+                        Text(
+                          'No conversations yet',
+                          style: TextStyle(
+                            fontSize: 18,
+                            fontWeight: FontWeight.bold,
+                            color: Colors.grey,
+                          ),
+                        ),
+                        SizedBox(height: 8),
+                        Text(
+                          'Start a conversation to see it here',
+                          style: TextStyle(
+                            color: Colors.grey,
+                          ),
+                        ),
+                      ],
+                    ),
+                  );
+                }
+
+                return ListView.builder(
+                  padding: const EdgeInsets.symmetric(horizontal: 8),
+                  itemCount: conversations.length,
+                  itemBuilder: (context, index) {
+                    final conversation = conversations[index];
+                    return ConversationTile(
+                      conversation: conversation,
+                      chatController: _chatController!,
+                    );
+                  },
+                );
+              },
+            ),
+          ),
+        ],
       ),
-      floatingActionButton: Container(
-        width: 56,
-        height: 56,
-        decoration: BoxDecoration(
-          color: Colors.blue[700],
-          shape: BoxShape.circle,
-          boxShadow: [
-            BoxShadow(
-              color: Colors.black.withOpacity(0.2),
-              blurRadius: 8,
-              offset: const Offset(0, 4),
-            ),
-          ],
-        ),
-        child: FloatingActionButton(
-          onPressed: () {
-            // Handle new chat
-          },
-          elevation: 0,
-          backgroundColor: Colors.transparent, // Set transparent to show container
-          child: const Icon(Icons.add, color: Colors.white),
-        ),
+      floatingActionButton: FloatingActionButton(
+        onPressed: () {
+          // Implement new chat functionality
+          _showNewChatDialog();
+        },
+        backgroundColor: Colors.blue[800],
+        child: const Icon(Icons.add, color: Colors.white),
+      ),
+    );
+  }
+
+  void _showNewChatDialog() {
+    showDialog(
+      context: context,
+      builder: (context) => UserSearchDialog(
+        chatController: _chatController!,
       ),
     );
   }

@@ -27,6 +27,8 @@ class AuthService {
       });
       UserModel user = UserModel.fromJson(response.data);
       await _tokenStorage.storeToken(response.data['accessToken'], response.data['refreshToken']);
+      // Store user ID for chat functionality
+      await _tokenStorage.storeUserId(user.id);
       return user;
     } catch (e) {
       throw Exception('Failed to login. Please try again.');

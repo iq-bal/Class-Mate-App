@@ -12,6 +12,7 @@ class Message {
   final String? thumbnailUrl;
   final List<MessageReaction> reactions;
   final String? replyTo;
+  final Message? replyToMessage;
   final bool forwarded;
   final String? forwardedFrom;
   final bool read;
@@ -37,6 +38,7 @@ class Message {
     this.thumbnailUrl,
     required this.reactions,
     this.replyTo,
+    this.replyToMessage,
     required this.forwarded,
     this.forwardedFrom,
     required this.read,
@@ -50,12 +52,29 @@ class Message {
   });
 
   factory Message.fromJson(Map<String, dynamic> json) {
+    String senderId = '';
+    String receiverId = '';
+    
+    // Handle different sender_id structures (string from socket, object from GraphQL)
+    if (json['sender_id'] is String) {
+      senderId = json['sender_id'];
+    } else if (json['sender_id'] is Map) {
+      senderId = json['sender_id']?['_id'] ?? json['sender_id']?['id'] ?? '';
+    }
+    
+    // Handle different receiver_id structures (string from socket, object from GraphQL)
+    if (json['receiver_id'] is String) {
+      receiverId = json['receiver_id'];
+    } else if (json['receiver_id'] is Map) {
+      receiverId = json['receiver_id']?['_id'] ?? json['receiver_id']?['id'] ?? '';
+    }
+    
     return Message(
-      id: json['_id'],
-      senderId: json['sender_id']['_id'],
-      receiverId: json['receiver_id']['_id'],
-      content: json['content'],
-      messageType: json['message_type'],
+      id: json['_id'] ?? json['id'] ?? '',
+      senderId: senderId,
+      receiverId: receiverId,
+      content: json['content'] ?? '',
+      messageType: json['message_type'] ?? 'text',
       fileUrl: json['file_url'],
       fileName: json['file_name'],
       fileSize: json['file_size'],
@@ -65,9 +84,14 @@ class Message {
       reactions: (json['reactions'] as List?)
           ?.map((r) => MessageReaction.fromJson(r))
           .toList() ?? [],
-      replyTo: json['reply_to']?['_id'],
+      replyTo: json['reply_to'] is String 
+          ? json['reply_to'] 
+          : json['reply_to']?['_id'] ?? json['reply_to']?['id'],
+      replyToMessage: json['reply_to'] is Map<String, dynamic>
+          ? Message.fromJson(json['reply_to'])
+          : null,
       forwarded: json['forwarded'] ?? false,
-      forwardedFrom: json['forwarded_from']?['_id'],
+      forwardedFrom: json['forwarded_from']?['_id'] ?? json['forwarded_from']?['id'],
       read: json['read'] ?? false,
       readAt: json['read_at'] != null ? DateTime.parse(json['read_at']) : null,
       delivered: json['delivered'] ?? false,
@@ -78,7 +102,9 @@ class Message {
       editedAt: json['edited_at'] != null
           ? DateTime.parse(json['edited_at'])
           : null,
-      createdAt: DateTime.parse(json['createdAt']),
+      createdAt: json['createdAt'] != null 
+          ? DateTime.parse(json['createdAt'])
+          : DateTime.now(),
       deletedFor: (json['deleted_for'] as List?)
           ?.map((d) => d['user_id'] as String)
           .toList() ?? [],
@@ -99,6 +125,7 @@ class Message {
     String? thumbnailUrl,
     List<MessageReaction>? reactions,
     String? replyTo,
+    Message? replyToMessage,
     bool? forwarded,
     String? forwardedFrom,
     bool? read,
@@ -124,6 +151,7 @@ class Message {
       thumbnailUrl: thumbnailUrl ?? this.thumbnailUrl,
       reactions: reactions ?? this.reactions,
       replyTo: replyTo ?? this.replyTo,
+      replyToMessage: replyToMessage ?? this.replyToMessage,
       forwarded: forwarded ?? this.forwarded,
       forwardedFrom: forwardedFrom ?? this.forwardedFrom,
       read: read ?? this.read,

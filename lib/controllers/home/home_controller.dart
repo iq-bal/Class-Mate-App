@@ -9,6 +9,7 @@ class HomeController {
   
   final ValueNotifier<HomeState> _stateNotifier = ValueNotifier(HomeState.idle);
   ValueNotifier<HomeState> get stateNotifier => _stateNotifier;
+  bool _disposed = false;
   
   HomePageModel? _homePageData;
   HomePageModel? get homePageData => _homePageData;
@@ -82,9 +83,11 @@ class HomeController {
   
   // Fetch today's enrolled courses
   Future<void> fetchTodaysEnrolledCourses(String day) async {
+    if (_disposed) return;
     _stateNotifier.value = HomeState.loading;
     try {
       final data = await _homeService.getTodaysEnrolledCourses(day);
+      if (_disposed) return;
       if (data != null) {
         _homePageData = data;
         _stateNotifier.value = HomeState.success;
@@ -93,7 +96,9 @@ class HomeController {
       }
     } catch (e) {
       print('Error fetching today\'s enrolled courses: $e');
-      _stateNotifier.value = HomeState.error;
+      if (!_disposed) {
+        _stateNotifier.value = HomeState.error;
+      }
     }
   }
   
@@ -101,6 +106,7 @@ class HomeController {
   Future<void> fetchStudentAllAssignments() async {
     try {
       final data = await _homeService.getStudentAllAssignments();
+      if (_disposed) return;
       if (data != null) {
         _assignmentsData = data;
         print('Assignments data fetched: ${_assignmentsData!.enrollments.length} enrollments');
@@ -118,6 +124,7 @@ class HomeController {
   Future<void> fetchStudentAllClassTests() async {
     try {
       final data = await _homeService.getStudentAllClassTests();
+      if (_disposed) return;
       if (data != null) {
         _classTestsData = data;
         print('Class tests data fetched: ${_classTestsData!.enrollments.length} enrollments');
@@ -135,6 +142,7 @@ class HomeController {
   Future<void> fetchCurrentClass(String day, String currentTime) async {
     try {
       final data = await _homeService.getCurrentClassForStudent(day, currentTime);
+      if (_disposed) return;
       if (data != null) {
         _currentClassData = data;
         print('Current class data fetched: ${data.toString()}');
@@ -144,25 +152,33 @@ class HomeController {
       }
     } catch (e) {
       print('Error fetching current class: $e');
-      _currentClassData = null;
+      if (!_disposed) {
+        _currentClassData = null;
+      }
     }
   }
   
   Future<void> fetchHomePageData() async {
     try {
+      if (_disposed) return;
       _stateNotifier.value = HomeState.loading;
       _errorMessage = null;
       
       _homePageData = await _homeService.getHomePageData();
       
-      _stateNotifier.value = HomeState.success;
+      if (!_disposed) {
+        _stateNotifier.value = HomeState.success;
+      }
     } catch (e) {
-      _errorMessage = e.toString();
-      _stateNotifier.value = HomeState.error;
+      if (!_disposed) {
+        _errorMessage = e.toString();
+        _stateNotifier.value = HomeState.error;
+      }
     }
   }
   
   void dispose() {
+    _disposed = true;
     _stateNotifier.dispose();
   }
 }

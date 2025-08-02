@@ -10,7 +10,7 @@ class UserModel {
     required this.email,
     required this.name,
     required this.role,
-  });
+  }); 
 
   // Factory constructor to create a UserModel object from a JSON map
   factory UserModel.fromJson(Map<String, dynamic> json) {

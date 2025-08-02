@@ -46,6 +46,10 @@
 	<key>UIApplicationSupportsIndirectInputEvents</key>
 	<true/>
 
+	<!-- Microphone Permission -->
+	<key>NSMicrophoneUsageDescription</key>
+	<string>This app needs access to microphone to record voice messages</string>
+
 	<!-- Notification Permissions -->
     <key>UIBackgroundModes</key>
     <array>

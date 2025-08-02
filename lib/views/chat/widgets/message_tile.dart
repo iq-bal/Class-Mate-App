@@ -1,4 +1,3 @@
-import 'package:classmate/views/chat/chat_screen_view.dart';
 import 'package:flutter/material.dart';
 
 class MessageTile extends StatelessWidget {
@@ -20,15 +19,8 @@ class MessageTile extends StatelessWidget {
     return GestureDetector(
       onTap: () {
         // Navigate to ChatScreen with hardcoded data
-        Navigator.push(
-          context,
-          MaterialPageRoute(
-            builder: (context) => const ChatScreen(
-              recipientId: "hardcoded-recipient-id",
-              token: "hardcoded-token",
-            ),
-          ),
-        );
+        // Navigation would be handled by parent widget
+        // This is just a display tile for the conversation list
       },
       child: Container(
         margin: const EdgeInsets.symmetric(vertical: 8),
