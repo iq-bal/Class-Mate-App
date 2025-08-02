@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:classmate/models/chat/message.dart';
 import 'package:intl/intl.dart';
 import 'dart:io';
@@ -13,6 +14,7 @@ class MessageBubble extends StatelessWidget {
   final VoidCallback? onForward;
   final VoidCallback? onEdit;
   final VoidCallback? onDelete;
+  final VoidCallback? onDeleteForEveryone;
   final Message? repliedMessage;
   final String? repliedToUserName;
 
@@ -27,6 +29,7 @@ class MessageBubble extends StatelessWidget {
     this.onForward,
     this.onEdit,
     this.onDelete,
+    this.onDeleteForEveryone,
     this.repliedMessage,
     this.repliedToUserName,
   });
@@ -66,7 +69,7 @@ class MessageBubble extends StatelessWidget {
                     _buildMessageContent(),
                     
                     // Message reactions
-                    if (message.reactions.isNotEmpty) _buildReactions(),
+                    if (message.reactions.isNotEmpty) _buildReactionsDisplay(),
                     
                     // Message time and status
                     const SizedBox(height: 4),
@@ -350,33 +353,51 @@ class MessageBubble extends StatelessWidget {
     }
   }
 
-  Widget _buildReactions() {
+  Widget _buildReactionsDisplay() {
+    // Group reactions by emoji and count them
+    final Map<String, int> reactionCounts = {};
+    for (final reaction in message.reactions) {
+      reactionCounts[reaction.reaction] = (reactionCounts[reaction.reaction] ?? 0) + 1;
+    }
+
     return Container(
-      margin: const EdgeInsets.only(top: 8),
+      margin: const EdgeInsets.only(top: 6),
       child: Wrap(
-        spacing: 4,
-        children: message.reactions.map((reaction) {
+        spacing: 6,
+        runSpacing: 4,
+        children: reactionCounts.entries.map((entry) {
           return Container(
             padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
             decoration: BoxDecoration(
-              color: isMe ? Colors.blue[700] : Colors.grey[300],
+              color: Colors.white,
               borderRadius: BorderRadius.circular(12),
+              border: Border.all(color: Colors.grey[300]!, width: 1),
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black.withOpacity(0.1),
+                  blurRadius: 2,
+                  offset: const Offset(0, 1),
+                ),
+              ],
             ),
             child: Row(
               mainAxisSize: MainAxisSize.min,
               children: [
                 Text(
-                  reaction.reaction,
-                  style: const TextStyle(fontSize: 12),
+                  entry.key,
+                  style: const TextStyle(fontSize: 14),
                 ),
-                const SizedBox(width: 4),
-                Text(
-                  '1', // Since we don't have count, show 1
-                  style: TextStyle(
-                    fontSize: 10,
-                    color: isMe ? Colors.white : Colors.black87,
-                  ),
-                ),
+                if (entry.value > 1) ...[
+                   const SizedBox(width: 4),
+                   Text(
+                     entry.value.toString(),
+                     style: TextStyle(
+                       fontSize: 11,
+                       fontWeight: FontWeight.w600,
+                       color: Colors.grey[600],
+                     ),
+                   ),
+                 ]
               ],
             ),
           );
@@ -405,91 +426,179 @@ class MessageBubble extends StatelessWidget {
   void _showMessageOptions(BuildContext context) {
     showModalBottomSheet(
       context: context,
+      backgroundColor: Colors.transparent,
       builder: (context) => Container(
-        padding: const EdgeInsets.all(16),
+        margin: const EdgeInsets.all(16),
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(16),
+        ),
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            if (onReact != null)
-              ListTile(
-                leading: const Icon(Icons.emoji_emotions),
-                title: const Text('React'),
-                onTap: () {
-                  Navigator.pop(context);
-                  _showReactionPicker(context);
-                },
-              ),
-            if (onReply != null)
-              ListTile(
-                leading: const Icon(Icons.reply),
-                title: const Text('Reply'),
-                onTap: () {
-                  Navigator.pop(context);
-                  onReply!();
-                },
-              ),
-            if (onForward != null)
-              ListTile(
-                leading: const Icon(Icons.forward),
-                title: const Text('Forward'),
-                onTap: () {
-                  Navigator.pop(context);
-                  onForward!();
-                },
-              ),
-            if (onEdit != null)
-              ListTile(
-                leading: const Icon(Icons.edit),
-                title: const Text('Edit'),
-                onTap: () {
-                  Navigator.pop(context);
-                  onEdit!();
-                },
-              ),
-            if (onDelete != null)
-              ListTile(
-                leading: const Icon(Icons.delete, color: Colors.red),
-                title: const Text('Delete', style: TextStyle(color: Colors.red)),
-                onTap: () {
-                  Navigator.pop(context);
-                  onDelete!();
-                },
-              ),
+            // Reaction row
+            if (onReact != null) _buildReactionRow(context),
+            
+            // Divider
+            if (onReact != null) const Divider(height: 1),
+            
+            // Action buttons row
+            _buildActionButtonsRow(context),
           ],
         ),
       ),
     );
   }
 
-  void _showReactionPicker(BuildContext context) {
+  Widget _buildReactionRow(BuildContext context) {
     final reactions = ['👍', '❤️', '😂', '😮', '😢', '😡'];
     
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+        children: reactions.map((emoji) {
+          return GestureDetector(
+             onTap: () {
+               Navigator.pop(context);
+               if (onReact != null) {
+                 onReact!(emoji);
+               }
+             },
+            child: Container(
+              width: 44,
+              height: 44,
+              decoration: BoxDecoration(
+                color: Colors.grey[100],
+                shape: BoxShape.circle,
+              ),
+              child: Center(
+                child: Text(
+                  emoji,
+                  style: const TextStyle(fontSize: 20),
+                ),
+              ),
+            ),
+          );
+        }).toList(),
+      ),
+    );
+  }
+
+  Widget _buildActionButtonsRow(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+        children: [
+          if (onReply != null)
+            _buildActionButton(
+              icon: Icons.reply,
+              label: 'Reply',
+              onTap: () {
+                Navigator.pop(context);
+                onReply!();
+              },
+            ),
+          if (onForward != null)
+            _buildActionButton(
+              icon: Icons.forward,
+              label: 'Forward',
+              onTap: () {
+                Navigator.pop(context);
+                onForward!();
+              },
+            ),
+          _buildActionButton(
+            icon: Icons.copy,
+            label: 'Copy',
+            onTap: () {
+              Navigator.pop(context);
+              _copyMessage();
+            },
+          ),
+          if (onDeleteForEveryone != null || onDelete != null)
+            _buildActionButton(
+              icon: Icons.delete,
+              label: 'Delete',
+              color: Colors.red,
+              onTap: () {
+                Navigator.pop(context);
+                _showDeleteDialog(context);
+              },
+            ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildActionButton({
+    required IconData icon,
+    required String label,
+    required VoidCallback onTap,
+    Color? color,
+  }) {
+    return GestureDetector(
+      onTap: onTap,
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Container(
+            width: 44,
+            height: 44,
+            decoration: BoxDecoration(
+              color: Colors.grey[100],
+              shape: BoxShape.circle,
+            ),
+            child: Icon(
+              icon,
+              color: color ?? Colors.grey[700],
+              size: 20,
+            ),
+          ),
+          const SizedBox(height: 4),
+          Text(
+            label,
+            style: TextStyle(
+              fontSize: 12,
+              color: color ?? Colors.grey[700],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  void _copyMessage() {
+    Clipboard.setData(ClipboardData(text: message.content));
+  }
+
+  void _showDeleteDialog(BuildContext context) {
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
-        title: const Text('React to message'),
-        content: Wrap(
-          children: reactions.map((emoji) {
-            return GestureDetector(
-              onTap: () {
+        title: const Text('Delete Message'),
+        content: const Text('This message will be deleted for everyone. This action cannot be undone.'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('Cancel'),
+          ),
+          TextButton(
+            onPressed: () {
                 Navigator.pop(context);
-                onReact!(emoji);
+                if (onDeleteForEveryone != null) {
+                  onDeleteForEveryone!();
+                } else {
+                  onDelete!();
+                }
               },
-              child: Container(
-                margin: const EdgeInsets.all(8),
-                padding: const EdgeInsets.all(12),
-                decoration: BoxDecoration(
-                  color: Colors.grey[100],
-                  borderRadius: BorderRadius.circular(8),
-                ),
-                child: Text(
-                  emoji,
-                  style: const TextStyle(fontSize: 24),
-                ),
-              ),
-            );
-          }).toList(),
-        ),
+            style: TextButton.styleFrom(
+              foregroundColor: Colors.red,
+            ),
+            child: const Text('Delete'),
+          ),
+        ],
       ),
     );
   }

@@ -14,6 +14,9 @@ class ChatService extends ChangeNotifier {
   bool isConnected = false;
   final Map<String, bool> typingStatus = {};
   final Map<String, List<Message>> conversations = {};
+  
+  // Callback for when a message is deleted via Socket.IO
+  Function(String messageId, String conversationUserId)? onMessageDeleted;
 
   ChatService({
     required this.userId,
@@ -86,6 +89,12 @@ class ChatService extends ChangeNotifier {
       _updateMessageReaction(data);
       notifyListeners();
     });
+
+    // Message reacted (alternative event name)
+     socket.on('messageReacted', (data) {
+       _updateMessageReaction(data);
+       notifyListeners();
+     });
 
     // Message edited
     socket.on('messageEdited', (data) {
@@ -166,19 +175,30 @@ class ChatService extends ChangeNotifier {
   void _handleDeletedMessage(Map<String, dynamic> data) {
     final String messageId = data['messageId'];
     final bool forEveryone = data['forEveryone'];
+    String? affectedConversationUserId;
 
-    conversations.forEach((_, messages) {
+    conversations.forEach((conversationUserId, messages) {
       if (forEveryone) {
+        final hadMessage = messages.any((m) => m.id == messageId);
         messages.removeWhere((m) => m.id == messageId);
+        if (hadMessage) {
+          affectedConversationUserId = conversationUserId;
+        }
       } else {
         final index = messages.indexWhere((m) => m.id == messageId);
         if (index != -1) {
           messages[index] = messages[index].copyWith(
             deletedFor: [...messages[index].deletedFor, data['userId']],
           );
+          affectedConversationUserId = conversationUserId;
         }
       }
     });
+    
+    // Notify the chat controller if a message was deleted and we have a callback
+    if (affectedConversationUserId != null && onMessageDeleted != null) {
+      onMessageDeleted!(messageId, affectedConversationUserId!);
+    }
   }
 
   void _markMessageAsDelivered(String messageId) {
@@ -307,10 +327,12 @@ class ChatService extends ChangeNotifier {
   }
 
   void reactToMessage(String messageId, String reaction) {
-    socket.emit('messageReaction', {
+    final reactionData = {
       'messageId': messageId,
       'reaction': reaction,
-    });
+    };
+    
+    socket.emit('reactToMessage', reactionData);
   }
 
   void editMessage(String messageId, String newContent) {
@@ -320,7 +342,7 @@ class ChatService extends ChangeNotifier {
     });
   }
 
-  void deleteMessage(String messageId, {bool forEveryone = false}) {
+  void deleteMessage(String messageId, {bool forEveryone = true}) {
     socket.emit('deleteMessage', {
       'messageId': messageId,
       'forEveryone': forEveryone,

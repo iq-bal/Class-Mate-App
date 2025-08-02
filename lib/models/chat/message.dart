@@ -93,16 +93,18 @@ class Message {
       forwarded: json['forwarded'] ?? false,
       forwardedFrom: json['forwarded_from']?['_id'] ?? json['forwarded_from']?['id'],
       read: json['read'] ?? false,
-      readAt: json['read_at'] != null ? DateTime.parse(json['read_at']) : null,
+      readAt: json['read_at'] != null && json['read_at'] is String 
+          ? DateTime.parse(json['read_at']) 
+          : null,
       delivered: json['delivered'] ?? false,
-      deliveredAt: json['delivered_at'] != null
+      deliveredAt: json['delivered_at'] != null && json['delivered_at'] is String
           ? DateTime.parse(json['delivered_at'])
           : null,
       edited: json['edited'] ?? false,
-      editedAt: json['edited_at'] != null
+      editedAt: json['edited_at'] != null && json['edited_at'] is String
           ? DateTime.parse(json['edited_at'])
           : null,
-      createdAt: json['createdAt'] != null 
+      createdAt: json['createdAt'] != null && json['createdAt'] is String
           ? DateTime.parse(json['createdAt'])
           : DateTime.now(),
       deletedFor: (json['deleted_for'] as List?)
@@ -178,10 +180,20 @@ class MessageReaction {
   });
 
   factory MessageReaction.fromJson(Map<String, dynamic> json) {
+    // Handle different user_id structures (string from socket, object from GraphQL)
+    String userId = '';
+    if (json['user_id'] is String) {
+      userId = json['user_id'];
+    } else if (json['user_id'] is Map) {
+      userId = json['user_id']?['_id'] ?? json['user_id']?['id'] ?? '';
+    }
+    
     return MessageReaction(
-      userId: json['user_id'],
-      reaction: json['reaction'],
-      createdAt: DateTime.parse(json['created_at']),
+      userId: userId,
+      reaction: json['reaction'] ?? '',
+      createdAt: json['created_at'] != null && json['created_at'] is String
+          ? DateTime.parse(json['created_at'])
+          : DateTime.now(),
     );
   }
 }

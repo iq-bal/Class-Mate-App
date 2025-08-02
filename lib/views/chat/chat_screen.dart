@@ -205,21 +205,21 @@ class _ChatScreenState extends State<ChatScreen> {
       context: context,
       builder: (context) => AlertDialog(
         title: const Text('Delete Message'),
-        content: const Text('Choose deletion scope:'),
+        content: const Text('This message will be deleted for everyone. This action cannot be undone.'),
         actions: [
           TextButton(
-            onPressed: () {
-              _chatService.deleteMessage(message.id, forEveryone: false);
-              Navigator.pop(context);
-            },
-            child: const Text('For Me'),
+            onPressed: () => Navigator.pop(context),
+            child: const Text('Cancel'),
           ),
           TextButton(
             onPressed: () {
               _chatService.deleteMessage(message.id, forEveryone: true);
               Navigator.pop(context);
             },
-            child: const Text('For Everyone'),
+            style: TextButton.styleFrom(
+              foregroundColor: Colors.red,
+            ),
+            child: const Text('Delete'),
           ),
         ],
       ),

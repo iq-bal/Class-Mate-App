@@ -543,8 +543,7 @@ class _ChatScreenViewState extends State<ChatScreenView> {
                             _setReplyMessage(message);
                           },
                           onForward: () {
-                            // Implement forward functionality
-                            // Show a dialog to select users to forward to
+                            _showForwardDialog(message);
                           },
                           onEdit: message.senderId == widget.chatController.currentUserId
                               ? () {
@@ -552,11 +551,9 @@ class _ChatScreenViewState extends State<ChatScreenView> {
                                   _showEditDialog(message);
                                 }
                               : null,
-                          onDelete: message.senderId == widget.chatController.currentUserId
-                              ? () {
-                                  widget.chatController.deleteMessage(message.id);
-                                }
-                              : null,
+                          onDeleteForEveryone: () {
+                            widget.chatController.deleteMessage(message.id);
+                          },
                         ),
                     );
                   },
@@ -832,6 +829,33 @@ class _ChatScreenViewState extends State<ChatScreenView> {
               Navigator.pop(context);
             },
             child: const Text('Save'),
+          ),
+        ],
+      ),
+    );
+  }
+
+  void _showForwardDialog(Message message) {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Forward Message'),
+        content: const Text('Forward functionality will be implemented with user selection.'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('Cancel'),
+          ),
+          ElevatedButton(
+            onPressed: () {
+              // For now, just close the dialog
+              // In a full implementation, you would:
+              // 1. Show a list of users/conversations
+              // 2. Allow selection
+              // 3. Call widget.chatController.forwardMessage(message.id, selectedUserIds)
+              Navigator.pop(context);
+            },
+            child: const Text('Forward'),
           ),
         ],
       ),

@@ -359,7 +359,7 @@ class ChatGraphQLService {
   }
 
   // Delete message
-  Future<bool> deleteMessage(String messageId, {bool forEveryone = false}) async {
+  Future<bool> deleteMessage(String messageId, {bool forEveryone = true}) async {
     const String mutation = r'''
       mutation DeleteMessage($messageId: ID!, $forEveryone: Boolean) {
         deleteMessage(message_id: $messageId, for_everyone: $forEveryone)
@@ -464,6 +464,7 @@ class ChatGraphQLService {
       if (result != null && result['data'] != null && result['data']['reactToMessage'] != null) {
         return Message.fromJson(result['data']['reactToMessage']);
       }
+      
       return null;
     } catch (e) {
       print('Error reacting to message: $e');

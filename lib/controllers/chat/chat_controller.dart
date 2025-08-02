@@ -90,6 +90,9 @@ class ChatController extends ChangeNotifier {
     // Listen to chat service changes
     _chatService.addListener(_onChatServiceUpdate);
     
+    // Setup callback for message deletion events
+    _chatService.onMessageDeleted = _handleSocketMessageDeletion;
+    
     // Setup socket listeners
     _setupSocketListeners();
     
@@ -167,6 +170,112 @@ class ChatController extends ChangeNotifier {
     
     _conversationsNotifier.value = currentConversations;
   }
+
+  void _updateConversationAfterMessageDeletion(Message deletedMessage, List<Message> remainingMessages) {
+     if (_disposed || currentConversationUserId == null) return;
+     
+     final currentConversations = List<Conversation>.from(_conversationsNotifier.value);
+     
+     // Find the conversation that needs updating
+     final existingIndex = currentConversations.indexWhere(
+       (conv) => conv.withUserId == currentConversationUserId
+     );
+     
+     if (existingIndex != -1) {
+       final existingConv = currentConversations[existingIndex];
+       
+       // Check if the deleted message was the last message in this conversation
+       if (existingConv.lastMessage?.id == deletedMessage.id) {
+         // Find the new last message from remaining messages
+         Message? newLastMessage;
+         if (remainingMessages.isNotEmpty) {
+           // Sort by creation time and get the most recent
+           final sortedMessages = List<Message>.from(remainingMessages)
+             ..sort((a, b) => b.createdAt.compareTo(a.createdAt));
+           newLastMessage = sortedMessages.first;
+         }
+         
+         // Update the conversation with new last message
+         final updatedConv = Conversation(
+           withUserId: existingConv.withUserId,
+           withUserName: existingConv.withUserName,
+           withUserProfilePicture: existingConv.withUserProfilePicture,
+           lastMessage: newLastMessage,
+           unreadCount: existingConv.unreadCount,
+           lastActivity: newLastMessage?.createdAt,
+         );
+         
+         currentConversations[existingIndex] = updatedConv;
+         
+         // Re-sort conversations by last activity
+         currentConversations.sort((a, b) => 
+           (b.lastActivity ?? DateTime(0)).compareTo(a.lastActivity ?? DateTime(0))
+         );
+         
+         _conversationsNotifier.value = currentConversations;
+         print('🗑️ DELETE DEBUG: Updated conversation list with new last message');
+       }
+     }
+   }
+
+   void _handleSocketMessageDeletion(String messageId, String conversationUserId) {
+     if (_disposed) return;
+     
+     print('🗑️ SOCKET DELETE DEBUG: Handling deletion of message $messageId in conversation $conversationUserId');
+     
+     // Get the remaining messages for this conversation
+     final remainingMessages = _chatService.conversations[conversationUserId] ?? [];
+     
+     // Update the conversation list to reflect the new last message
+     final currentConversations = List<Conversation>.from(_conversationsNotifier.value);
+     final existingIndex = currentConversations.indexWhere(
+       (conv) => conv.withUserId == conversationUserId
+     );
+     
+     if (existingIndex != -1) {
+       final existingConv = currentConversations[existingIndex];
+       
+       // Check if the deleted message was the last message in this conversation
+       if (existingConv.lastMessage?.id == messageId) {
+         // Find the new last message from remaining messages
+         Message? newLastMessage;
+         if (remainingMessages.isNotEmpty) {
+           // Sort by creation time and get the most recent
+           final sortedMessages = List<Message>.from(remainingMessages)
+             ..sort((a, b) => b.createdAt.compareTo(a.createdAt));
+           newLastMessage = sortedMessages.first;
+         }
+         
+         // Update the conversation with new last message
+         final updatedConv = Conversation(
+           withUserId: existingConv.withUserId,
+           withUserName: existingConv.withUserName,
+           withUserProfilePicture: existingConv.withUserProfilePicture,
+           lastMessage: newLastMessage,
+           unreadCount: existingConv.unreadCount,
+           lastActivity: newLastMessage?.createdAt,
+         );
+         
+         currentConversations[existingIndex] = updatedConv;
+         
+         // Re-sort conversations by last activity
+         currentConversations.sort((a, b) => 
+           (b.lastActivity ?? DateTime(0)).compareTo(a.lastActivity ?? DateTime(0))
+         );
+         
+         _conversationsNotifier.value = currentConversations;
+         print('🗑️ SOCKET DELETE DEBUG: Updated conversation list after socket deletion');
+       }
+     }
+     
+     // Also update the current messages if we're viewing this conversation
+     if (currentConversationUserId == conversationUserId) {
+       final currentMessages = List<Message>.from(_messagesNotifier.value);
+       currentMessages.removeWhere((m) => m.id == messageId);
+       _messagesNotifier.value = currentMessages;
+       print('🗑️ SOCKET DELETE DEBUG: Updated current messages view');
+     }
+   }
 
   // Set current conversation and load messages
   void setCurrentConversation(String userId) {
@@ -451,10 +560,45 @@ class ChatController extends ChangeNotifier {
     }
   }
 
-  Future<void> deleteMessage(String messageId, {bool forEveryone = false}) async {
+  Future<void> deleteMessage(String messageId, {bool forEveryone = true}) async {
     try {
-      _chatService.deleteMessage(messageId, forEveryone: forEveryone);
+      print('🗑️ DELETE DEBUG: Deleting message $messageId for everyone');
+      
+      // Check if this is a temporary message (not yet sent to server)
+      final isTemporaryMessage = messageId.startsWith('temp_');
+      
+      if (!isTemporaryMessage) {
+        // Delete via Socket.IO for real-time updates (only for server messages)
+        _chatService.deleteMessage(messageId, forEveryone: true);
+        
+        // Also delete via GraphQL for persistence (only for server messages)
+        final success = await _chatGraphQLService.deleteMessage(messageId, forEveryone: true);
+        print('🗑️ DELETE DEBUG: GraphQL deletion success: $success');
+        
+        if (!success) {
+          print('🗑️ DELETE WARNING: GraphQL deletion failed, but continuing with local deletion');
+        }
+      } else {
+        print('🗑️ DELETE DEBUG: Skipping server deletion for temporary message');
+      }
+      
+      // Update local UI immediately for better UX - always remove message completely
+      if (currentConversationUserId != null) {
+        final currentMessages = List<Message>.from(_messagesNotifier.value);
+        final deletedMessage = currentMessages.firstWhere((m) => m.id == messageId, orElse: () => throw StateError('Message not found'));
+        currentMessages.removeWhere((m) => m.id == messageId);
+        print('🗑️ DELETE DEBUG: Removed message from UI');
+        _messagesNotifier.value = currentMessages;
+        
+        // Also remove from the service's local conversation cache
+        _chatService.conversations[currentConversationUserId]?.removeWhere((m) => m.id == messageId);
+        
+        // Update conversations list if the deleted message was the last message
+        _updateConversationAfterMessageDeletion(deletedMessage, currentMessages);
+      }
+      
     } catch (e) {
+      print('🗑️ DELETE ERROR: $e');
       errorMessage = e.toString();
     }
   }
