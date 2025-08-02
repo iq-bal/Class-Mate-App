@@ -2,7 +2,14 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 
 class AboutSection extends StatelessWidget {
-  const AboutSection({super.key});
+  final String aboutText;
+  final VoidCallback? onEdit;
+
+  const AboutSection({
+    super.key,
+    required this.aboutText,
+    this.onEdit,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -12,17 +19,34 @@ class AboutSection extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text("About Me",
-              style: GoogleFonts.inter(
-                  fontSize: 16, fontWeight: FontWeight.bold)),
+          // "About Me" header with edit icon
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Text(
+                "About Me",
+                style: GoogleFonts.inter(
+                  fontSize: 16,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+              IconButton(
+                onPressed: onEdit,
+                icon: const Icon(Icons.edit, size: 20),
+                tooltip: 'Edit',
+                splashRadius: 20,
+              ),
+            ],
+          ),
           const SizedBox(height: 10),
           Text(
-            "Passionate learner, coder, and AI enthusiast. Currently pursuing Computer Science & Engineering at Shadow University. I enjoy building digital solutions and contributing to open-source.",
+            aboutText,
             style: GoogleFonts.inter(
-                fontSize: 14,
-                color: Colors.grey[800],
-                height: 1.5,
-                letterSpacing: 0.3),
+              fontSize: 14,
+              color: Colors.grey[800],
+              height: 1.5,
+              letterSpacing: 0.3,
+            ),
           ),
         ],
       ),

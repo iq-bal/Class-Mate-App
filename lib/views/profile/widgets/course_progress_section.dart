@@ -1,8 +1,23 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 
+class CourseProgress {
+  final String courseName;
+  final Color color;
+
+  CourseProgress({
+    required this.courseName,
+    required this.color,
+  });
+}
+
 class CourseProgressSection extends StatelessWidget {
-  const CourseProgressSection({super.key});
+  final List<CourseProgress> courses;
+
+  const CourseProgressSection({
+    super.key,
+    required this.courses,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -12,35 +27,47 @@ class CourseProgressSection extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text("Courses",
-              style: GoogleFonts.inter(
-                  fontSize: 16, fontWeight: FontWeight.bold)),
+          Text(
+            "Courses",
+            style: GoogleFonts.inter(
+              fontSize: 16,
+              fontWeight: FontWeight.bold,
+            ),
+          ),
           const SizedBox(height: 16),
-          _progressTile("Data Structures", 0.8, Colors.blueAccent),
-          _progressTile("AI & Machine Learning", 0.6, Colors.deepPurple),
-          _progressTile("Operating Systems", 0.45, Colors.orangeAccent),
+          ...courses.map(
+            (course) => _courseTile(
+              course.courseName,
+              course.color,
+            ),
+          ),
         ],
       ),
     );
   }
 
-  Widget _progressTile(String name, double value, Color color) {
+  Widget _courseTile(String name, Color color) {
     return Padding(
-      padding: const EdgeInsets.only(bottom: 18),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
+      padding: const EdgeInsets.only(bottom: 12),
+      child: Row(
         children: [
-          Text(name,
+          Container(
+            width: 8,
+            height: 8,
+            decoration: BoxDecoration(
+              color: color,
+              shape: BoxShape.circle,
+            ),
+          ),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Text(
+              name,
               style: GoogleFonts.inter(
-                  fontWeight: FontWeight.w500, color: Colors.grey[800])),
-          const SizedBox(height: 6),
-          ClipRRect(
-            borderRadius: BorderRadius.circular(10),
-            child: LinearProgressIndicator(
-              value: value,
-              minHeight: 8,
-              backgroundColor: Colors.grey[200],
-              valueColor: AlwaysStoppedAnimation<Color>(color),
+                fontWeight: FontWeight.w500,
+                color: Colors.grey[800],
+                fontSize: 14,
+              ),
             ),
           ),
         ],

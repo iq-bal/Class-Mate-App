@@ -2,7 +2,18 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 
 class AcademicInfoCard extends StatelessWidget {
-  const AcademicInfoCard({super.key});
+  final String department;
+  final String semester;
+  final String cgpa;
+  final String status;
+
+  const AcademicInfoCard({
+    super.key,
+    required this.department,
+    required this.semester,
+    required this.cgpa,
+    required this.status,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -12,14 +23,18 @@ class AcademicInfoCard extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text("Academic Info",
-              style: GoogleFonts.inter(
-                  fontSize: 16, fontWeight: FontWeight.bold)),
+          Text(
+            "Academic Info",
+            style: GoogleFonts.inter(
+              fontSize: 16,
+              fontWeight: FontWeight.bold,
+            ),
+          ),
           const SizedBox(height: 16),
-          _infoRow("Department", "Computer Science & Engineering"),
-          _infoRow("Semester", "6th"),
-          _infoRow("CGPA", "3.86"),
-          _infoRow("Status", "Active"),
+          _infoRow("Department", department),
+          _infoRow("Semester", semester),
+          _infoRow("CGPA", cgpa),
+          _infoRow("Status", status),
         ],
       ),
     );
@@ -31,12 +46,20 @@ class AcademicInfoCard extends StatelessWidget {
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
-          Text(title,
-              style: GoogleFonts.inter(
-                  color: Colors.grey[700], fontWeight: FontWeight.w500)),
-          Text(value,
-              style: GoogleFonts.inter(
-                  color: Colors.black87, fontWeight: FontWeight.w600)),
+          Text(
+            title,
+            style: GoogleFonts.inter(
+              color: Colors.grey[700],
+              fontWeight: FontWeight.w500,
+            ),
+          ),
+          Text(
+            value,
+            style: GoogleFonts.inter(
+              color: Colors.black87,
+              fontWeight: FontWeight.w600,
+            ),
+          ),
         ],
       ),
     );
