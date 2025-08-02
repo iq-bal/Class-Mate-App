@@ -17,6 +17,26 @@ class AssessmentsView extends StatelessWidget {
 
   static const Color primaryTeal = Color(0xFF006966);
 
+  String _formatEvaluatedDate(String? evaluatedAt) {
+    if (evaluatedAt == null || evaluatedAt.isEmpty) {
+      return 'Not evaluated yet';
+    }
+    
+    try {
+      // Check if it's a timestamp (numeric string)
+      if (RegExp(r'^\d+$').hasMatch(evaluatedAt)) {
+        final timestamp = int.parse(evaluatedAt);
+        final date = DateTime.fromMillisecondsSinceEpoch(timestamp);
+        return HelperFunction.formatISODate(date.toIso8601String());
+      }
+      // Otherwise try to parse as ISO date string
+      final date = DateTime.parse(evaluatedAt);
+      return HelperFunction.formatISODate(date.toIso8601String());
+    } catch (e) {
+      return 'Invalid date';
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -62,7 +82,7 @@ class AssessmentsView extends StatelessWidget {
                         },
                         {
                           'label': 'grade',
-                          'percentage': assignmentDetail.submission?.grade != null ? 100.0 : 0.0,
+                          'percentage': assignmentDetail.submission?.grade ?? 0.0,
                           'isPositive': true
                         },
                         {
@@ -73,11 +93,13 @@ class AssessmentsView extends StatelessWidget {
                       ],
                     ),
                     const SizedBox(height: 16),
-                    const FeedbackCard(
-                      avatarUrl: 'https://via.placeholder.com/150', // Replace with dynamic avatar URL
-                      date: '15 Nov, 2024', // Replace with dynamic date
-                      feedback: 'Your works are overall good, but evaluation method could be better.', // Adjust based on assignment details
-                      author: 'Dr. Al Mahmud', // Replace with dynamic author name
+                    FeedbackCard(
+                      avatarUrl: assignmentDetail.teacher?.profilePicture ?? 'https://via.placeholder.com/150',
+                      date: _formatEvaluatedDate(assignmentDetail.submission?.evaluatedAt),
+                      feedback: assignmentDetail.submission?.teacherComments?.isNotEmpty == true 
+                          ? assignmentDetail.submission!.teacherComments! 
+                          : 'No feedback provided yet.',
+                      author: assignmentDetail.teacher?.name ?? 'Unknown Teacher',
                     ),
                   ],
                 ),
