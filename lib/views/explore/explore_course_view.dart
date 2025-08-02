@@ -5,7 +5,6 @@ import 'widgets/search_section.dart';
 import 'widgets/search_result_section.dart';
 import 'widgets/recommended_section.dart';
 import 'widgets/popular_section.dart';
-import 'widgets/in_progress_section.dart';
 
 class ExploreCourseView extends StatefulWidget {
   const ExploreCourseView({super.key});
@@ -58,19 +57,13 @@ class _ExploreCourseViewState extends State<ExploreCourseView> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Explore Courses'),
+        title: const Align(
+          alignment: Alignment.centerLeft,
+          child: Text('Explore Courses'),
+        ),
         backgroundColor: Colors.white,
         elevation: 0,
-        leading: IconButton(
-          icon: const Icon(Icons.menu, color: Colors.black),
-          onPressed: () {},
-        ),
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.notifications, color: Colors.black),
-            onPressed: () {},
-          ),
-        ],
+        automaticallyImplyLeading: false,
       ),
       body: ValueListenableBuilder<ExploreCourseState>(
         valueListenable: exploreCourseController.stateNotifier,
@@ -109,8 +102,7 @@ class _ExploreCourseViewState extends State<ExploreCourseView> {
                       exploreCourseController.popularCourses!.isEmpty
                       ? const Text('No popular courses found.')
                       : PopularSection(course: exploreCourseController.popularCourses![0]),
-                  const SizedBox(height: 24),
-                  const InProgressSection(),
+
                 ],
               ),
             ),
