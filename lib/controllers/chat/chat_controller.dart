@@ -93,6 +93,9 @@ class ChatController extends ChangeNotifier {
     // Setup callback for message deletion events
     _chatService.onMessageDeleted = _handleSocketMessageDeletion;
     
+    // Setup callback for message reaction events
+    _chatService.onMessageReactionUpdated = _handleSocketMessageReaction;
+    
     // Setup socket listeners
     _setupSocketListeners();
     
@@ -219,63 +222,88 @@ class ChatController extends ChangeNotifier {
    }
 
    void _handleSocketMessageDeletion(String messageId, String conversationUserId) {
-     if (_disposed) return;
-     
-     print('🗑️ SOCKET DELETE DEBUG: Handling deletion of message $messageId in conversation $conversationUserId');
-     
-     // Get the remaining messages for this conversation
-     final remainingMessages = _chatService.conversations[conversationUserId] ?? [];
-     
-     // Update the conversation list to reflect the new last message
-     final currentConversations = List<Conversation>.from(_conversationsNotifier.value);
-     final existingIndex = currentConversations.indexWhere(
-       (conv) => conv.withUserId == conversationUserId
-     );
-     
-     if (existingIndex != -1) {
-       final existingConv = currentConversations[existingIndex];
-       
-       // Check if the deleted message was the last message in this conversation
-       if (existingConv.lastMessage?.id == messageId) {
-         // Find the new last message from remaining messages
-         Message? newLastMessage;
-         if (remainingMessages.isNotEmpty) {
-           // Sort by creation time and get the most recent
-           final sortedMessages = List<Message>.from(remainingMessages)
-             ..sort((a, b) => b.createdAt.compareTo(a.createdAt));
-           newLastMessage = sortedMessages.first;
-         }
-         
-         // Update the conversation with new last message
-         final updatedConv = Conversation(
-           withUserId: existingConv.withUserId,
-           withUserName: existingConv.withUserName,
-           withUserProfilePicture: existingConv.withUserProfilePicture,
-           lastMessage: newLastMessage,
-           unreadCount: existingConv.unreadCount,
-           lastActivity: newLastMessage?.createdAt,
-         );
-         
-         currentConversations[existingIndex] = updatedConv;
-         
-         // Re-sort conversations by last activity
-         currentConversations.sort((a, b) => 
-           (b.lastActivity ?? DateTime(0)).compareTo(a.lastActivity ?? DateTime(0))
-         );
-         
-         _conversationsNotifier.value = currentConversations;
-         print('🗑️ SOCKET DELETE DEBUG: Updated conversation list after socket deletion');
-       }
-     }
-     
-     // Also update the current messages if we're viewing this conversation
-     if (currentConversationUserId == conversationUserId) {
-       final currentMessages = List<Message>.from(_messagesNotifier.value);
-       currentMessages.removeWhere((m) => m.id == messageId);
-       _messagesNotifier.value = currentMessages;
-       print('🗑️ SOCKET DELETE DEBUG: Updated current messages view');
-     }
-   }
+      if (_disposed) return;
+      
+      print('🗑️ SOCKET DELETE DEBUG: Handling deletion of message $messageId in conversation $conversationUserId');
+      
+      // Get the remaining messages for this conversation
+      final remainingMessages = _chatService.conversations[conversationUserId] ?? [];
+      
+      // Update the conversation list to reflect the new last message
+      final currentConversations = List<Conversation>.from(_conversationsNotifier.value);
+      final existingIndex = currentConversations.indexWhere(
+        (conv) => conv.withUserId == conversationUserId
+      );
+      
+      if (existingIndex != -1) {
+        final existingConv = currentConversations[existingIndex];
+        
+        // Check if the deleted message was the last message in this conversation
+        if (existingConv.lastMessage?.id == messageId) {
+          // Find the new last message from remaining messages
+          Message? newLastMessage;
+          if (remainingMessages.isNotEmpty) {
+            // Sort by creation time and get the most recent
+            final sortedMessages = List<Message>.from(remainingMessages)
+              ..sort((a, b) => b.createdAt.compareTo(a.createdAt));
+            newLastMessage = sortedMessages.first;
+          }
+          
+          // Update the conversation with new last message
+          final updatedConv = Conversation(
+            withUserId: existingConv.withUserId,
+            withUserName: existingConv.withUserName,
+            withUserProfilePicture: existingConv.withUserProfilePicture,
+            lastMessage: newLastMessage,
+            unreadCount: existingConv.unreadCount,
+            lastActivity: newLastMessage?.createdAt,
+          );
+          
+          currentConversations[existingIndex] = updatedConv;
+          
+          // Re-sort conversations by last activity
+          currentConversations.sort((a, b) => 
+            (b.lastActivity ?? DateTime(0)).compareTo(a.lastActivity ?? DateTime(0))
+          );
+          
+          _conversationsNotifier.value = currentConversations;
+          print('🗑️ SOCKET DELETE DEBUG: Updated conversation list after socket deletion');
+        }
+      }
+      
+      // Also update the current messages if we're viewing this conversation
+      if (currentConversationUserId == conversationUserId) {
+        final currentMessages = List<Message>.from(_messagesNotifier.value);
+        currentMessages.removeWhere((m) => m.id == messageId);
+        _messagesNotifier.value = currentMessages;
+        print('🗑️ SOCKET DELETE DEBUG: Updated current messages view');
+      }
+    }
+
+    void _handleSocketMessageReaction(String messageId, String conversationUserId) {
+      if (_disposed) return;
+      
+      print('🎭 SOCKET REACTION DEBUG: Handling reaction update for message $messageId in conversation $conversationUserId');
+      
+      // Update the current messages if we're viewing this conversation
+      if (currentConversationUserId == conversationUserId) {
+        final currentMessages = List<Message>.from(_messagesNotifier.value);
+        final messageIndex = currentMessages.indexWhere((m) => m.id == messageId);
+        
+        if (messageIndex != -1) {
+          // Get the updated message from the service's cache
+          final updatedMessages = _chatService.conversations[conversationUserId] ?? [];
+          final updatedMessageIndex = updatedMessages.indexWhere((m) => m.id == messageId);
+          
+          if (updatedMessageIndex != -1) {
+            // Replace the message with the updated version that has new reactions
+            currentMessages[messageIndex] = updatedMessages[updatedMessageIndex];
+            _messagesNotifier.value = currentMessages;
+            print('🎭 SOCKET REACTION DEBUG: Updated message reactions in UI');
+          }
+        }
+      }
+    }
 
   // Set current conversation and load messages
   void setCurrentConversation(String userId) {
@@ -638,8 +666,21 @@ class ChatController extends ChangeNotifier {
 
   Future<void> reactToMessage(String messageId, String reaction) async {
     try {
+      print('🎭 REACTION DEBUG: Adding reaction $reaction to message $messageId');
+      
+      // Send reaction via Socket.IO for real-time updates
       _chatService.reactToMessage(messageId, reaction);
+      
+      // Also persist via GraphQL for data consistency
+      final result = await _chatGraphQLService.reactToMessage(messageId, reaction);
+      print('🎭 REACTION DEBUG: GraphQL reaction result: ${result != null ? 'success' : 'failed'}');
+      
+      if (result == null) {
+        print('🎭 REACTION WARNING: GraphQL reaction failed, but continuing with Socket.IO');
+      }
+      
     } catch (e) {
+      print('🎭 REACTION ERROR: $e');
       errorMessage = e.toString();
     }
   }

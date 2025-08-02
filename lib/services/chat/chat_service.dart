@@ -17,6 +17,9 @@ class ChatService extends ChangeNotifier {
   
   // Callback for when a message is deleted via Socket.IO
   Function(String messageId, String conversationUserId)? onMessageDeleted;
+  
+  // Callback for when a message reaction is updated via Socket.IO
+  Function(String messageId, String conversationUserId)? onMessageReactionUpdated;
 
   ChatService({
     required this.userId,
@@ -141,8 +144,9 @@ class ChatService extends ChangeNotifier {
     final String messageId = data['messageId'];
     final String userId = data['userId'];
     final String reaction = data['reaction'];
+    String? affectedConversationUserId;
 
-    conversations.forEach((_, messages) {
+    conversations.forEach((conversationUserId, messages) {
       final index = messages.indexWhere((m) => m.id == messageId);
       if (index != -1) {
         final message = messages[index];
@@ -152,8 +156,15 @@ class ChatService extends ChangeNotifier {
           reaction: reaction,
           createdAt: DateTime.now(),
         ));
+        affectedConversationUserId = conversationUserId;
+        print('🎭 SOCKET REACTION DEBUG: Updated reaction for message $messageId in conversation $conversationUserId');
       }
     });
+    
+    // Notify the chat controller if a reaction was updated and we have a callback
+    if (affectedConversationUserId != null && onMessageReactionUpdated != null) {
+      onMessageReactionUpdated!(messageId, affectedConversationUserId!);
+    }
   }
 
   void _updateEditedMessage(Map<String, dynamic> data) {
@@ -332,7 +343,8 @@ class ChatService extends ChangeNotifier {
       'reaction': reaction,
     };
     
-    socket.emit('reactToMessage', reactionData);
+    print('🎭 SOCKET REACTION DEBUG: Emitting react event for message $messageId with reaction $reaction');
+    socket.emit('react', reactionData);
   }
 
   void editMessage(String messageId, String newContent) {

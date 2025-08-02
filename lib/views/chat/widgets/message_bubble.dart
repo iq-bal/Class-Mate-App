@@ -40,55 +40,68 @@ class MessageBubble extends StatelessWidget {
       margin: const EdgeInsets.symmetric(vertical: 4, horizontal: 8),
       child: Row(
         mainAxisAlignment: isMe ? MainAxisAlignment.end : MainAxisAlignment.start,
+        crossAxisAlignment: CrossAxisAlignment.end,
         children: [
           if (!isMe) ..._buildSenderAvatar(),
           Flexible(
-            child: GestureDetector(
-              onLongPress: () => _showMessageOptions(context),
-              child: Container(
-                constraints: BoxConstraints(
-                  maxWidth: MediaQuery.of(context).size.width * 0.7,
-                ),
-                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-                decoration: BoxDecoration(
-                  color: isMe ? Colors.blue[600] : Colors.grey[200],
-                  borderRadius: BorderRadius.only(
-                    topLeft: const Radius.circular(20),
-                    topRight: const Radius.circular(20),
-                    bottomLeft: isMe ? const Radius.circular(20) : const Radius.circular(4),
-                    bottomRight: isMe ? const Radius.circular(4) : const Radius.circular(20),
-                  ),
-                ),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    // Reply to message (if any)
-                    if (message.replyTo != null || repliedMessage != null) _buildReplyPreview(),
-                    
-                    // Message content
-                    _buildMessageContent(),
-                    
-                    // Message reactions
-                    if (message.reactions.isNotEmpty) _buildReactionsDisplay(),
-                    
-                    // Message time and status
-                    const SizedBox(height: 4),
-                    Row(
-                      mainAxisSize: MainAxisSize.min,
+            child: Stack(
+              children: [
+                GestureDetector(
+                  onLongPress: () => _showMessageOptions(context),
+                  child: Container(
+                    constraints: BoxConstraints(
+                      maxWidth: MediaQuery.of(context).size.width * 0.7,
+                    ),
+                    padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                    margin: message.reactions.isNotEmpty 
+                        ? const EdgeInsets.only(bottom: 16) 
+                        : EdgeInsets.zero,
+                    decoration: BoxDecoration(
+                      color: isMe ? Colors.blue[600] : Colors.grey[200],
+                      borderRadius: BorderRadius.only(
+                        topLeft: const Radius.circular(20),
+                        topRight: const Radius.circular(20),
+                        bottomLeft: isMe ? const Radius.circular(20) : const Radius.circular(4),
+                        bottomRight: isMe ? const Radius.circular(4) : const Radius.circular(20),
+                      ),
+                    ),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Text(
-                          _formatTime(message.createdAt),
-                          style: TextStyle(
-                            fontSize: 11,
-                            color: isMe ? Colors.white70 : Colors.grey[600],
-                          ),
+                        // Reply to message (if any)
+                        if (message.replyTo != null || repliedMessage != null) _buildReplyPreview(),
+                        
+                        // Message content
+                        _buildMessageContent(),
+                        
+                        // Message time and status
+                        const SizedBox(height: 4),
+                        Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Text(
+                              _formatTime(message.createdAt),
+                              style: TextStyle(
+                                fontSize: 11,
+                                color: isMe ? Colors.white70 : Colors.grey[600],
+                              ),
+                            ),
+                            if (isMe) ..._buildMessageStatus(),
+                          ],
                         ),
-                        if (isMe) ..._buildMessageStatus(),
                       ],
                     ),
-                  ],
+                  ),
                 ),
-              ),
+                // Message reactions positioned at bottom right corner
+                if (message.reactions.isNotEmpty)
+                  Positioned(
+                    bottom: 0,
+                    right: isMe ? 8 : null,
+                    left: !isMe ? 8 : null,
+                    child: _buildReactionsDisplay(),
+                  ),
+              ],
             ),
           ),
           if (isMe) ..._buildSenderAvatar(),
@@ -354,9 +367,12 @@ class MessageBubble extends StatelessWidget {
   }
 
   Widget _buildReactionsDisplay() {
+    print('🎭 UI REACTION DEBUG: Building reactions display for message ${message.id} with ${message.reactions.length} reactions');
+    
     // Group reactions by emoji and count them
     final Map<String, int> reactionCounts = {};
     for (final reaction in message.reactions) {
+      print('🎭 UI REACTION DEBUG: Processing reaction ${reaction.reaction} from user ${reaction.userId}');
       reactionCounts[reaction.reaction] = (reactionCounts[reaction.reaction] ?? 0) + 1;
     }
 
@@ -460,9 +476,13 @@ class MessageBubble extends StatelessWidget {
         children: reactions.map((emoji) {
           return GestureDetector(
              onTap: () {
+               print('🎭 UI REACTION DEBUG: User tapped reaction $emoji for message ${message.id}');
                Navigator.pop(context);
                if (onReact != null) {
+                 print('🎭 UI REACTION DEBUG: Calling onReact callback with $emoji');
                  onReact!(emoji);
+               } else {
+                 print('🎭 UI REACTION DEBUG: onReact callback is null!');
                }
              },
             child: Container(
