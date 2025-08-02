@@ -45,6 +45,7 @@ class ClassDetailsStudentModel {
           .toList(),
       assignments: (courseData['assignments'] as List<dynamic>)
           .map((assignment) => AssignmentEntity(
+        id: assignment['id'] as String?,
         title: assignment['title'] as String?,
         description: assignment['description'] as String?,
         deadline: assignment['deadline'] != null

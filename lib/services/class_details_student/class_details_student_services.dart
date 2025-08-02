@@ -26,9 +26,11 @@ class ClassDetailsStudentServices {
           }
         }
         assignments {
+          id
           title
           description
           deadline
+          submissionCount
         }
       }
     }
@@ -40,6 +42,9 @@ class ClassDetailsStudentServices {
         '/',
         data: {'query': query, 'variables': variables},
       );
+      print("student class details start");
+      print(response);
+      print("end");
       if (response.statusCode == 200) {
         final data = response.data;
         // Check for errors in the response

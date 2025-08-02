@@ -82,11 +82,53 @@ class _CreateAssignmentViewState extends State<CreateAssignmentView> {
     }
   }
 
+  String _formatDueDate(DateTime? deadline) {
+    if (deadline == null) return 'No deadline';
+    
+    try {
+      final now = DateTime.now();
+      final difference = deadline.difference(now).inDays;
+      
+      if (difference == 0) {
+        return 'Due today';
+      } else if (difference == 1) {
+        return '1 day left';
+      } else if (difference > 1) {
+        return '$difference days left';
+      } else {
+        return 'Overdue';
+      }
+    } catch (e) {
+      return 'Invalid date';
+    }
+  }
+
+  Color _getDeadlineColor(DateTime? deadline) {
+    if (deadline == null) return Colors.grey;
+    
+    try {
+      final now = DateTime.now();
+      final difference = deadline.difference(now).inDays;
+      
+      if (difference < 0) {
+        return Colors.red; // Overdue
+      } else if (difference == 0) {
+        return Colors.orange; // Due today
+      } else if (difference <= 2) {
+        return Colors.amber; // Due soon
+      } else {
+        return Colors.green; // Plenty of time
+      }
+    } catch (e) {
+      return Colors.grey;
+    }
+  }
+
   Future<void> _submitAssignment() async {
-    String assignmentId = "6770faec4ba49e91eade309d";
-    if (selectedFile != null) {
+    String assignmentId = widget.assignmentModel.id ?? "";
+    if (selectedFile != null && assignmentId.isNotEmpty) {
       await _controller.submitAssignment(
-        assignmentId, // Replace with actual assignment ID
+        assignmentId,
         selectedFile!.path!,
       );
 
@@ -123,29 +165,30 @@ class _CreateAssignmentViewState extends State<CreateAssignmentView> {
                   print("More options clicked");
                 },
               ),
-              Container(
-                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                decoration: BoxDecoration(
-                  color: Colors.red.shade100,
-                  borderRadius: BorderRadius.circular(4),
-                ),
-                child: const Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  crossAxisAlignment: CrossAxisAlignment.center,
-                  children: [
-                    Icon(Icons.error, size: 16, color: Colors.red),
-                    SizedBox(width: 4),
-                    Text(
-                      '2 days left',
-                      style: TextStyle(
-                        color: Colors.red,
-                        fontSize: 14,
-                        fontWeight: FontWeight.normal,
+              if (widget.assignmentModel.deadline != null)
+                Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                  decoration: BoxDecoration(
+                    color: _getDeadlineColor(widget.assignmentModel.deadline).withOpacity(0.1),
+                    borderRadius: BorderRadius.circular(4),
+                  ),
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    crossAxisAlignment: CrossAxisAlignment.center,
+                    children: [
+                      Icon(Icons.schedule, size: 16, color: _getDeadlineColor(widget.assignmentModel.deadline)),
+                      const SizedBox(width: 4),
+                      Text(
+                        _formatDueDate(widget.assignmentModel.deadline),
+                        style: TextStyle(
+                          color: _getDeadlineColor(widget.assignmentModel.deadline),
+                          fontSize: 14,
+                          fontWeight: FontWeight.normal,
+                        ),
                       ),
-                    ),
-                  ],
+                    ],
+                  ),
                 ),
-              ),
               Container(
                 width: double.infinity,
                 margin: const EdgeInsets.symmetric(horizontal: 16),

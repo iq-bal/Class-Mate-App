@@ -25,10 +25,12 @@ class _AssignmentDetailPageState extends State<AssignmentDetailPage> {
 
   @override
   void initState() {
+
     super.initState();
+    debugPrint("Received Assignment ID: ${widget.assignmentId}");
     _fetchAssignmentDetails();
   }
-
+  
   Future<void> _fetchAssignmentDetails() async {
     await _controller.getAssignmentDetails(widget.assignmentId);
     setState(() {
@@ -51,11 +53,11 @@ class _AssignmentDetailPageState extends State<AssignmentDetailPage> {
       );
     }
 
-    return const CreateAssignmentView(
-      assignmentModel: AssignmentModel(
-        id: "123",
-        title: "Data Structures",
-        description: "Complete tasks on Linked Lists.",
+    return CreateAssignmentView(
+      assignmentModel: _controller.assignmentDetail?.assignment ?? const AssignmentModel(
+        id: null,
+        title: null,
+        description: null,
       ),
     );
   }

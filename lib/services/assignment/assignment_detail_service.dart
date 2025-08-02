@@ -55,16 +55,40 @@ class AssignmentDetailService{
       final dio = dioClient.getDio(AppConfig.graphqlServer);
       // Define the GraphQL query
       const String query = r'''
-    query GetAssignmentDetails($id: ID!) {
-      assignment(id: $id) {
+    query GetAssignmentWithSubmission($assignmentId: ID!) {
+      assignment(id: $assignmentId) {
         id
         title
         description
+        deadline
+        created_at
+        submissionCount
+        course {
+          id
+          title
+          course_code
+          description
+        }
+        teacher {
+          id
+          name
+          profile_picture
+        }
         submission {
+          id
+          file_url
           plagiarism_score
-          grade
           ai_generated
           teacher_comments
+          grade
+          submitted_at
+          evaluated_at
+          student {
+            id
+            name
+            roll
+            email
+          }
         }
       }
     }
@@ -75,7 +99,7 @@ class AssignmentDetailService{
         '/',
         data: {
           'query': query,
-          'variables': {'id': assignmentId},
+          'variables': {'assignmentId': assignmentId},
         },
       );
 

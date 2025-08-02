@@ -5,6 +5,7 @@ class AssignmentEntity {
   final String? description;
   final DateTime? deadline;
   final DateTime? createdAt;
+  final int? submissionCount;
 
   const AssignmentEntity({
     this.id,
@@ -13,6 +14,7 @@ class AssignmentEntity {
     this.description,
     this.deadline,
     this.createdAt,
+    this.submissionCount,
   });
 
   // Factory method to create an AssignmentEntity from JSON
@@ -24,6 +26,7 @@ class AssignmentEntity {
       description: json['description'] as String?,
       deadline: json['deadline'] != null ? DateTime.parse(json['deadline'] as String) : null,
       createdAt: json['created_at'] != null ? DateTime.parse(json['created_at'] as String) : null,
+      submissionCount: json['submissionCount'] as int?,
     );
   }
 }

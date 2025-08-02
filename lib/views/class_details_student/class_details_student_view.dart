@@ -144,7 +144,7 @@ class _ClassDetailsStudentState extends State<ClassDetailsStudent> {
                               iconText: HelperFunction.getFirstTwoLettersUppercase(
                                 assignment.title ?? "",
                               ),
-                              totalItems: 12, // Placeholder or dynamic count
+                              totalItems: assignment.submissionCount ?? 0,
                               onTap: () {
                                 Navigator.push(
                                   context,
