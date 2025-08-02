@@ -1,14 +1,19 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:classmate/controllers/profile_student/profile_student_controller.dart';
+import 'package:classmate/models/profile_student/profile_student_model.dart';
+import 'edit_about_dialog.dart';
 
 class AboutSection extends StatelessWidget {
   final String aboutText;
-  final VoidCallback? onEdit;
+  final ProfileStudentModel? profile;
+  final ProfileStudentController? controller;
 
   const AboutSection({
     super.key,
     required this.aboutText,
-    this.onEdit,
+    this.profile,
+    this.controller,
   });
 
   @override
@@ -31,7 +36,17 @@ class AboutSection extends StatelessWidget {
                 ),
               ),
               IconButton(
-                onPressed: onEdit,
+                onPressed: () {
+                  if (profile != null && controller != null) {
+                    showDialog(
+                      context: context,
+                      builder: (context) => EditAboutDialog(
+                        profile: profile!,
+                        controller: controller!,
+                      ),
+                    );
+                  }
+                },
                 icon: const Icon(Icons.edit, size: 20),
                 tooltip: 'Edit',
                 splashRadius: 20,

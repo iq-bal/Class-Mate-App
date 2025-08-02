@@ -1,10 +1,12 @@
+import 'dart:io';
 import 'package:flutter/material.dart';
+import 'package:image_picker/image_picker.dart';
 
 class ProfileHeader extends StatelessWidget {
   final String coverImageUrl;
   final String profileImageUrl;
-  final VoidCallback? onCoverImageEdit;
-  final VoidCallback? onProfileImageEdit;
+  final Function(File)? onCoverImageEdit;
+  final Function(File)? onProfileImageEdit;
 
   const ProfileHeader({
     super.key,
@@ -38,7 +40,7 @@ class ProfileHeader extends StatelessWidget {
           top: 160, // lowered slightly
           right: 16,
           child: GestureDetector(
-            onTap: onCoverImageEdit,
+            onTap: () => _pickCoverImage(),
             child: Container(
               padding: const EdgeInsets.all(6),
               decoration: const BoxDecoration(
@@ -72,7 +74,7 @@ class ProfileHeader extends StatelessWidget {
                 top: 0,
                 right: 0,
                 child: GestureDetector(
-                  onTap: onProfileImageEdit,
+                  onTap: () => _pickProfileImage(),
                   child: Container(
                     padding: const EdgeInsets.all(5),
                     decoration: const BoxDecoration(
@@ -88,5 +90,29 @@ class ProfileHeader extends StatelessWidget {
         ),
       ],
     );
+  }
+
+  Future<void> _pickCoverImage() async {
+    final ImagePicker picker = ImagePicker();
+    final XFile? image = await picker.pickImage(
+      source: ImageSource.gallery,
+      imageQuality: 80,
+    );
+    
+    if (image != null && onCoverImageEdit != null) {
+      onCoverImageEdit!(File(image.path));
+    }
+  }
+
+  Future<void> _pickProfileImage() async {
+    final ImagePicker picker = ImagePicker();
+    final XFile? image = await picker.pickImage(
+      source: ImageSource.gallery,
+      imageQuality: 80,
+    );
+    
+    if (image != null && onProfileImageEdit != null) {
+      onProfileImageEdit!(File(image.path));
+    }
   }
 }

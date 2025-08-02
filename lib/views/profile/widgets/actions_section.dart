@@ -3,10 +3,20 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:provider/provider.dart';
 
 import '../../../controllers/authentication/auth_controller.dart';
+import '../../../controllers/profile_student/profile_student_controller.dart';
+import '../../../models/profile_student/profile_student_model.dart';
 import '../../authentication/landing.dart';
+import 'edit_profile_dialog.dart';
 
 class ActionsSection extends StatelessWidget {
-  const ActionsSection({super.key});
+  final ProfileStudentModel? profile;
+  final ProfileStudentController? controller;
+
+  const ActionsSection({
+    super.key,
+    this.profile,
+    this.controller,
+  });
 
   Future<void> _handleLogout(BuildContext context) async {
     final authController = Provider.of<AuthController>(context, listen: false);
@@ -42,7 +52,15 @@ class ActionsSection extends StatelessWidget {
           label: "Edit Profile",
           iconColor: Colors.indigo,
           onTap: () {
-            // TODO: Implement Edit Profile action
+            if (profile != null && controller != null) {
+              showDialog(
+                context: context,
+                builder: (context) => EditProfileDialog(
+                  profile: profile!,
+                  controller: controller!,
+                ),
+              );
+            }
           },
         ),
         _actionTile(
