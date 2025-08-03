@@ -123,34 +123,13 @@ class ChatController extends ChangeNotifier {
 
   void _onChatServiceUpdate() {
     if (_disposed) return;
+    
     // Update messages from chat service for current conversation
     if (currentConversationUserId != null) {
       final messages = _chatService.conversations[currentConversationUserId] ?? [];
       
-      // Create completely new message objects to ensure proper UI updates
-      final newMessagesList = messages.map((msg) => Message(
-        id: msg.id,
-        senderId: msg.senderId,
-        receiverId: msg.receiverId,
-        content: msg.content,
-        messageType: msg.messageType,
-        reactions: List<MessageReaction>.from(msg.reactions), // Create new list
-        forwarded: msg.forwarded,
-        read: msg.read,
-        delivered: msg.delivered,
-        edited: msg.edited,
-        createdAt: msg.createdAt,
-        editedAt: msg.editedAt,
-        fileUrl: msg.fileUrl,
-        fileName: msg.fileName,
-        fileSize: msg.fileSize,
-        duration: msg.duration,
-        replyTo: msg.replyTo,
-        replyToMessage: msg.replyToMessage,
-        deletedFor: msg.deletedFor,
-      )).toList();
-      
-      _messagesNotifier.value = newMessagesList;
+      // Directly use the messages from the service to avoid creating duplicates
+      _messagesNotifier.value = messages;
     }
     
     // Update typing status
@@ -236,8 +215,8 @@ class ChatController extends ChangeNotifier {
          Message? newLastMessage;
          if (remainingMessages.isNotEmpty) {
            // Sort by creation time and get the most recent
-           final sortedMessages = List<Message>.from(remainingMessages)
-             ..sort((a, b) => b.createdAt.compareTo(a.createdAt));
+          final sortedMessages = [...remainingMessages]
+            ..sort((a, b) => b.createdAt.compareTo(a.createdAt));
            newLastMessage = sortedMessages.first;
          }
          
@@ -287,7 +266,7 @@ class ChatController extends ChangeNotifier {
           Message? newLastMessage;
           if (remainingMessages.isNotEmpty) {
             // Sort by creation time and get the most recent
-            final sortedMessages = List<Message>.from(remainingMessages)
+            final sortedMessages = [...remainingMessages]
               ..sort((a, b) => b.createdAt.compareTo(a.createdAt));
             newLastMessage = sortedMessages.first;
           }
@@ -316,7 +295,7 @@ class ChatController extends ChangeNotifier {
       
       // Also update the current messages if we're viewing this conversation
       if (currentConversationUserId == conversationUserId) {
-        final currentMessages = List<Message>.from(_messagesNotifier.value);
+        final currentMessages = _messagesNotifier.value;
         currentMessages.removeWhere((m) => m.id == messageId);
         _messagesNotifier.value = currentMessages;
         print('🗑️ SOCKET DELETE DEBUG: Updated current messages view');
@@ -326,12 +305,9 @@ class ChatController extends ChangeNotifier {
     void _handleSocketMessageReaction(String messageId, String conversationUserId) {
     if (_disposed) return;
     
-    print('🎭 SOCKET REACTION DEBUG: Handling reaction update for message $messageId in conversation $conversationUserId');
-    print('🎭 SOCKET REACTION DEBUG: Current conversation: $currentConversationUserId');
-    
     // Update the current messages if we're viewing this conversation
     if (currentConversationUserId == conversationUserId) {
-      final currentMessages = List<Message>.from(_messagesNotifier.value);
+      final currentMessages = _messagesNotifier.value;
       final messageIndex = currentMessages.indexWhere((m) => m.id == messageId);
       
       if (messageIndex != -1) {
@@ -341,25 +317,21 @@ class ChatController extends ChangeNotifier {
         
         if (updatedMessageIndex != -1) {
           final updatedMessage = updatedMessages[updatedMessageIndex];
-          print('🎭 SOCKET REACTION DEBUG: Found updated message with ${updatedMessage.reactions.length} reactions');
           
-          // Use copyWith to create a new message object with updated reactions
-          // This preserves all other properties of the message
-          currentMessages[messageIndex] = currentMessages[messageIndex].copyWith(
-            reactions: List<MessageReaction>.from(updatedMessage.reactions),
-          );
+          // Replace the message with the updated version from service cache
+          // This ensures we have the exact same message object with updated reactions
+          currentMessages[messageIndex] = updatedMessage;
           
-          // Create a new list to trigger the ValueNotifier update
-          _messagesNotifier.value = List<Message>.from(currentMessages);
-          print('🎭 SOCKET REACTION DEBUG: Updated message at index $messageIndex with ${updatedMessage.reactions.length} reactions');
+          // Assign the modified list directly to trigger the ValueNotifier update
+          _messagesNotifier.value = currentMessages;
         } else {
-          print('🎭 SOCKET REACTION DEBUG: Updated message not found in service cache');
+          // Try to reload messages to get the updated reaction
+          loadMessages(conversationUserId);
         }
       } else {
-        print('🎭 SOCKET REACTION DEBUG: Message $messageId not found in current messages');
+        // The message might be very recent or not loaded yet, try to reload messages
+        loadMessages(conversationUserId);
       }
-    } else {
-      print('🎭 SOCKET REACTION DEBUG: Reaction not for current conversation, ignoring');
     }
   }
 
@@ -370,7 +342,7 @@ class ChatController extends ChangeNotifier {
     
     // Update the current messages if we're viewing this conversation
     if (currentConversationUserId == conversationUserId) {
-      final currentMessages = List<Message>.from(_messagesNotifier.value);
+      final currentMessages = [..._messagesNotifier.value];
       final messageIndex = currentMessages.indexWhere((m) => m.id == messageId);
       
       if (messageIndex != -1) {
@@ -409,20 +381,20 @@ class ChatController extends ChangeNotifier {
         final existingMessages = _chatService.conversations[userId] ?? [];
         
         // Merge database messages with in-memory messages
-        // Remove duplicates by checking message IDs
+        // Prioritize in-memory messages as they contain the most recent updates (reactions, etc.)
         final allMessages = <Message>[];
         final messageIds = <String>{};
         
-        // Add database messages first
-        for (final message in dbMessages) {
+        // Add in-memory messages first (they have the latest updates)
+        for (final message in existingMessages) {
           if (!messageIds.contains(message.id)) {
             allMessages.add(message);
             messageIds.add(message.id);
           }
         }
         
-        // Add any new in-memory messages not in database
-        for (final message in existingMessages) {
+        // Add database messages that aren't already in memory
+        for (final message in dbMessages) {
           if (!messageIds.contains(message.id)) {
             allMessages.add(message);
             messageIds.add(message.id);
@@ -510,7 +482,7 @@ class ChatController extends ChangeNotifier {
             : message.senderId;
         
         if (conversationUserId == currentConversationUserId) {
-          final currentMessages = List<Message>.from(_messagesNotifier.value);
+          final currentMessages = [..._messagesNotifier.value];
           
           // Find and update any temporary message with the real server message
           if (isMessageFromCurrentUser(message)) {
@@ -648,7 +620,7 @@ class ChatController extends ChangeNotifier {
       
       // Add message to UI immediately if it's for current conversation
       if (currentConversationUserId == receiverId) {
-        final currentMessages = List<Message>.from(_messagesNotifier.value);
+        final currentMessages = [..._messagesNotifier.value];
         currentMessages.add(tempMessage);
         currentMessages.sort((a, b) => a.createdAt.compareTo(b.createdAt));
         _messagesNotifier.value = currentMessages;
@@ -745,7 +717,7 @@ class ChatController extends ChangeNotifier {
       
       // Update local UI immediately for better UX - always remove message completely
       if (currentConversationUserId != null) {
-        final currentMessages = List<Message>.from(_messagesNotifier.value);
+        final currentMessages = [..._messagesNotifier.value];
         final deletedMessage = currentMessages.firstWhere((m) => m.id == messageId, orElse: () => throw StateError('Message not found'));
         currentMessages.removeWhere((m) => m.id == messageId);
         print('🗑️ DELETE DEBUG: Removed message from UI');
@@ -798,25 +770,17 @@ class ChatController extends ChangeNotifier {
   }
 
   Future<void> reactToMessage(String messageId, String reaction) async {
-    print('🎭 CONTROLLER REACTION DEBUG: Sending reaction "$reaction" to message $messageId');
     try {
-      print('🎭 REACTION DEBUG: Adding reaction $reaction to message $messageId');
-      
       // Send reaction via Socket.IO for real-time updates
       _chatService.reactToMessage(messageId, reaction);
       
       // Also persist via GraphQL for data consistency
       final result = await _chatGraphQLService.reactToMessage(messageId, reaction);
-      print('🎭 REACTION DEBUG: GraphQL reaction result: ${result != null ? 'success' : 'failed'}');
       
       if (result == null) {
-        print('🎭 REACTION WARNING: GraphQL reaction failed, but continuing with Socket.IO');
+        // GraphQL reaction failed, but continuing with Socket.IO
       }
-      
-      print('🎭 CONTROLLER REACTION DEBUG: Reaction sent successfully');
     } catch (e) {
-      print('🎭 CONTROLLER REACTION DEBUG: Error reacting to message: $e');
-      print('🎭 REACTION ERROR: $e');
       errorMessage = e.toString();
     }
   }
@@ -964,7 +928,7 @@ class ChatController extends ChangeNotifier {
   // Helper methods
   void _updateMessageStatus(String messageId, {bool? delivered, bool? read}) {
     if (_disposed) return;
-    final currentMessages = List<Message>.from(_messagesNotifier.value);
+    final currentMessages = [..._messagesNotifier.value];
     final index = currentMessages.indexWhere((m) => m.id == messageId);
     
     if (index != -1) {

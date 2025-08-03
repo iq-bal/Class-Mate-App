@@ -1,8 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:cached_network_image/cached_network_image.dart';
 import 'package:classmate/models/chat/message.dart';
 import 'package:classmate/config/app_config.dart';
+import 'package:classmate/views/chat/widgets/audio_player_widget.dart';
 import 'package:intl/intl.dart';
+import 'package:url_launcher/url_launcher.dart';
 import 'dart:io';
 
 class MessageBubble extends StatelessWidget {
@@ -73,7 +76,7 @@ class MessageBubble extends StatelessWidget {
                         if (message.replyTo != null || repliedMessage != null) _buildReplyPreview(),
                         
                         // Message content
-                        _buildMessageContent(),
+                        _buildMessageContent(context),
                         
                         // Message time and status
                         const SizedBox(height: 4),
@@ -134,6 +137,7 @@ class MessageBubble extends StatelessWidget {
             : const AssetImage('assets/images/avatar.png') as ImageProvider,
         backgroundColor: Colors.grey,
       ),
+      const SizedBox(width: 8),
     ];
   }
 
@@ -239,7 +243,7 @@ class MessageBubble extends StatelessWidget {
     }
   }
 
-  Widget _buildMessageContent() {
+  Widget _buildMessageContent(BuildContext context) {
     switch (message.messageType) {
       case 'text':
         return Text(
@@ -290,83 +294,80 @@ class MessageBubble extends StatelessWidget {
           ],
         );
       case 'file':
-        return Container(
-          padding: const EdgeInsets.all(12),
-          decoration: BoxDecoration(
-            color: isMe ? Colors.blue[700] : Colors.grey[300],
-            borderRadius: BorderRadius.circular(8),
-          ),
-          child: Row(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Icon(
-                Icons.attach_file,
-                color: isMe ? Colors.white : Colors.black87,
-                size: 20,
-              ),
-              const SizedBox(width: 8),
-              Flexible(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      message.fileName ?? 'File',
-                      style: TextStyle(
-                        fontSize: 14,
-                        color: isMe ? Colors.white : Colors.black87,
-                        fontWeight: FontWeight.w500,
-                      ),
-                    ),
-                    if (message.fileSize != null)
+        return GestureDetector(
+           onTap: () => _downloadFile(context, message),
+          child: Container(
+            padding: const EdgeInsets.all(12),
+            decoration: BoxDecoration(
+              color: isMe ? Colors.blue[700] : Colors.grey[300],
+              borderRadius: BorderRadius.circular(8),
+            ),
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Icon(
+                  Icons.file_download,
+                  color: isMe ? Colors.white : Colors.black87,
+                  size: 20,
+                ),
+                const SizedBox(width: 8),
+                Flexible(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
                       Text(
-                        _formatFileSize(message.fileSize!),
+                        message.fileName ?? 'File',
                         style: TextStyle(
-                          fontSize: 12,
-                          color: isMe ? Colors.white70 : Colors.grey[600],
+                          fontSize: 14,
+                          color: isMe ? Colors.white : Colors.black87,
+                          fontWeight: FontWeight.w500,
                         ),
                       ),
-                  ],
-                ),
-              ),
-            ],
-          ),
-        );
-      case 'voice':
-        return Container(
-          padding: const EdgeInsets.all(12),
-          decoration: BoxDecoration(
-            color: isMe ? Colors.blue[700] : Colors.grey[300],
-            borderRadius: BorderRadius.circular(8),
-          ),
-          child: Row(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Icon(
-                Icons.mic,
-                color: isMe ? Colors.white : Colors.black87,
-                size: 20,
-              ),
-              const SizedBox(width: 8),
-              Text(
-                'Voice message',
-                style: TextStyle(
-                  fontSize: 14,
-                  color: isMe ? Colors.white : Colors.black87,
-                ),
-              ),
-              if (message.duration != null) ...[
-                const SizedBox(width: 8),
-                Text(
-                  _formatDuration(message.duration!),
-                  style: TextStyle(
-                    fontSize: 12,
-                    color: isMe ? Colors.white70 : Colors.grey[600],
+                      if (message.fileSize != null)
+                        Text(
+                          _formatFileSize(message.fileSize!),
+                          style: TextStyle(
+                            fontSize: 12,
+                            color: isMe ? Colors.white70 : Colors.grey[600],
+                          ),
+                        ),
+                      Text(
+                        'Tap to download',
+                        style: TextStyle(
+                          fontSize: 11,
+                          color: isMe ? Colors.white60 : Colors.grey[500],
+                          fontStyle: FontStyle.italic,
+                        ),
+                      ),
+                    ],
                   ),
                 ),
               ],
-            ],
+            ),
           ),
         );
+      case 'voice':
+          final audioUrl = message.fileUrl != null 
+              ? '${AppConfig.imageServer}${message.fileUrl}'
+              : message.content;
+          return Container(
+            padding: const EdgeInsets.all(8),
+            decoration: BoxDecoration(
+              color: isMe ? Colors.blue[700] : Colors.grey[300],
+              borderRadius: BorderRadius.circular(12),
+            ),
+            constraints: const BoxConstraints(
+              maxWidth: 280,
+              minWidth: 200,
+            ),
+            child: AudioPlayerWidget(
+              audioUrl: audioUrl,
+              isMe: isMe,
+              duration: message.duration != null 
+                  ? _parseDuration(message.duration!) 
+                  : null,
+            ),
+          );
       default:
         return Text(
           message.content,
@@ -379,12 +380,9 @@ class MessageBubble extends StatelessWidget {
   }
 
   Widget _buildReactionsDisplay() {
-    print('🎭 UI REACTION DEBUG: Building reactions display for message ${message.id} with ${message.reactions.length} reactions');
-    
     // Group reactions by emoji and count them
     final Map<String, int> reactionCounts = {};
     for (final reaction in message.reactions) {
-      print('🎭 UI REACTION DEBUG: Processing reaction ${reaction.reaction} from user ${reaction.userId}');
       reactionCounts[reaction.reaction] = (reactionCounts[reaction.reaction] ?? 0) + 1;
     }
 
@@ -488,13 +486,9 @@ class MessageBubble extends StatelessWidget {
         children: reactions.map((emoji) {
           return GestureDetector(
              onTap: () {
-               print('🎭 UI REACTION DEBUG: User tapped reaction $emoji for message ${message.id}');
                Navigator.pop(context);
                if (onReact != null) {
-                 print('🎭 UI REACTION DEBUG: Calling onReact callback with $emoji');
                  onReact!(emoji);
-               } else {
-                 print('🎭 UI REACTION DEBUG: onReact callback is null!');
                }
              },
             child: Container(
@@ -746,5 +740,42 @@ class MessageBubble extends StatelessWidget {
     final minutes = seconds ~/ 60;
     final remainingSeconds = seconds % 60;
     return '$minutes:${remainingSeconds.toString().padLeft(2, '0')}';
+  }
+
+  Duration? _parseDuration(int seconds) {
+    return Duration(seconds: seconds);
+  }
+
+  Future<void> _downloadFile(BuildContext context, Message message) async {
+    if (message.fileUrl == null) return;
+    
+    try {
+      final fileUrl = '${AppConfig.imageServer}${message.fileUrl}';
+      final uri = Uri.parse(fileUrl);
+      
+      if (await canLaunchUrl(uri)) {
+        await launchUrl(uri, mode: LaunchMode.externalApplication);
+      } else {
+        // Show error message if URL can't be launched
+        if (context.mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text('Unable to download file'),
+              backgroundColor: Colors.red,
+            ),
+          );
+        }
+      }
+    } catch (e) {
+      // Show error message if download fails
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Download failed: ${e.toString()}'),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
+    }
   }
 }

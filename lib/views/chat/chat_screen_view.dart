@@ -67,6 +67,7 @@ class _ChatScreenViewState extends State<ChatScreenView> {
   Future<void> _initializeRecorder() async {
     try {
       _audioRecorder = FlutterSoundRecorder();
+      await _audioRecorder!.openRecorder();
     } catch (e) {
       print('Error initializing recorder: $e');
     }
@@ -630,7 +631,7 @@ class _ChatScreenViewState extends State<ChatScreenView> {
                     final isMe = widget.chatController.isMessageFromCurrentUser(message);
                     
                     return Dismissible(
-                      key: ValueKey('${message.id}_${message.reactions.length}_${message.reactions.map((r) => '${r.userId}_${r.reaction}').join('_')}'),
+                      key: ValueKey(message.id),
                       direction: isMe 
                           ? DismissDirection.endToStart // Swipe left for sent messages
                           : DismissDirection.startToEnd, // Swipe right for received messages

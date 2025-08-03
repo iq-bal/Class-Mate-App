@@ -95,14 +95,12 @@ class ChatService extends ChangeNotifier {
 
     // Message reactions
     socket.on('messageReaction', (data) {
-      print('🎭 SOCKET EVENT DEBUG: Received messageReaction event: $data');
       _updateMessageReaction(data);
       notifyListeners();
     });
 
     // Message reacted (alternative event name)
      socket.on('messageReacted', (data) {
-       print('🎭 SOCKET EVENT DEBUG: Received messageReacted event: $data');
        _updateMessageReaction(data);
        notifyListeners();
      });
@@ -178,52 +176,49 @@ class ChatService extends ChangeNotifier {
   }
 
   void _updateMessageReaction(Map<String, dynamic> data) {
-    print('🎭 SOCKET REACTION DEBUG: Processing reaction data: $data');
-    
     final String messageId = data['messageId'];
-    final String userId = data['userId'];
+    final String reactionUserId = data['userId'];
     final String reaction = data['reaction'];
     String? affectedConversationUserId;
-
-    print('🎭 SOCKET REACTION DEBUG: Looking for message $messageId in ${conversations.length} conversations');
+    bool messageFound = false;
     
+    // Search through all conversations to find the message
     conversations.forEach((conversationUserId, messages) {
-      print('🎭 SOCKET REACTION DEBUG: Checking conversation $conversationUserId with ${messages.length} messages');
       final index = messages.indexWhere((m) => m.id == messageId);
       if (index != -1) {
+        messageFound = true;
         final message = messages[index];
-        print('🎭 SOCKET REACTION DEBUG: Found message $messageId at index $index, current reactions: ${message.reactions.length}');
         
         // Create a new list of reactions by filtering out existing reactions from this user
         final List<MessageReaction> updatedReactions = List<MessageReaction>.from(
-          message.reactions.where((r) => r.userId != userId)
+          message.reactions.where((r) => r.userId != reactionUserId)
         );
         
         // Add new reaction
         updatedReactions.add(MessageReaction(
-          userId: userId,
+          userId: reactionUserId,
           reaction: reaction,
           createdAt: DateTime.now(),
         ));
-        
-        print('🎭 SOCKET REACTION DEBUG: Updated reactions list, old count: ${message.reactions.length}, new count: ${updatedReactions.length}');
         
         // Create a new message with updated reactions
         messages[index] = message.copyWith(reactions: updatedReactions);
         
         affectedConversationUserId = conversationUserId;
-        print('🎭 SOCKET REACTION DEBUG: Updated reaction for message $messageId in conversation $conversationUserId');
-      } else {
-        print('🎭 SOCKET REACTION DEBUG: Message $messageId not found in conversation $conversationUserId');
       }
     });
     
+    if (!messageFound) {
+      // Try to determine the conversation based on the current user and reaction user
+      if (reactionUserId != userId) {
+        // Reaction is from another user, so the conversation key would be their ID
+        affectedConversationUserId = reactionUserId;
+      }
+    }
+    
     // Notify the chat controller if a reaction was updated and we have a callback
     if (affectedConversationUserId != null && onMessageReactionUpdated != null) {
-      print('🎭 SOCKET REACTION DEBUG: Notifying controller about reaction update');
       onMessageReactionUpdated!(messageId, affectedConversationUserId!);
-    } else {
-      print('🎭 SOCKET REACTION DEBUG: No callback or affected conversation found');
     }
   }
 

@@ -69,12 +69,22 @@ class Message {
       receiverId = json['receiver_id']?['_id'] ?? json['receiver_id']?['id'] ?? '';
     }
     
+    // Determine correct message type for audio files
+    String messageType = json['message_type'] ?? 'text';
+    if (messageType == 'file' && json['file_name'] != null) {
+      final fileName = json['file_name'] as String;
+      final extension = fileName.split('.').last.toLowerCase();
+      if (['mp3', 'wav', 'm4a', 'aac', 'ogg', 'webm'].contains(extension)) {
+        messageType = 'voice';
+      }
+    }
+    
     return Message(
       id: json['_id'] ?? json['id'] ?? '',
       senderId: senderId,
       receiverId: receiverId,
       content: json['content'] ?? '',
-      messageType: json['message_type'] ?? 'text',
+      messageType: messageType,
       fileUrl: json['file_url'],
       fileName: json['file_name'],
       fileSize: json['file_size'],
