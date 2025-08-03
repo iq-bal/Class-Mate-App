@@ -3,6 +3,7 @@ import 'package:classmate/models/chat/message.dart';
 import 'package:classmate/services/chat/chat_service.dart';
 import 'package:classmate/services/chat/chat_graphql_service.dart';
 import 'package:classmate/core/token_storage.dart';
+import 'package:socket_io_client/socket_io_client.dart' as IO;
 import 'dart:io';
 
 // Conversation model for the chat list
@@ -62,6 +63,15 @@ class ChatController extends ChangeNotifier {
   String? currentConversationUserId;
   bool _disposed = false;
   
+  // Call event callbacks
+  Function(Map<String, dynamic>)? onIncomingCall;
+  Function(Map<String, dynamic>)? onCallAccepted;
+  Function(Map<String, dynamic>)? onCallRejected;
+  Function(Map<String, dynamic>)? onCallEnded;
+  
+  // Callback for when a message ID is updated from temporary to real
+  Function(String oldId, String newId)? onMessageIdUpdated;
+  
   ChatController({
     required String userId,
     required String baseUrl,
@@ -83,6 +93,9 @@ class ChatController extends ChangeNotifier {
   ValueNotifier<Map<String, bool>> get typingStatusNotifier => _typingStatusNotifier;
   ValueNotifier<Map<String, bool>> get onlineStatusNotifier => _onlineStatusNotifier;
   ValueNotifier<int> get unreadCountNotifier => _unreadCountNotifier;
+  
+  // Getter for accessing socket
+  IO.Socket get socket => _chatService.socket;
 
   void _initializeChat() {
     _stateNotifier.value = ChatState.loading;
@@ -96,6 +109,12 @@ class ChatController extends ChangeNotifier {
     // Setup callback for message reaction events
     _chatService.onMessageReactionUpdated = _handleSocketMessageReaction;
     
+    // Setup callback for message edit events
+    _chatService.onMessageEdited = _handleSocketMessageEdit;
+    
+    // Setup callback for message ID updates
+    _chatService.onMessageIdUpdated = _notifyMessageIdUpdated;
+    
     // Setup socket listeners
     _setupSocketListeners();
     
@@ -107,7 +126,31 @@ class ChatController extends ChangeNotifier {
     // Update messages from chat service for current conversation
     if (currentConversationUserId != null) {
       final messages = _chatService.conversations[currentConversationUserId] ?? [];
-      _messagesNotifier.value = List.from(messages); // Create new list to trigger UI update
+      
+      // Create completely new message objects to ensure proper UI updates
+      final newMessagesList = messages.map((msg) => Message(
+        id: msg.id,
+        senderId: msg.senderId,
+        receiverId: msg.receiverId,
+        content: msg.content,
+        messageType: msg.messageType,
+        reactions: List<MessageReaction>.from(msg.reactions), // Create new list
+        forwarded: msg.forwarded,
+        read: msg.read,
+        delivered: msg.delivered,
+        edited: msg.edited,
+        createdAt: msg.createdAt,
+        editedAt: msg.editedAt,
+        fileUrl: msg.fileUrl,
+        fileName: msg.fileName,
+        fileSize: msg.fileSize,
+        duration: msg.duration,
+        replyTo: msg.replyTo,
+        replyToMessage: msg.replyToMessage,
+        deletedFor: msg.deletedFor,
+      )).toList();
+      
+      _messagesNotifier.value = newMessagesList;
     }
     
     // Update typing status
@@ -281,29 +324,69 @@ class ChatController extends ChangeNotifier {
     }
 
     void _handleSocketMessageReaction(String messageId, String conversationUserId) {
-      if (_disposed) return;
+    if (_disposed) return;
+    
+    print('🎭 SOCKET REACTION DEBUG: Handling reaction update for message $messageId in conversation $conversationUserId');
+    print('🎭 SOCKET REACTION DEBUG: Current conversation: $currentConversationUserId');
+    
+    // Update the current messages if we're viewing this conversation
+    if (currentConversationUserId == conversationUserId) {
+      final currentMessages = List<Message>.from(_messagesNotifier.value);
+      final messageIndex = currentMessages.indexWhere((m) => m.id == messageId);
       
-      print('🎭 SOCKET REACTION DEBUG: Handling reaction update for message $messageId in conversation $conversationUserId');
-      
-      // Update the current messages if we're viewing this conversation
-      if (currentConversationUserId == conversationUserId) {
-        final currentMessages = List<Message>.from(_messagesNotifier.value);
-        final messageIndex = currentMessages.indexWhere((m) => m.id == messageId);
+      if (messageIndex != -1) {
+        // Get the updated message from the service's cache
+        final updatedMessages = _chatService.conversations[conversationUserId] ?? [];
+        final updatedMessageIndex = updatedMessages.indexWhere((m) => m.id == messageId);
         
-        if (messageIndex != -1) {
-          // Get the updated message from the service's cache
-          final updatedMessages = _chatService.conversations[conversationUserId] ?? [];
-          final updatedMessageIndex = updatedMessages.indexWhere((m) => m.id == messageId);
+        if (updatedMessageIndex != -1) {
+          final updatedMessage = updatedMessages[updatedMessageIndex];
+          print('🎭 SOCKET REACTION DEBUG: Found updated message with ${updatedMessage.reactions.length} reactions');
           
-          if (updatedMessageIndex != -1) {
-            // Replace the message with the updated version that has new reactions
-            currentMessages[messageIndex] = updatedMessages[updatedMessageIndex];
-            _messagesNotifier.value = currentMessages;
-            print('🎭 SOCKET REACTION DEBUG: Updated message reactions in UI');
-          }
+          // Use copyWith to create a new message object with updated reactions
+          // This preserves all other properties of the message
+          currentMessages[messageIndex] = currentMessages[messageIndex].copyWith(
+            reactions: List<MessageReaction>.from(updatedMessage.reactions),
+          );
+          
+          // Create a new list to trigger the ValueNotifier update
+          _messagesNotifier.value = List<Message>.from(currentMessages);
+          print('🎭 SOCKET REACTION DEBUG: Updated message at index $messageIndex with ${updatedMessage.reactions.length} reactions');
+        } else {
+          print('🎭 SOCKET REACTION DEBUG: Updated message not found in service cache');
+        }
+      } else {
+        print('🎭 SOCKET REACTION DEBUG: Message $messageId not found in current messages');
+      }
+    } else {
+      print('🎭 SOCKET REACTION DEBUG: Reaction not for current conversation, ignoring');
+    }
+  }
+
+  void _handleSocketMessageEdit(String messageId, String conversationUserId) {
+    if (_disposed) return;
+    
+    print('🔧 SOCKET EDIT DEBUG: Handling edit update for message $messageId in conversation $conversationUserId');
+    
+    // Update the current messages if we're viewing this conversation
+    if (currentConversationUserId == conversationUserId) {
+      final currentMessages = List<Message>.from(_messagesNotifier.value);
+      final messageIndex = currentMessages.indexWhere((m) => m.id == messageId);
+      
+      if (messageIndex != -1) {
+        // Get the updated message from the service's cache
+        final updatedMessages = _chatService.conversations[conversationUserId] ?? [];
+        final updatedMessageIndex = updatedMessages.indexWhere((m) => m.id == messageId);
+        
+        if (updatedMessageIndex != -1) {
+          // Replace the message with the updated version that has new content
+          currentMessages[messageIndex] = updatedMessages[updatedMessageIndex];
+          _messagesNotifier.value = currentMessages;
+          print('🔧 SOCKET EDIT DEBUG: Updated message content in UI');
         }
       }
     }
+  }
 
   // Set current conversation and load messages
   void setCurrentConversation(String userId) {
@@ -429,14 +512,33 @@ class ChatController extends ChangeNotifier {
         if (conversationUserId == currentConversationUserId) {
           final currentMessages = List<Message>.from(_messagesNotifier.value);
           
-          // Remove any temporary message with similar content and timestamp
+          // Find and update any temporary message with the real server message
           if (isMessageFromCurrentUser(message)) {
-            currentMessages.removeWhere((m) => 
+            final tempMessageIndex = currentMessages.indexWhere((m) => 
               m.id.startsWith('temp_') && 
               m.content == message.content &&
               m.senderId == message.senderId &&
               m.receiverId == message.receiverId
             );
+            
+            if (tempMessageIndex != -1) {
+              // Update the temporary message with the real server message data
+              // This preserves any references to this message object
+              final tempMessage = currentMessages[tempMessageIndex];
+              currentMessages[tempMessageIndex] = message.copyWith(
+                // Preserve any local-only properties if needed
+                createdAt: tempMessage.createdAt, // Keep original timestamp for UI consistency
+              );
+              
+              print('🔄 Updated temporary message ${tempMessage.id} to real ID ${message.id}');
+              
+              // Notify about the ID change so UI components can update their references
+              _notifyMessageIdUpdated(tempMessage.id, message.id);
+              
+              currentMessages.sort((a, b) => a.createdAt.compareTo(b.createdAt));
+              _messagesNotifier.value = currentMessages;
+              return; // Exit early since we updated the existing message
+            }
           }
           
           // Check if message already exists to avoid duplicates
@@ -507,7 +609,7 @@ class ChatController extends ChangeNotifier {
     _chatService.socket.on('callEnded', (data) {
       if (_disposed) return;
       // Handle call ended
-      _handleCallEnded(data);
+      _handleCallEndedEvent(data);
     });
   }
 
@@ -552,6 +654,16 @@ class ChatController extends ChangeNotifier {
         _messagesNotifier.value = currentMessages;
       }
       
+      // Also add temporary message to ChatService's conversation cache
+      // This ensures the temporary message can be found and replaced when the real message arrives
+      // Use the same conversation key logic as ChatService._addMessageToConversation
+      final conversationKey = receiverId; // For messages we send, conversation key is the receiver ID
+      if (!_chatService.conversations.containsKey(conversationKey)) {
+        _chatService.conversations[conversationKey] = [];
+      }
+      _chatService.conversations[conversationKey]!.add(tempMessage);
+      _chatService.conversations[conversationKey]!.sort((a, b) => a.createdAt.compareTo(b.createdAt));
+      
       // Update conversations list with the new message
       _updateConversationsListWithNewMessage(tempMessage);
       
@@ -582,8 +694,29 @@ class ChatController extends ChangeNotifier {
 
   Future<void> editMessage(String messageId, String newContent) async {
     try {
+      print('🔧 EDIT DEBUG: Editing message $messageId with content: $newContent');
+      
+      // Check if this is a temporary message (not yet sent to server)
+      final isTemporaryMessage = messageId.startsWith('temp_');
+      
+      if (isTemporaryMessage) {
+        print('🔧 EDIT DEBUG: Cannot edit temporary message $messageId - message not yet sent to server');
+        errorMessage = 'Cannot edit message while it\'s being sent. Please wait and try again.';
+        return;
+      }
+      
+      // Send via Socket.IO for real-time updates
       _chatService.editMessage(messageId, newContent);
+      
+      // Also persist via GraphQL for data consistency
+      final result = await _chatGraphQLService.editMessage(messageId, newContent);
+      if (result != null) {
+        print('🔧 EDIT DEBUG: Message edited successfully via GraphQL');
+      } else {
+        print('🔧 EDIT DEBUG: GraphQL edit failed');
+      }
     } catch (e) {
+      print('🔧 EDIT DEBUG: Error editing message: $e');
       errorMessage = e.toString();
     }
   }
@@ -665,6 +798,7 @@ class ChatController extends ChangeNotifier {
   }
 
   Future<void> reactToMessage(String messageId, String reaction) async {
+    print('🎭 CONTROLLER REACTION DEBUG: Sending reaction "$reaction" to message $messageId');
     try {
       print('🎭 REACTION DEBUG: Adding reaction $reaction to message $messageId');
       
@@ -679,7 +813,9 @@ class ChatController extends ChangeNotifier {
         print('🎭 REACTION WARNING: GraphQL reaction failed, but continuing with Socket.IO');
       }
       
+      print('🎭 CONTROLLER REACTION DEBUG: Reaction sent successfully');
     } catch (e) {
+      print('🎭 CONTROLLER REACTION DEBUG: Error reacting to message: $e');
       print('🎭 REACTION ERROR: $e');
       errorMessage = e.toString();
     }
@@ -843,20 +979,39 @@ class ChatController extends ChangeNotifier {
   }
 
   void _handleIncomingCall(Map<String, dynamic> data) {
-    // Implement incoming call handling
-    // This could show a call dialog or notification
+    // Handle incoming call by showing call screen
+    final callerId = data['from'];
+    final callerName = data['callerName'] ?? 'Unknown';
+    final callerProfilePicture = data['callerProfilePicture'];
+    final callType = data['callType'] ?? 'voice';
+    
+    // Notify listeners about incoming call
+    onIncomingCall?.call({
+      'callerId': callerId,
+      'callerName': callerName,
+      'callerProfilePicture': callerProfilePicture,
+      'callType': callType,
+      'callData': data,
+    });
   }
 
   void _handleCallAccepted(Map<String, dynamic> data) {
-    // Implement call accepted handling
+    // Handle call accepted
+    onCallAccepted?.call(data);
   }
 
   void _handleCallRejected(Map<String, dynamic> data) {
-    // Implement call rejected handling
+    // Handle call rejected
+    onCallRejected?.call(data);
   }
+  
+  void _handleCallEndedEvent(Map<String, dynamic> data) {
+      // Handle call ended
+      onCallEnded?.call(data);
+    }
 
-  void _handleCallEnded(Map<String, dynamic> data) {
-    // Implement call ended handling
+  void _notifyMessageIdUpdated(String oldId, String newId) {
+    onMessageIdUpdated?.call(oldId, newId);
   }
 
   bool isUserOnline(String userId) {

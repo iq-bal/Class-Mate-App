@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:classmate/config/app_config.dart';
 
 class InstructorInfo extends StatelessWidget {
   final String instructorName;
@@ -22,7 +23,7 @@ class InstructorInfo extends StatelessWidget {
           Row(
             children: [
               CircleAvatar(
-                backgroundImage: NetworkImage('http://localhost:4001$imageUrl'),
+                backgroundImage: NetworkImage('${AppConfig.imageServer}$imageUrl'),
                 radius: 18,
               ),
               const SizedBox(width: 8),

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:classmate/config/app_config.dart';
 
 class CourseCard extends StatelessWidget {
   final String title;
@@ -22,7 +23,7 @@ class CourseCard extends StatelessWidget {
       decoration: BoxDecoration(
         borderRadius: BorderRadius.circular(16),
         image: DecorationImage(
-          image: NetworkImage('http://localhost:4001$imagePath'),
+          image: NetworkImage('${AppConfig.imageServer}$imagePath'),
           fit: BoxFit.cover,
         ),
       ),

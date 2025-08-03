@@ -1,6 +1,7 @@
 import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
+import 'package:classmate/config/app_config.dart';
 
 class ProfileHeader extends StatelessWidget {
   final String coverImageUrl;
@@ -29,7 +30,7 @@ class ProfileHeader extends StatelessWidget {
           height: 200,
           decoration: BoxDecoration(
             image: DecorationImage(
-              image: NetworkImage(coverImageUrl),
+              image: NetworkImage(coverImageUrl.startsWith('http') ? coverImageUrl : '${AppConfig.imageServer}$coverImageUrl'),
               fit: BoxFit.cover,
             ),
           ),
@@ -65,7 +66,7 @@ class ProfileHeader extends StatelessWidget {
                 backgroundColor: Colors.white,
                 child: CircleAvatar(
                   radius: 46,
-                  backgroundImage: NetworkImage(profileImageUrl),
+                  backgroundImage: NetworkImage(profileImageUrl.startsWith('http') ? profileImageUrl : '${AppConfig.imageServer}$profileImageUrl'),
                 ),
               ),
 

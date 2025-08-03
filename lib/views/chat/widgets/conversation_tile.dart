@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:classmate/controllers/chat/chat_controller.dart';
 import 'package:classmate/views/chat/chat_screen_view.dart';
+import 'package:classmate/config/app_config.dart';
+import 'package:intl/intl.dart';
 
 class ConversationTile extends StatelessWidget {
   final Conversation conversation;
@@ -84,8 +86,8 @@ class ConversationTile extends StatelessWidget {
             CircleAvatar(
               radius: 28,
               backgroundImage: conversation.withUserProfilePicture != null
-                  ? NetworkImage('http://localhost:4001${conversation.withUserProfilePicture}')
-                  : const AssetImage('assets/images/avatar.png') as ImageProvider,
+                ? NetworkImage('${AppConfig.imageServer}${conversation.withUserProfilePicture}')
+                : const AssetImage('assets/images/avatar.png') as ImageProvider,
               backgroundColor: Colors.grey[300],
             ),
             // Online status indicator

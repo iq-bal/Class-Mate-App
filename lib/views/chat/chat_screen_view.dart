@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:classmate/controllers/chat/chat_controller.dart';
 import 'package:classmate/models/chat/message.dart';
 import 'package:classmate/views/chat/widgets/message_bubble.dart';
+import 'package:classmate/views/chat/call_screen.dart';
+import 'package:classmate/config/app_config.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter_sound/flutter_sound.dart';
@@ -41,6 +43,8 @@ class _ChatScreenViewState extends State<ChatScreenView> {
   int _recordingDuration = 0;
   Message? _replyingToMessage;
   bool _showReplyPreview = false;
+  Message? _editingMessage;
+  bool _isEditing = false;
 
   @override
   void initState() {
@@ -55,6 +59,9 @@ class _ChatScreenViewState extends State<ChatScreenView> {
     
     // Listen for new messages to auto-scroll
     widget.chatController.messagesNotifier.addListener(_onMessagesChanged);
+    
+    // // Listen for message ID updates
+    widget.chatController.onMessageIdUpdated = _onMessageIdUpdated;
   }
 
   Future<void> _initializeRecorder() async {
@@ -69,6 +76,7 @@ class _ChatScreenViewState extends State<ChatScreenView> {
   void dispose() {
     _messageController.removeListener(_onTypingChanged);
     widget.chatController.messagesNotifier.removeListener(_onMessagesChanged);
+    widget.chatController.onMessageIdUpdated = null; // Clear the callback
     _messageController.dispose();
     _scrollController.dispose();
     _recordingTimer?.cancel();
@@ -112,15 +120,38 @@ class _ChatScreenViewState extends State<ChatScreenView> {
   void _sendMessage() {
     final content = _messageController.text.trim();
     if (content.isNotEmpty) {
-      widget.chatController.sendMessage(
-        receiverId: widget.withUserId,
-        content: content,
-        type: 'text',
-        replyToId: _replyingToMessage?.id,
-      );
-      _messageController.clear();
-      _clearReply();
-      _scrollToBottom();
+      if (_isEditing) {
+        // Save edit
+        _saveEdit();
+      } else {
+        // Check if replying to a temporary message (not yet sent to server)
+        String? validReplyToId;
+        if (_replyingToMessage != null) {
+          if (_replyingToMessage!.id.startsWith('temp_')) {
+            // Don't reply to temporary messages - show warning
+            ScaffoldMessenger.of(context).showSnackBar(
+              const SnackBar(
+                content: Text('Cannot reply to a message that is still being sent. Please wait and try again.'),
+                backgroundColor: Colors.orange,
+              ),
+            );
+            return;
+          } else {
+            validReplyToId = _replyingToMessage!.id;
+          }
+        }
+        
+        // Send new message
+        widget.chatController.sendMessage(
+          receiverId: widget.withUserId,
+          content: content,
+          type: 'text',
+          replyToId: validReplyToId,
+        );
+        _messageController.clear();
+        _clearReply();
+        _scrollToBottom();
+      }
     }
   }
 
@@ -143,6 +174,23 @@ class _ChatScreenViewState extends State<ChatScreenView> {
   void _sendImageMessage() async {
     final XFile? image = await _imagePicker.pickImage(source: ImageSource.gallery);
     if (image != null) {
+      // Check if replying to a temporary message (not yet sent to server)
+      String? validReplyToId;
+      if (_replyingToMessage != null) {
+        if (_replyingToMessage!.id.startsWith('temp_')) {
+          // Don't reply to temporary messages - show warning
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text('Cannot reply to a message that is still being sent. Please wait and try again.'),
+              backgroundColor: Colors.orange,
+            ),
+          );
+          return;
+        } else {
+          validReplyToId = _replyingToMessage!.id;
+        }
+      }
+      
       final file = File(image.path);
       // Send actual image file
       widget.chatController.sendMessage(
@@ -150,7 +198,9 @@ class _ChatScreenViewState extends State<ChatScreenView> {
         content: '', // Optional caption
         type: 'image',
         file: file,
+        replyToId: validReplyToId,
       );
+      _clearReply();
       _scrollToBottom();
     }
   }
@@ -160,6 +210,23 @@ class _ChatScreenViewState extends State<ChatScreenView> {
     try {
       final result = await FilePicker.platform.pickFiles();
       if (result != null && result.files.single.path != null) {
+        // Check if replying to a temporary message (not yet sent to server)
+        String? validReplyToId;
+        if (_replyingToMessage != null) {
+          if (_replyingToMessage!.id.startsWith('temp_')) {
+            // Don't reply to temporary messages - show warning
+            ScaffoldMessenger.of(context).showSnackBar(
+              const SnackBar(
+                content: Text('Cannot reply to a message that is still being sent. Please wait and try again.'),
+                backgroundColor: Colors.orange,
+              ),
+            );
+            return;
+          } else {
+            validReplyToId = _replyingToMessage!.id;
+          }
+        }
+        
         final file = File(result.files.single.path!);
         // Send actual file
         widget.chatController.sendMessage(
@@ -167,7 +234,9 @@ class _ChatScreenViewState extends State<ChatScreenView> {
           content: '', // Optional description
           type: 'file',
           file: file,
+          replyToId: validReplyToId,
         );
+        _clearReply();
         _scrollToBottom();
       }
     } catch (e) {
@@ -236,13 +305,32 @@ class _ChatScreenViewState extends State<ChatScreenView> {
         if (path != null && path.isNotEmpty) {
           final file = File(path);
           if (await file.exists()) {
+            // Check if replying to a temporary message (not yet sent to server)
+            String? validReplyToId;
+            if (_replyingToMessage != null) {
+              if (_replyingToMessage!.id.startsWith('temp_')) {
+                // Don't reply to temporary messages - show warning
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(
+                    content: Text('Cannot reply to a message that is still being sent. Please wait and try again.'),
+                    backgroundColor: Colors.orange,
+                  ),
+                );
+                return;
+              } else {
+                validReplyToId = _replyingToMessage!.id;
+              }
+            }
+            
             // Send voice message
             widget.chatController.sendMessage(
               receiverId: widget.withUserId,
               content: 'Voice message',
               type: 'voice',
               file: file,
+              replyToId: validReplyToId,
             );
+            _clearReply();
             _scrollToBottom();
           }
         }
@@ -280,6 +368,45 @@ class _ChatScreenViewState extends State<ChatScreenView> {
 
   void _onMessagesChanged() {
     _scrollToBottom();
+    
+    // Update _replyingToMessage if it was pointing to a temporary message that got replaced
+    if (_replyingToMessage != null && _replyingToMessage!.id.startsWith('temp_')) {
+      final currentMessages = widget.chatController.messagesNotifier.value;
+      // Look for a message with the same content, sender, and receiver but with a real ID
+      final replacementMessage = currentMessages.firstWhere(
+        (m) => !m.id.startsWith('temp_') &&
+               m.content == _replyingToMessage!.content &&
+               m.senderId == _replyingToMessage!.senderId &&
+               m.receiverId == _replyingToMessage!.receiverId,
+        orElse: () => _replyingToMessage!, // Return original if no replacement found
+      );
+      
+      // If we found a replacement message, update the reference
+      if (replacementMessage.id != _replyingToMessage!.id) {
+        setState(() {
+          _replyingToMessage = replacementMessage;
+        });
+        print('🔄 Updated _replyingToMessage from temp ID ${_replyingToMessage!.id} to real ID ${replacementMessage.id}');
+      }
+    }
+  }
+
+  void _onMessageIdUpdated(String oldId, String newId) {
+    // Update _replyingToMessage if it was pointing to the temporary message
+    if (_replyingToMessage != null && _replyingToMessage!.id == oldId) {
+      // Find the updated message with the new ID
+      final currentMessages = widget.chatController.messagesNotifier.value;
+      final updatedMessage = currentMessages.firstWhere(
+        (m) => m.id == newId,
+        orElse: () => _replyingToMessage!, // Fallback to original if not found
+      );
+      
+      if (updatedMessage.id == newId) {
+        setState(() {
+          _replyingToMessage = updatedMessage;
+        });
+      }
+    }
   }
 
   void _scrollToBottom() {
@@ -312,7 +439,7 @@ class _ChatScreenViewState extends State<ChatScreenView> {
                 CircleAvatar(
                   radius: 20,
                   backgroundImage: widget.withUserProfilePicture != null
-                      ? NetworkImage('http://localhost:4001${widget.withUserProfilePicture}')
+                      ? NetworkImage('${AppConfig.imageServer}${widget.withUserProfilePicture}')
                       : const AssetImage('assets/images/avatar.png') as ImageProvider,
                   backgroundColor: Colors.grey[300],
                 ),
@@ -397,22 +524,34 @@ class _ChatScreenViewState extends State<ChatScreenView> {
           IconButton(
             icon: const Icon(Icons.videocam, color: Colors.black87),
             onPressed: () {
-              // Implement video call
-              widget.chatController.initiateCall(
-                widget.withUserId,
-                'video',
-                {}, // Signal data would be provided by WebRTC
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (context) => CallScreen(
+                    chatController: widget.chatController,
+                    participantId: widget.withUserId,
+                    participantName: widget.withUserName,
+                    participantProfilePicture: widget.withUserProfilePicture,
+                    callType: 'video',
+                  ),
+                ),
               );
             },
           ),
           IconButton(
             icon: const Icon(Icons.call, color: Colors.black87),
             onPressed: () {
-              // Implement voice call
-              widget.chatController.initiateCall(
-                widget.withUserId,
-                'voice',
-                {}, // Signal data would be provided by WebRTC
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (context) => CallScreen(
+                    chatController: widget.chatController,
+                    participantId: widget.withUserId,
+                    participantName: widget.withUserName,
+                    participantProfilePicture: widget.withUserProfilePicture,
+                    callType: 'voice',
+                  ),
+                ),
               );
             },
           ),
@@ -447,7 +586,7 @@ class _ChatScreenViewState extends State<ChatScreenView> {
                     final isMe = widget.chatController.isMessageFromCurrentUser(message);
                     
                     return Dismissible(
-                      key: Key(message.id),
+                      key: ValueKey('${message.id}_${message.reactions.length}_${message.reactions.map((r) => '${r.userId}_${r.reaction}').join('_')}'),
                       direction: isMe 
                           ? DismissDirection.endToStart // Swipe left for sent messages
                           : DismissDirection.startToEnd, // Swipe right for received messages
@@ -545,7 +684,7 @@ class _ChatScreenViewState extends State<ChatScreenView> {
                           onForward: () {
                             _showForwardDialog(message);
                           },
-                          onEdit: message.senderId == widget.chatController.currentUserId
+                          onEdit: message.senderId == widget.chatController.currentUserId && !message.id.startsWith('temp_')
                               ? () {
                                   // Implement edit functionality
                                   _showEditDialog(message);
@@ -579,6 +718,9 @@ class _ChatScreenViewState extends State<ChatScreenView> {
                 // Reply preview
                 if (_showReplyPreview && _replyingToMessage != null)
                   _buildReplyPreview(),
+                // Edit preview
+                if (_isEditing && _editingMessage != null)
+                  _buildEditPreview(),
                 // Message input
                 Padding(
                   padding: const EdgeInsets.all(16),
@@ -651,12 +793,15 @@ class _ChatScreenViewState extends State<ChatScreenView> {
         ),
         const SizedBox(width: 8),
         Container(
-          decoration: const BoxDecoration(
-            color: Colors.blue,
+          decoration: BoxDecoration(
+            color: _isEditing ? Colors.orange : Colors.blue,
             shape: BoxShape.circle,
           ),
           child: IconButton(
-            icon: const Icon(Icons.send, color: Colors.white),
+            icon: Icon(
+              _isEditing ? Icons.check : Icons.send,
+              color: Colors.white,
+            ),
             onPressed: _sendMessage,
           ),
         ),
@@ -718,6 +863,60 @@ class _ChatScreenViewState extends State<ChatScreenView> {
           IconButton(
             icon: Icon(Icons.close, color: Colors.grey[600], size: 20),
             onPressed: _clearReply,
+            constraints: BoxConstraints(minWidth: 32, minHeight: 32),
+            padding: EdgeInsets.zero,
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildEditPreview() {
+    if (_editingMessage == null) return const SizedBox.shrink();
+    
+    return Container(
+      padding: const EdgeInsets.all(12),
+      margin: const EdgeInsets.only(left: 16, right: 16, top: 8),
+      decoration: BoxDecoration(
+        color: Colors.orange[50],
+        borderRadius: BorderRadius.circular(8),
+        border: Border(
+          left: BorderSide(
+            color: Colors.orange,
+            width: 3,
+          ),
+        ),
+      ),
+      child: Row(
+        children: [
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  'Editing message',
+                  style: TextStyle(
+                    fontSize: 12,
+                    color: Colors.orange[600],
+                    fontWeight: FontWeight.w500,
+                  ),
+                ),
+                const SizedBox(height: 4),
+                Text(
+                  _editingMessage!.content,
+                  style: TextStyle(
+                    fontSize: 14,
+                    color: Colors.grey[700],
+                  ),
+                  maxLines: 2,
+                  overflow: TextOverflow.ellipsis,
+                ),
+              ],
+            ),
+          ),
+          IconButton(
+            icon: Icon(Icons.close, color: Colors.grey[600], size: 20),
+            onPressed: _cancelEdit,
             constraints: BoxConstraints(minWidth: 32, minHeight: 32),
             padding: EdgeInsets.zero,
           ),
@@ -798,41 +997,67 @@ class _ChatScreenViewState extends State<ChatScreenView> {
   }
 
   void _showEditDialog(Message message) {
-    final editController = TextEditingController(text: message.content);
+    setState(() {
+      _editingMessage = message;
+      _isEditing = true;
+      _messageController.text = message.content;
+      _clearReply(); // Clear any existing reply when editing
+    });
     
-    showDialog(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: const Text('Edit Message'),
-        content: TextField(
-          controller: editController,
-          decoration: const InputDecoration(
-            hintText: 'Enter new message...',
-            border: OutlineInputBorder(),
+    // Focus the text field
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      FocusScope.of(context).requestFocus(FocusNode());
+    });
+  }
+  
+  void _cancelEdit() {
+    setState(() {
+      _editingMessage = null;
+      _isEditing = false;
+      _messageController.clear();
+    });
+  }
+  
+  void _saveEdit() async {
+    if (_editingMessage == null) return;
+    
+    final newContent = _messageController.text.trim();
+    if (newContent.isNotEmpty && newContent != _editingMessage!.content) {
+      // Check if this is a temporary message
+      if (_editingMessage!.id.startsWith('temp_')) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Cannot edit message while it\'s being sent. Please wait and try again.'),
+            backgroundColor: Colors.orange,
           ),
-          maxLines: null,
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: const Text('Cancel'),
-          ),
-          ElevatedButton(
-            onPressed: () {
-              final newContent = editController.text.trim();
-              if (newContent.isNotEmpty && newContent != message.content) {
-                widget.chatController.editMessage(
-                  message.id,
-                  newContent,
-                );
-              }
-              Navigator.pop(context);
-            },
-            child: const Text('Save'),
-          ),
-        ],
-      ),
-    );
+        );
+        return;
+      }
+      
+      await widget.chatController.editMessage(
+        _editingMessage!.id,
+        newContent,
+      );
+      
+      // Check if there was an error
+       if (widget.chatController.errorMessage != null && widget.chatController.errorMessage!.isNotEmpty) {
+         ScaffoldMessenger.of(context).showSnackBar(
+           SnackBar(
+             content: Text(widget.chatController.errorMessage!),
+             backgroundColor: Colors.red,
+           ),
+         );
+         // Clear the error message
+         widget.chatController.errorMessage = null;
+         return;
+       }
+    }
+    
+    setState(() {
+      _editingMessage = null;
+      _isEditing = false;
+      _messageController.clear();
+    });
   }
 
   void _showForwardDialog(Message message) {

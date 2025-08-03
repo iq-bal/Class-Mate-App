@@ -4,6 +4,7 @@ import 'package:classmate/views/profile_teacher/widgets/about_me_section.dart';
 import 'package:classmate/views/profile_teacher/widgets/course_section.dart';
 import 'package:classmate/views/profile_teacher/widgets/info_section.dart';
 import 'package:classmate/views/profile_teacher/widgets/profile_header.dart';
+import 'package:classmate/config/app_config.dart';
 
 class TeacherProfilePage extends StatefulWidget {
   const TeacherProfilePage({super.key});
@@ -41,10 +42,10 @@ class _TeacherProfilePageState extends State<TeacherProfilePage> {
               children: [
                 ProfileHeader(
                   coverPhotoUrl: profile.coverPicture != null
-                      ? 'http://localhost:4001${profile.coverPicture}'
+                      ? '${AppConfig.imageServer}${profile.coverPicture}'
                       : 'https://example.com/default_cover.jpg',
                   profilePhotoUrl: profile.profilePicture != null
-                      ? 'http://localhost:4001${profile.profilePicture}'
+                      ? '${AppConfig.imageServer}${profile.profilePicture}'
                       : 'https://example.com/default_profile.jpg',
                   name: profile.name,
                   title: profile.teacher?.designation ?? '',

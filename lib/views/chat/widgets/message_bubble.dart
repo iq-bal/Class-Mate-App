@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:classmate/models/chat/message.dart';
+import 'package:classmate/config/app_config.dart';
 import 'package:intl/intl.dart';
 import 'dart:io';
 
@@ -86,6 +87,17 @@ class MessageBubble extends StatelessWidget {
                                 color: isMe ? Colors.white70 : Colors.grey[600],
                               ),
                             ),
+                            if (message.edited && message.editedAt != null) ...
+                            [
+                              Text(
+                                ' • edited ${_formatTime(message.editedAt!)}',
+                                style: TextStyle(
+                                  fontSize: 9,
+                                  color: isMe ? Colors.white60 : Colors.grey[500],
+                                  fontStyle: FontStyle.italic,
+                                ),
+                              ),
+                            ],
                             if (isMe) ..._buildMessageStatus(),
                           ],
                         ),
@@ -118,7 +130,7 @@ class MessageBubble extends StatelessWidget {
       CircleAvatar(
         radius: 16,
         backgroundImage: profilePicture != null
-            ? NetworkImage('http://localhost:4001$profilePicture')
+            ? NetworkImage('${AppConfig.imageServer}$profilePicture')
             : const AssetImage('assets/images/avatar.png') as ImageProvider,
         backgroundColor: Colors.grey,
       ),
@@ -529,6 +541,15 @@ class MessageBubble extends StatelessWidget {
                 onForward!();
               },
             ),
+          if (onEdit != null)
+            _buildActionButton(
+              icon: Icons.edit,
+              label: 'Edit',
+              onTap: () {
+                Navigator.pop(context);
+                onEdit!();
+              },
+            ),
           _buildActionButton(
             icon: Icons.copy,
             label: 'Copy',
@@ -671,7 +692,7 @@ class MessageBubble extends StatelessWidget {
     // Handle network URLs
     final networkUrl = imageUrl.startsWith('http') 
         ? imageUrl
-        : 'http://localhost:4001$imageUrl';
+        : '${AppConfig.imageServer}$imageUrl';
     
     return Image.network(
       networkUrl,

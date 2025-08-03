@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import '../../../controllers/chat/chat_controller.dart';
 import '../../../services/chat/chat_graphql_service.dart';
 import '../../../core/dio_client.dart';
+import '../../../config/app_config.dart';
 import '../chat_screen_view.dart';
 
 class UserSearchDialog extends StatefulWidget {
@@ -92,7 +93,7 @@ class _UserSearchDialogState extends State<UserSearchDialog> {
     if (imageUrl.startsWith('http://') || imageUrl.startsWith('https://')) {
       return imageUrl;
     }
-    return 'http://localhost:4001$imageUrl';
+    return '${AppConfig.imageServer}$imageUrl';
   }
 
   @override

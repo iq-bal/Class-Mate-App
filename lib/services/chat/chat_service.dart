@@ -20,6 +20,12 @@ class ChatService extends ChangeNotifier {
   
   // Callback for when a message reaction is updated via Socket.IO
   Function(String messageId, String conversationUserId)? onMessageReactionUpdated;
+  
+  // Callback for when a message is edited via Socket.IO
+  Function(String messageId, String conversationUserId)? onMessageEdited;
+  
+  // Callback for when a message ID is updated from temporary to real
+  Function(String oldId, String newId)? onMessageIdUpdated;
 
   ChatService({
     required this.userId,
@@ -89,12 +95,14 @@ class ChatService extends ChangeNotifier {
 
     // Message reactions
     socket.on('messageReaction', (data) {
+      print('🎭 SOCKET EVENT DEBUG: Received messageReaction event: $data');
       _updateMessageReaction(data);
       notifyListeners();
     });
 
     // Message reacted (alternative event name)
      socket.on('messageReacted', (data) {
+       print('🎭 SOCKET EVENT DEBUG: Received messageReacted event: $data');
        _updateMessageReaction(data);
        notifyListeners();
      });
@@ -120,7 +128,36 @@ class ChatService extends ChangeNotifier {
     if (!conversations.containsKey(conversationId)) {
       conversations[conversationId] = [];
     }
-    conversations[conversationId]!.add(message);
+    
+    final messages = conversations[conversationId]!;
+    
+    // Check if this is a response to a temporary message we sent
+    if (message.senderId == userId) {
+      final tempMessageIndex = messages.indexWhere((m) => 
+        m.id.startsWith('temp_') && 
+        m.content == message.content &&
+        m.senderId == message.senderId &&
+        m.receiverId == message.receiverId
+      );
+      
+      if (tempMessageIndex != -1) {
+         // Update the temporary message with the real server message
+         final tempMessage = messages[tempMessageIndex];
+         messages[tempMessageIndex] = message.copyWith(
+           createdAt: tempMessage.createdAt, // Keep original timestamp for UI consistency
+         );
+         
+         // Notify about the ID change
+         onMessageIdUpdated?.call(tempMessage.id, message.id);
+         
+         return; // Exit early since we updated the existing message
+       }
+    }
+    
+    // Check if message already exists to avoid duplicates
+    if (!messages.any((m) => m.id == message.id)) {
+      messages.add(message);
+    }
 
     // Mark message as delivered if we're the receiver
     if (message.receiverId == userId) {
@@ -141,37 +178,61 @@ class ChatService extends ChangeNotifier {
   }
 
   void _updateMessageReaction(Map<String, dynamic> data) {
+    print('🎭 SOCKET REACTION DEBUG: Processing reaction data: $data');
+    
     final String messageId = data['messageId'];
     final String userId = data['userId'];
     final String reaction = data['reaction'];
     String? affectedConversationUserId;
 
+    print('🎭 SOCKET REACTION DEBUG: Looking for message $messageId in ${conversations.length} conversations');
+    
     conversations.forEach((conversationUserId, messages) {
+      print('🎭 SOCKET REACTION DEBUG: Checking conversation $conversationUserId with ${messages.length} messages');
       final index = messages.indexWhere((m) => m.id == messageId);
       if (index != -1) {
         final message = messages[index];
-        message.reactions.removeWhere((r) => r.userId == userId);
-        message.reactions.add(MessageReaction(
+        print('🎭 SOCKET REACTION DEBUG: Found message $messageId at index $index, current reactions: ${message.reactions.length}');
+        
+        // Create a new list of reactions by filtering out existing reactions from this user
+        final List<MessageReaction> updatedReactions = List<MessageReaction>.from(
+          message.reactions.where((r) => r.userId != userId)
+        );
+        
+        // Add new reaction
+        updatedReactions.add(MessageReaction(
           userId: userId,
           reaction: reaction,
           createdAt: DateTime.now(),
         ));
+        
+        print('🎭 SOCKET REACTION DEBUG: Updated reactions list, old count: ${message.reactions.length}, new count: ${updatedReactions.length}');
+        
+        // Create a new message with updated reactions
+        messages[index] = message.copyWith(reactions: updatedReactions);
+        
         affectedConversationUserId = conversationUserId;
         print('🎭 SOCKET REACTION DEBUG: Updated reaction for message $messageId in conversation $conversationUserId');
+      } else {
+        print('🎭 SOCKET REACTION DEBUG: Message $messageId not found in conversation $conversationUserId');
       }
     });
     
     // Notify the chat controller if a reaction was updated and we have a callback
     if (affectedConversationUserId != null && onMessageReactionUpdated != null) {
+      print('🎭 SOCKET REACTION DEBUG: Notifying controller about reaction update');
       onMessageReactionUpdated!(messageId, affectedConversationUserId!);
+    } else {
+      print('🎭 SOCKET REACTION DEBUG: No callback or affected conversation found');
     }
   }
 
   void _updateEditedMessage(Map<String, dynamic> data) {
     final String messageId = data['messageId'];
     final String newContent = data['content'];
+    String? affectedConversationUserId;
 
-    conversations.forEach((_, messages) {
+    conversations.forEach((conversationUserId, messages) {
       final index = messages.indexWhere((m) => m.id == messageId);
       if (index != -1) {
         messages[index] = messages[index].copyWith(
@@ -179,8 +240,14 @@ class ChatService extends ChangeNotifier {
           edited: true,
           editedAt: DateTime.now(),
         );
+        affectedConversationUserId = conversationUserId;
       }
     });
+    
+    // Notify the chat controller about the edited message
+    if (affectedConversationUserId != null && onMessageEdited != null) {
+      onMessageEdited!(messageId, affectedConversationUserId!);
+    }
   }
 
   void _handleDeletedMessage(Map<String, dynamic> data) {
@@ -343,8 +410,9 @@ class ChatService extends ChangeNotifier {
       'reaction': reaction,
     };
     
-    print('🎭 SOCKET REACTION DEBUG: Emitting react event for message $messageId with reaction $reaction');
+    print('🎭 SERVICE REACTION DEBUG: Emitting react event for message $messageId with reaction "$reaction"');
     socket.emit('react', reactionData);
+    print('🎭 SERVICE REACTION DEBUG: React event emitted successfully');
   }
 
   void editMessage(String messageId, String newContent) {

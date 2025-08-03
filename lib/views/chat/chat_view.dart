@@ -6,7 +6,9 @@ import 'package:classmate/core/token_storage.dart';
 import 'package:classmate/config/app_config.dart';
 import 'package:classmate/views/chat/widgets/conversation_tile.dart';
 import 'package:classmate/views/chat/widgets/user_search_dialog.dart';
+import 'package:classmate/views/chat/user_search_screen.dart';
 import 'package:classmate/views/chat/chat_screen_view.dart';
+import 'package:classmate/views/chat/call_screen.dart';
 import 'package:classmate/views/chat/ai_chat_view.dart';
 import 'package:classmate/views/authentication/landing.dart';
 import 'package:classmate/services/profile_student/profile_student_service.dart';
@@ -57,6 +59,9 @@ class _ChatViewState extends State<ChatView> {
             token: token,
             currentUserProfilePicture: currentUserProfilePicture,
           );
+          
+          // Set up incoming call handler
+          _chatController!.onIncomingCall = _handleIncomingCall;
           
           await _chatController!.loadConversations();
           await _chatController!.loadUnreadMessages();
@@ -167,15 +172,17 @@ class _ChatViewState extends State<ChatView> {
           IconButton(
             icon: const Icon(Icons.search, color: Colors.black87),
             onPressed: () {
-              // Implement search functionality
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (context) => UserSearchScreen(
+                    chatController: _chatController!,
+                  ),
+                ),
+              );
             },
           ),
-          IconButton(
-            icon: const Icon(Icons.more_vert, color: Colors.black87),
-            onPressed: () {
-              // Implement more options
-            },
-          ),
+
         ],
       ),
       body: Column(
@@ -315,14 +322,7 @@ class _ChatViewState extends State<ChatView> {
           ),
         ],
       ),
-      floatingActionButton: FloatingActionButton(
-        onPressed: () {
-          // Implement new chat functionality
-          _showNewChatDialog();
-        },
-        backgroundColor: Colors.blue[800],
-        child: const Icon(Icons.add, color: Colors.white),
-      ),
+
     );
   }
 
@@ -334,4 +334,21 @@ class _ChatViewState extends State<ChatView> {
       ),
     );
   }
+
+  void _handleIncomingCall(Map<String, dynamic> callData) {
+     Navigator.push(
+       context,
+       MaterialPageRoute(
+         builder: (context) => CallScreen(
+           chatController: _chatController!,
+           participantId: callData['callerId'] ?? '',
+           participantName: callData['callerName'] ?? 'Unknown',
+           participantProfilePicture: callData['callerProfilePicture'],
+           callType: callData['callType'] ?? 'voice',
+           isIncoming: true,
+           incomingCallData: callData['callData'],
+         ),
+       ),
+     );
+   }
 }
