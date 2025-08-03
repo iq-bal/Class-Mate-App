@@ -20,40 +20,38 @@ class EvaluationModel {
     // Extract the top-level "data" object.
     final data = json['data'] as Map<String, dynamic>;
     // Extract the submission details.
-    final submissionJson = data['getSubmissionByAssignmentAndStudent'] as Map<String, dynamic>;
+    final submissionJson = data['submission'] as Map<String, dynamic>;
 
     // Create a copy of the submission JSON for adjustments.
     final Map<String, dynamic> adjustedJson = Map<String, dynamic>.from(submissionJson);
-
-    // If "assignment_id" is a Map, extract its 'id'
-    if (adjustedJson['assignment_id'] is Map) {
-      adjustedJson['assignment_id'] = (adjustedJson['assignment_id'] as Map<String, dynamic>)['id'];
-    }
-
-    // If "student_id" is a Map, extract its 'id'
-    if (adjustedJson['student_id'] is Map) {
-      adjustedJson['student_id'] = (adjustedJson['student_id'] as Map<String, dynamic>)['id'];
-    }
 
     // Convert numeric timestamps (epoch ms) to ISO8601 strings.
     if (adjustedJson['submitted_at'] is int) {
       final epoch = adjustedJson['submitted_at'] as int;
       adjustedJson['submitted_at'] = DateTime.fromMillisecondsSinceEpoch(epoch).toIso8601String();
+    } else if (adjustedJson['submitted_at'] is String && RegExp(r'^\d+$').hasMatch(adjustedJson['submitted_at'])) {
+      final epoch = int.parse(adjustedJson['submitted_at']);
+      adjustedJson['submitted_at'] = DateTime.fromMillisecondsSinceEpoch(epoch).toIso8601String();
     }
+    
     if (adjustedJson['evaluated_at'] is int) {
       final epoch = adjustedJson['evaluated_at'] as int;
       adjustedJson['evaluated_at'] = DateTime.fromMillisecondsSinceEpoch(epoch).toIso8601String();
+    } else if (adjustedJson['evaluated_at'] is String && RegExp(r'^\d+$').hasMatch(adjustedJson['evaluated_at'])) {
+      final epoch = int.parse(adjustedJson['evaluated_at']);
+      adjustedJson['evaluated_at'] = DateTime.fromMillisecondsSinceEpoch(epoch).toIso8601String();
+    }
+
+    // Handle ai_generated field type conversion
+    if (adjustedJson['ai_generated'] is int) {
+      adjustedJson['ai_generated'] = (adjustedJson['ai_generated'] as int) == 1;
     }
 
     // Now, use your unmodified entity factories.
     final submission = SubmissionEntity.fromJson(adjustedJson);
     final student = StudentEntity.fromJson(submissionJson['student'] as Map<String, dynamic>);
-
-    final assignment = AssignmentEntity.fromJson(submissionJson['assignment_id'] as Map<String, dynamic>);
-
-    final teacher = TeacherEntity.fromJson(
-      (submissionJson['assignment_id'] as Map<String, dynamic>)['teacher'] as Map<String, dynamic>,
-    );
+    final assignment = AssignmentEntity.fromJson(submissionJson['assignment'] as Map<String, dynamic>);
+    final teacher = TeacherEntity.fromJson(submissionJson['assignment']['teacher'] as Map<String, dynamic>);
 
     return EvaluationModel(
       submission: submission,

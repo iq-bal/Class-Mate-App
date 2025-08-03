@@ -1,3 +1,4 @@
+import 'package:classmate/config/app_config.dart';
 import 'package:flutter/material.dart';
 import 'package:classmate/models/course_detail_teacher/enrollment_model.dart';
 
@@ -49,7 +50,7 @@ class EnrollmentStudentTile extends StatelessWidget {
         leading: CircleAvatar(
           backgroundColor: Colors.grey[300],
           backgroundImage: enrollment.student.profilePicture.isNotEmpty
-              ? NetworkImage(enrollment.student.profilePicture)
+              ? NetworkImage('${AppConfig.imageServer}$enrollment.student.profilePicture')
               : null,
           child: enrollment.student.profilePicture.isEmpty
               ? const Icon(Icons.person, color: Colors.grey)

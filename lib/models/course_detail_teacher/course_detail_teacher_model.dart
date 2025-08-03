@@ -10,7 +10,7 @@ class CourseDetailTeacherModel {
   final String title;
   final String courseCode;
   final List<StudentModel> enrolledStudents;
-  final ScheduleModel schedule;
+  final List<ScheduleModel> schedules;
   final List<AssignmentEntity> assignments;
   final List<ClassTestEntity> classTests; 
 
@@ -21,7 +21,7 @@ class CourseDetailTeacherModel {
     required this.enrolledStudents,
     required this.assignments,
     required this.classTests,
-    required this.schedule
+    required this.schedules
   });
 
   factory CourseDetailTeacherModel.fromJson(Map<String, dynamic> json) {
@@ -38,15 +38,9 @@ class CourseDetailTeacherModel {
       classTests: (json['classTests'] as List<dynamic>? ?? [])
           .map((classTest) => ClassTestEntity.fromJson(classTest as Map<String, dynamic>))
           .toList(),
-      schedule: json['schedule'] != null 
-          ? ScheduleModel.fromJson(json['schedule'] as Map<String, dynamic>)
-          : ScheduleModel(
-              section: '',
-              roomNo: '',
-              day: '',
-              startTime: '',
-              endTime: ''
-            )
+      schedules: (json['schedules'] as List<dynamic>? ?? [])
+          .map((schedule) => ScheduleModel.fromJson(schedule as Map<String, dynamic>))
+          .toList()
     );
   }
 }

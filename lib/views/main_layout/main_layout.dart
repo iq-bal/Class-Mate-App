@@ -49,14 +49,12 @@ class _MainLayoutState extends State<MainLayout> {
   void _initializeLayout() {
     if (widget.role.toLowerCase() == 'teacher') {
       _pages = [
-        const Center(child: Text('Teacher Dashboard')),
-        const CourseDetailScreen(),
+        const HomeTeacherView(),
         const TeacherProfilePage(),
       ];
 
       _navItems = [
         BottomNavItem(icon: Icons.dashboard, label: 'Dashboard'),
-        BottomNavItem(icon: Icons.book, label: 'Resources'),
         BottomNavItem(icon: Icons.person, label: 'Profile'),
       ];
     } else {

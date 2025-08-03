@@ -54,7 +54,7 @@ class _LoginPageState extends State<LoginPage> {
       if (widget.role.toLowerCase() == "teacher" && user.role.toLowerCase() == "teacher") {
         Navigator.pushReplacement(
           context,
-          MaterialPageRoute(builder: (context) => const CourseDetailScreen()),
+          MaterialPageRoute(builder: (context) => const MainLayout(role: "teacher")),
         );
       } else if (widget.role.toLowerCase() == "student" && user.role.toLowerCase() == "student") {
         Navigator.pushReplacement(

@@ -7,16 +7,15 @@ import 'package:classmate/views/assignment/widgets/feedback_card.dart';
 import '../../controllers/assignment_teacher/assignment_teacher_controller.dart';
 import 'pdf_viewer_page.dart';
 import 'package:classmate/utils/custom_app_bar.dart';
+import 'package:intl/intl.dart';
 
 class EvaluationPage extends StatefulWidget {
-  final String assignmentId;
-  final String studentId;
+  final String submissionId;
   static const Color primaryTeal = Color(0xFF006966);
 
   const EvaluationPage({
     super.key,
-    required this.assignmentId,
-    required this.studentId,
+    required this.submissionId,
   });
   @override
   State<EvaluationPage> createState() => _EvaluationPageState();
@@ -32,7 +31,7 @@ class _EvaluationPageState extends State<EvaluationPage> {
   void initState() {
     super.initState();
     _controller = AssignmentTeacherController();
-    _controller.fetchSingleSubmission(widget.assignmentId, widget.studentId);
+    _controller.fetchSingleSubmission(widget.submissionId);
     _gradeController = TextEditingController();
     _commentsController = TextEditingController();
 
@@ -63,8 +62,8 @@ class _EvaluationPageState extends State<EvaluationPage> {
     Map<String, dynamic> submissionInput = {
       'grade': double.parse(_gradeController.text),
       'teacher_comments': _commentsController.text,
-      'assignment_id': widget.assignmentId,
-      'student_id': widget.studentId
+      'assignment_id': _controller.evaluationDetail?.submission.assignmentId,
+      'student_id': _controller.evaluationDetail?.submission.studentId
     };
 
     // Call updateSubmission with the current submission ID and new data
@@ -264,6 +263,30 @@ class _EvaluationPageState extends State<EvaluationPage> {
     );
   }
 
+  String _formatEvaluatedDate(String? evaluatedAt) {
+    if (evaluatedAt == null || evaluatedAt.isEmpty || evaluatedAt == 'null') {
+      return 'Not evaluated yet';
+    }
+    
+    try {
+      // Check if it's a timestamp (numeric string)
+      if (RegExp(r'^\d+$').hasMatch(evaluatedAt)) {
+        final timestamp = int.parse(evaluatedAt);
+        // Check if timestamp is reasonable (not too large)
+        if (timestamp > DateTime.now().millisecondsSinceEpoch * 10) {
+          return 'Invalid date';
+        }
+        final date = DateTime.fromMillisecondsSinceEpoch(timestamp);
+        return DateFormat('MMM dd, yyyy').format(date);
+      }
+      // Otherwise try to parse as ISO date string
+      final date = DateTime.parse(evaluatedAt);
+      return DateFormat('MMM dd, yyyy').format(date);
+    } catch (e) {
+      return 'Not evaluated yet';
+    }
+  }
+
   // Build the main content using the updated CustomAppBar with a popup menu.
   Widget buildMainContent(BuildContext context) {
     final bottomPadding = MediaQuery.of(context).viewInsets.bottom;
@@ -311,10 +334,12 @@ class _EvaluationPageState extends State<EvaluationPage> {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       InfoCard(
-                        initials: (evaluation.teacher.name ?? 'UN').substring(0, min(2, (evaluation.teacher.name ?? 'UN').length)).toUpperCase(),
+                        initials: evaluation.assignment.title != null 
+                            ? evaluation.assignment.title!.substring(0, 2).toUpperCase()
+                            : 'AS',
                         backgroundColor: EvaluationPage.primaryTeal,
-                        title: evaluation.assignment.title ?? 'Untitled Assignment',
-                        description: evaluation.assignment.description ?? 'No description provided',
+                        title: evaluation.assignment.title ?? 'Assignment Submission',
+                        description: evaluation.assignment.description ?? 'Student submission for evaluation',
                       ),
                       const SizedBox(height: 16),
                       EvaluationCard(
@@ -332,11 +357,9 @@ class _EvaluationPageState extends State<EvaluationPage> {
                       const SizedBox(height: 16),
                       FeedbackCard(
                         avatarUrl: evaluation.teacher.profilePicture ?? 'https://via.placeholder.com/150',
-                        date: evaluation.submission.evaluatedAt != null 
-                              ? evaluation.submission.evaluatedAt!.toString().substring(0, 10)
-                              : 'Not evaluated yet',
+                        date: _formatEvaluatedDate(evaluation.submission.evaluatedAt),
                         feedback: evaluation.submission.teacherComments ?? 'No feedback provided yet',
-                        author: evaluation.teacher.name ?? 'Unknown Teacher',
+                        author: evaluation.teacher.name ?? 'Teacher',
                       ),
                       const SizedBox(height: 24),
                     ],

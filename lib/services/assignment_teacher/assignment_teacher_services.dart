@@ -8,30 +8,39 @@ class AssignmentTeacherServices {
 
   Future<SubmissionDetailModel> getAssignmentSubmissions(String assignmentId) async {
     const String query = '''
-    query GetAssignmentSubmissions(\$assignmentId: ID!) {
-      submissionsByAssignment(assignment_id: \$assignmentId) {
+    query GetAssignmentWithSubmissions(\$assignmentId: ID!) {
+      assignment(id: \$assignmentId) {
         id
-        file_url
-        plagiarism_score
-        ai_generated
-        teacher_comments
-        grade
-        submitted_at
-        evaluated_at
-        student {
-          id
-          name
-          email
-          roll
-          section
-          profile_picture
-        }
-        assignment_id {
+        title
+        description
+        deadline
+        created_at
+        course {
           id
           title
-          description
-          deadline
+          course_code
         }
+        submissions {
+          id
+          assignment_id
+          student_id
+          file_url
+          plagiarism_score
+          ai_generated
+          teacher_comments
+          grade
+          submitted_at
+          evaluated_at
+          student {
+            id
+            name
+            email
+            profile_picture
+            roll
+            section
+          }
+        }
+        submissionCount
       }
     }
     ''';
@@ -66,17 +75,20 @@ class AssignmentTeacherServices {
 
 
 
-  // New function for the GetSubmission query.
-  Future<EvaluationModel> getSingleSubmission(String assignmentId, String studentId) async {
+  // Updated function for the GetSubmissionById query.
+  Future<EvaluationModel> getSingleSubmission(String submissionId) async {
     const String query = '''
-    query GetSubmission(\$assignmentId: ID!, \$studentId: ID!) {
-      getSubmissionByAssignmentAndStudent(assignment_id: \$assignmentId, student_id: \$studentId) {
+    query GetSubmissionById(\$submissionId: ID!) {
+      submission(id: \$submissionId) {
         id
+        assignment_id
+        student_id
         file_url
         plagiarism_score
         ai_generated
         teacher_comments
         grade
+        submitted_at
         evaluated_at
         student {
           id
@@ -86,11 +98,12 @@ class AssignmentTeacherServices {
           roll
           section
         }
-        assignment_id {
+        assignment {
           id
           title
           description
           deadline
+          created_at
           teacher {
             id
             name
@@ -102,8 +115,7 @@ class AssignmentTeacherServices {
     ''';
     try {
       final variables = {
-        'assignmentId': assignmentId,
-        'studentId': studentId,
+        'submissionId': submissionId,
       };
       final response = await dioClient
           .getDio(AppConfig.graphqlServer)

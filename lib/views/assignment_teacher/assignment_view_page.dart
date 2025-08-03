@@ -1,3 +1,4 @@
+import 'package:classmate/config/app_config.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/cupertino.dart';
 import 'pdf_viewer_page.dart';
@@ -183,8 +184,7 @@ class _AssignmentViewPageState extends State<AssignmentViewPage> {
                             context,
                             MaterialPageRoute(
                               builder: (context) => EvaluationPage(
-                                assignmentId: widget.assignmentId,
-                                studentId: student.id ?? "",
+                                submissionId: submission.submission.id ?? "",
                               ),
                             ),
                           );
@@ -221,8 +221,12 @@ class _AssignmentViewPageState extends State<AssignmentViewPage> {
                                 ),
                                 child: CircleAvatar(
                                   radius: 30,
-                                  backgroundImage: NetworkImage(
-                                      student.profilePicture ?? ""),
+                                  backgroundImage: student.profilePicture != null && student.profilePicture!.isNotEmpty
+                                      ? NetworkImage('${AppConfig.imageServer}${student.profilePicture}')
+                                      : null,
+                                  child: student.profilePicture == null || student.profilePicture!.isEmpty
+                                      ? const Icon(Icons.person, size: 30)
+                                      : null,
                                 ),
                               ),
                               const SizedBox(width: 16),

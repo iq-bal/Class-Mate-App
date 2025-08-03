@@ -35,12 +35,15 @@ class CourseProgressSection extends StatelessWidget {
             ),
           ),
           const SizedBox(height: 16),
-          ...courses.map(
-            (course) => _courseTile(
-              course.courseName,
-              course.color,
+          if (courses.isEmpty)
+            _buildNoCoursesFallback()
+          else
+            ...courses.map(
+              (course) => _courseTile(
+                course.courseName,
+                course.color,
+              ),
             ),
-          ),
         ],
       ),
     );
@@ -67,6 +70,71 @@ class CourseProgressSection extends StatelessWidget {
                 fontWeight: FontWeight.w500,
                 color: Colors.grey[800],
                 fontSize: 14,
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildNoCoursesFallback() {
+    return Container(
+      padding: const EdgeInsets.all(24),
+      decoration: BoxDecoration(
+        color: Colors.grey.shade50,
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(
+          color: Colors.grey.shade200,
+          width: 1,
+        ),
+      ),
+      child: Column(
+        children: [
+          Container(
+            padding: const EdgeInsets.all(16),
+            decoration: BoxDecoration(
+              color: Colors.blue.shade50,
+              shape: BoxShape.circle,
+            ),
+            child: Icon(
+              Icons.school_outlined,
+              size: 32,
+              color: Colors.blue.shade400,
+            ),
+          ),
+          const SizedBox(height: 16),
+          Text(
+            "No Courses Enrolled",
+            style: GoogleFonts.inter(
+              fontSize: 16,
+              fontWeight: FontWeight.w600,
+              color: Colors.grey[800],
+            ),
+          ),
+          const SizedBox(height: 8),
+          Text(
+            "You haven't enrolled in any courses yet. Start exploring available courses to begin your learning journey.",
+            textAlign: TextAlign.center,
+            style: GoogleFonts.inter(
+              fontSize: 14,
+              color: Colors.grey[600],
+              height: 1.4,
+            ),
+          ),
+          const SizedBox(height: 20),
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
+            decoration: BoxDecoration(
+              color: Colors.blue.shade100,
+              borderRadius: BorderRadius.circular(12),
+            ),
+            child: Text(
+              "Explore Courses",
+              style: GoogleFonts.inter(
+                fontSize: 14,
+                fontWeight: FontWeight.w500,
+                color: Colors.blue.shade700,
               ),
             ),
           ),

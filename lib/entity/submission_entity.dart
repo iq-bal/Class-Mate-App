@@ -31,7 +31,9 @@ class SubmissionEntity {
       studentId: json['student_id'] as String?,
       fileUrl: json['file_url'] as String?,
       plagiarismScore: (json['plagiarism_score'] as num?)?.toDouble(),
-      aiGenerated: (json['ai_generated'] as num?)?.toDouble(),
+      aiGenerated: json['ai_generated'] is bool 
+          ? (json['ai_generated'] as bool ? 1.0 : 0.0)
+          : (json['ai_generated'] as num?)?.toDouble(),
       teacherComments: json['teacher_comments'] as String?,
       grade: (json['grade'] as num?)?.toDouble(), // Convert grade to double
       submittedAt: json['submitted_at'] as String?, // Directly assign as String

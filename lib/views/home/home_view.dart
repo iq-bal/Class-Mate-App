@@ -330,65 +330,192 @@ class _HomeViewState extends State<HomeView> {
         final classTest = item['classTest'] as ClassTestHomeModel;
         final courseTitle = item['courseTitle'] as String;
         
-        return Card(
-          margin: const EdgeInsets.only(bottom: 12),
-          child: Padding(
+        return Container(
+            margin: const EdgeInsets.only(bottom: 16),
             padding: const EdgeInsets.all(16),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  classTest.title,
-                  style: const TextStyle(
-                    fontSize: 18,
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
-                const SizedBox(height: 8),
-                Text(
-                  'Course: $courseTitle',
-                  style: const TextStyle(
-                    fontSize: 14,
-                    color: Colors.blue,
-                    fontWeight: FontWeight.w500,
-                  ),
-                ),
-                const SizedBox(height: 8),
-                if (classTest.description.isNotEmpty)
-                  Text(
-                    classTest.description,
-                    style: const TextStyle(
-                      fontSize: 14,
-                      color: Colors.grey,
-                    ),
-                  ),
-                const SizedBox(height: 12),
-                Row(
-                  children: [
-                    Icon(Icons.calendar_today, size: 16, color: Colors.grey[600]),
-                    const SizedBox(width: 4),
-                    Text(
-                      _formatClassTestDate(classTest.date),
-                      style: const TextStyle(fontSize: 14),
-                    ),
-                    const SizedBox(width: 16),
-                    Icon(Icons.timer, size: 16, color: Colors.grey[600]),
-                    const SizedBox(width: 4),
-                    Text(
-                      '${classTest.duration} min',
-                      style: const TextStyle(fontSize: 14),
-                    ),
-                    const SizedBox(width: 16),
-                    Icon(Icons.grade, size: 16, color: Colors.grey[600]),
-                    const SizedBox(width: 4),
-                    Text(
-                      '${classTest.totalMarks} marks',
-                      style: const TextStyle(fontSize: 14),
-                    ),
-                  ],
+            decoration: BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(16),
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.grey.withOpacity(0.1),
+                  spreadRadius: 4,
+                  blurRadius: 12,
+                  offset: const Offset(0, 6),
                 ),
               ],
             ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              // Top Row: Title and Status Badge
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Expanded(
+                     child: Text(
+                       classTest.title,
+                       style: const TextStyle(
+                         fontSize: 20,
+                         fontWeight: FontWeight.w700,
+                         color: Color(0xFF1A1A1A),
+                         letterSpacing: -0.5,
+                       ),
+                     ),
+                   ),
+                   Container(
+                      padding: const EdgeInsets.symmetric(vertical: 6, horizontal: 12),
+                      decoration: BoxDecoration(
+                        color: Colors.blue[100],
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      child: Text(
+                        "Test",
+                        style: TextStyle(
+                          fontSize: 12,
+                          fontWeight: FontWeight.w500,
+                          color: Colors.blue[800],
+                        ),
+                      ),
+                    ),
+                ],
+              ),
+              const SizedBox(height: 12),
+              
+              // Course Title
+               Container(
+                 padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                 decoration: BoxDecoration(
+                   color: Colors.blue.shade50,
+                   borderRadius: BorderRadius.circular(12),
+                   border: Border.all(color: Colors.blue.shade100),
+                 ),
+                 child: Text(
+                   courseTitle,
+                   style: TextStyle(
+                     fontSize: 14,
+                     color: Colors.blue.shade700,
+                     fontWeight: FontWeight.w600,
+                     letterSpacing: 0.2,
+                   ),
+                 ),
+               ),
+               
+               if (classTest.description.isNotEmpty) ...[
+                 const SizedBox(height: 12),
+                 Text(
+                   classTest.description,
+                   style: TextStyle(
+                     fontSize: 15,
+                     color: Colors.grey[700],
+                     height: 1.5,
+                     fontWeight: FontWeight.w400,
+                   ),
+                   maxLines: 2,
+                   overflow: TextOverflow.ellipsis,
+                 ),
+               ],
+              
+              const SizedBox(height: 16),
+              
+              // Info Row with Icons
+               Row(
+                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                 children: [
+                   // Date Info
+                   Expanded(
+                     child: Row(
+                       children: [
+                         Container(
+                            padding: const EdgeInsets.all(8),
+                            decoration: BoxDecoration(
+                              color: _getDateBackgroundColor(classTest.date),
+                              borderRadius: BorderRadius.circular(8),
+                            ),
+                            child: Icon(
+                              Icons.calendar_today,
+                              size: 16,
+                              color: _getDateColor(classTest.date),
+                            ),
+                          ),
+                          const SizedBox(width: 8),
+                          Flexible(
+                            child: Text(
+                              _formatClassTestDate(classTest.date),
+                              style: TextStyle(
+                                fontSize: 13,
+                                fontWeight: FontWeight.w600,
+                                color: _getDateColor(classTest.date),
+                              ),
+                              overflow: TextOverflow.ellipsis,
+                            ),
+                          ),
+                       ],
+                     ),
+                   ),
+                   
+                   // Duration Info
+                   Expanded(
+                     child: Row(
+                       mainAxisAlignment: MainAxisAlignment.center,
+                       children: [
+                         Container(
+                           padding: const EdgeInsets.all(8),
+                           decoration: BoxDecoration(
+                             color: Colors.grey.shade100,
+                             borderRadius: BorderRadius.circular(8),
+                           ),
+                           child: Icon(
+                             Icons.timer,
+                             size: 16,
+                             color: Colors.grey.shade600,
+                           ),
+                         ),
+                         const SizedBox(width: 8),
+                         Text(
+                           '${classTest.duration}m',
+                           style: TextStyle(
+                             fontSize: 13,
+                             fontWeight: FontWeight.w500,
+                             color: Colors.black.withOpacity(0.7),
+                           ),
+                         ),
+                       ],
+                     ),
+                   ),
+                   
+                   // Marks Info
+                   Expanded(
+                     child: Row(
+                       mainAxisAlignment: MainAxisAlignment.end,
+                       children: [
+                         Container(
+                           padding: const EdgeInsets.all(8),
+                           decoration: BoxDecoration(
+                             color: Colors.grey.shade100,
+                             borderRadius: BorderRadius.circular(8),
+                           ),
+                           child: Icon(
+                             Icons.grade,
+                             size: 16,
+                             color: Colors.grey.shade600,
+                           ),
+                         ),
+                         const SizedBox(width: 8),
+                         Text(
+                           '${classTest.totalMarks}pts',
+                           style: TextStyle(
+                             fontSize: 13,
+                             fontWeight: FontWeight.w500,
+                             color: Colors.black.withOpacity(0.7),
+                           ),
+                         ),
+                       ],
+                     ),
+                   ),
+                 ],
+               ),
+            ],
           ),
         );
       },
@@ -417,21 +544,105 @@ class _HomeViewState extends State<HomeView> {
   
   String _formatClassTestDate(String date) {
     try {
-      final testDate = DateTime.parse(date);
+      DateTime testDate;
+      
+      // Check if the date is a timestamp (numeric string)
+      if (RegExp(r'^\d+$').hasMatch(date)) {
+        // Convert timestamp to DateTime
+        final timestamp = int.parse(date);
+        testDate = DateTime.fromMillisecondsSinceEpoch(timestamp);
+      } else {
+        // Parse as regular date string
+        testDate = DateTime.parse(date);
+      }
+      
       final now = DateTime.now();
       final difference = testDate.difference(now).inDays;
+      
+      // Format the date nicely
+      final months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun',
+                     'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+      final formattedDate = '${testDate.day} ${months[testDate.month - 1]}';
       
       if (difference == 0) {
         return 'Today';
       } else if (difference == 1) {
         return 'Tomorrow';
-      } else if (difference > 1) {
-        return 'In $difference days';
+      } else if (difference > 1 && difference <= 7) {
+        return formattedDate;
+      } else if (difference > 7) {
+        return formattedDate;
       } else {
         return 'Past';
       }
     } catch (e) {
-      return date;
+      return 'Invalid Date';
+    }
+  }
+  
+  Color _getDateColor(String date) {
+    try {
+      DateTime testDate;
+      
+      // Check if the date is a timestamp (numeric string)
+      if (RegExp(r'^\d+$').hasMatch(date)) {
+        // Convert timestamp to DateTime
+        final timestamp = int.parse(date);
+        testDate = DateTime.fromMillisecondsSinceEpoch(timestamp);
+      } else {
+        // Parse as regular date string
+        testDate = DateTime.parse(date);
+      }
+      
+      final now = DateTime.now();
+      final difference = testDate.difference(now).inDays;
+      
+      if (difference < 0) {
+        return Colors.red.shade600; // Past due
+      } else if (difference == 0) {
+        return Colors.red.shade600; // Today
+      } else if (difference <= 3) {
+        return Colors.orange.shade600; // Within 3 days
+      } else if (difference <= 7) {
+        return Colors.blue.shade600; // Within a week
+      } else {
+        return Colors.green.shade600; // Future
+      }
+    } catch (e) {
+      return Colors.grey.shade600;
+    }
+  }
+  
+  Color _getDateBackgroundColor(String date) {
+    try {
+      DateTime testDate;
+      
+      // Check if the date is a timestamp (numeric string)
+      if (RegExp(r'^\d+$').hasMatch(date)) {
+        // Convert timestamp to DateTime
+        final timestamp = int.parse(date);
+        testDate = DateTime.fromMillisecondsSinceEpoch(timestamp);
+      } else {
+        // Parse as regular date string
+        testDate = DateTime.parse(date);
+      }
+      
+      final now = DateTime.now();
+      final difference = testDate.difference(now).inDays;
+      
+      if (difference < 0) {
+        return Colors.red.shade50; // Past due
+      } else if (difference == 0) {
+        return Colors.red.shade50; // Today
+      } else if (difference <= 3) {
+        return Colors.orange.shade50; // Within 3 days
+      } else if (difference <= 7) {
+        return Colors.blue.shade50; // Within a week
+      } else {
+        return Colors.green.shade50; // Future
+      }
+    } catch (e) {
+      return Colors.grey.shade100;
     }
   }
 }

@@ -1,15 +1,20 @@
+import 'package:classmate/config/app_config.dart';
 import 'package:flutter/material.dart';
 
 /// A reusable component to display a single student's information.
 class StudentTile extends StatelessWidget {
   final String name;
   final String id;
+  final String roll;
+  final String? profilePicture;
   final bool isPresent;
 
   const StudentTile({
     super.key,
     required this.name,
     required this.id,
+    required this.roll,
+    this.profilePicture,
     required this.isPresent,
   });
 
@@ -22,15 +27,20 @@ class StudentTile extends StatelessWidget {
         borderRadius: BorderRadius.circular(8),
       ),
       child: ListTile(
-        leading: const CircleAvatar(
+        leading: CircleAvatar(
           backgroundColor: Colors.grey,
-          child: Icon(Icons.person),
+          backgroundImage: profilePicture != null && profilePicture!.isNotEmpty
+              ? NetworkImage('${AppConfig.imageServer}$profilePicture')
+              : null,
+          child: profilePicture == null || profilePicture!.isEmpty
+              ? const Icon(Icons.person)
+              : null,
         ),
         title: Text(
           name,
           style: const TextStyle(fontWeight: FontWeight.bold),
         ),
-        subtitle: Text(id),
+        subtitle: Text('Roll: $roll'),
         trailing: Icon(
           isPresent ? Icons.check_circle : Icons.error,
           color: isPresent ? Colors.green : Colors.red,
@@ -81,12 +91,14 @@ class StudentList extends StatelessWidget {
         ListView.builder(
           shrinkWrap: true,
           physics: const NeverScrollableScrollPhysics(),
-          itemCount: students.length,
+          itemCount: students.length > 4 ? 4 : students.length, // Limit to 4 students
           itemBuilder: (context, index) {
             final student = students[index];
             return StudentTile(
               name: student['name'],
               id: student['id'],
+              roll: student['roll'],
+              profilePicture: student['profilePicture'],
               isPresent: student['isPresent'],
             );
           },

@@ -45,17 +45,16 @@ class _SchedulePageState extends State<SchedulePage> {
       // Call the controller's method to save the schedule to the backend
       widget.scheduleController.createSchedule(newSchedule);
 
-      // Append the schedule to the list
+      // Append the schedule to the list and clear form
       setState(() {
         schedules.add(newSchedule); // Add the newly created schedule to the list
+        // Clear the form after submission
+        sectionController.clear();
+        startTimeController.clear();
+        endTimeController.clear();
+        roomNumberController.clear();
+        selectedDay = null;
       });
-
-      // Clear the form after submission
-      sectionController.clear();
-      startTimeController.clear();
-      endTimeController.clear();
-      roomNumberController.clear();
-      selectedDay = null;
 
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('Schedule added successfully')),
@@ -65,6 +64,8 @@ class _SchedulePageState extends State<SchedulePage> {
 
   @override
   Widget build(BuildContext context) {
+    final bool hasSchedule = schedules.isNotEmpty;
+    
     return Scaffold(
       backgroundColor: const Color(0xFFF8FAFC),
       body: SafeArea(
@@ -74,42 +75,118 @@ class _SchedulePageState extends State<SchedulePage> {
             key: _formKey,
             child: ListView(
               children: [
-                const SizedBox(height: 10),
-                _buildDropdownDay(),
-                const SizedBox(height: 20),
-                _buildTextField(controller: sectionController, hint: 'Section (e.g., A1)', validatorMessage: 'Section is required'),
-                const SizedBox(height: 20),
-                _buildTextField(controller: startTimeController, hint: 'Start Time (e.g., 10:00 AM)', validatorMessage: 'Start time is required'),
-                const SizedBox(height: 20),
-                _buildTextField(controller: endTimeController, hint: 'End Time (e.g., 12:00 PM)', validatorMessage: 'End time is required'),
-                const SizedBox(height: 20),
-                _buildTextField(controller: roomNumberController, hint: 'Room Number (e.g., 305)', validatorMessage: 'Room number is required'),
-                const SizedBox(height: 30),
-                ElevatedButton(
-                  onPressed: _submit,
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: Colors.blueAccent,
-                    padding: const EdgeInsets.symmetric(vertical: 16),
-                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-                  ),
-                  child: const Text('Save Schedule', style: TextStyle(fontSize: 18)),
-                ),
+                // Conditional rendering based on whether a schedule exists
+                if (!hasSchedule) 
+                  ...[  // Only show form if no schedule exists
+                    const SizedBox(height: 10),
+                    _buildDropdownDay(),
+                    const SizedBox(height: 20),
+                    _buildTextField(controller: sectionController, hint: 'Section (e.g., A1)', validatorMessage: 'Section is required'),
+                    const SizedBox(height: 20),
+                    _buildTextField(controller: startTimeController, hint: 'Start Time (e.g., 10:00 AM)', validatorMessage: 'Start time is required'),
+                    const SizedBox(height: 20),
+                    _buildTextField(controller: endTimeController, hint: 'End Time (e.g., 12:00 PM)', validatorMessage: 'End time is required'),
+                    const SizedBox(height: 20),
+                    _buildTextField(controller: roomNumberController, hint: 'Room Number (e.g., 305)', validatorMessage: 'Room number is required'),
+                    const SizedBox(height: 30),
+                    ElevatedButton(
+                      onPressed: _submit,
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: Colors.blueAccent,
+                        padding: const EdgeInsets.symmetric(vertical: 16),
+                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                      ),
+                      child: const Text('Save Schedule', style: TextStyle(fontSize: 18)),
+                    ),
+                  ]
+                else
+                  ...[  // Show message when a schedule already exists
+                    Container(
+                      padding: const EdgeInsets.all(16),
+                      decoration: BoxDecoration(
+                        color: Colors.blue.shade50,
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      child: Column(
+                        children: [
+                          Icon(
+                            Icons.info_outline,
+                            size: 48,
+                            color: Colors.blue.shade700,
+                          ),
+                          const SizedBox(height: 16),
+                          const Text(
+                            'Only one schedule is allowed per course',
+                            style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                            textAlign: TextAlign.center,
+                          ),
+                          const SizedBox(height: 8),
+                          const Text(
+                            'You have already created a schedule for this course. To modify it, please delete the existing schedule first.',
+                            style: TextStyle(fontSize: 14),
+                            textAlign: TextAlign.center,
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
 
                 const SizedBox(height: 30),
 
                 // Display the list of added schedules
-                const Text(
-                  'Added Schedules:',
-                  style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold),
-                ),
-                const SizedBox(height: 10),
-                // Display the added schedules in a ListView
-                ...schedules.map((schedule) {
-                  return ListTile(
-                    title: Text("${schedule.day} - ${schedule.section}"),
-                    subtitle: Text("Time: ${schedule.startTime} - ${schedule.endTime}, Room: ${schedule.roomNumber}"),
-                  );
-                }).toList(),
+                if (hasSchedule) 
+                  ...[  // Only show this section if there's a schedule
+                    const Text(
+                      'Current Schedule:',
+                      style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold),
+                    ),
+                    const SizedBox(height: 10),
+                    // Display the schedule in a card
+                    Card(
+                      elevation: 2,
+                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                      child: Padding(
+                        padding: const EdgeInsets.all(16.0),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              "${schedules[0].day} - Section ${schedules[0].section}",
+                              style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                            ),
+                            const SizedBox(height: 8),
+                            Text(
+                              "Time: ${schedules[0].startTime} - ${schedules[0].endTime}",
+                              style: const TextStyle(fontSize: 16),
+                            ),
+                            const SizedBox(height: 4),
+                            Text(
+                              "Room: ${schedules[0].roomNumber}",
+                              style: const TextStyle(fontSize: 16),
+                            ),
+                            const SizedBox(height: 16),
+                            // Add delete button
+                            ElevatedButton.icon(
+                              onPressed: () {
+                                setState(() {
+                                  schedules.clear();
+                                });
+                                ScaffoldMessenger.of(context).showSnackBar(
+                                  const SnackBar(content: Text('Schedule removed')),
+                                );
+                              },
+                              style: ElevatedButton.styleFrom(
+                                backgroundColor: Colors.red.shade100,
+                                foregroundColor: Colors.red.shade700,
+                              ),
+                              icon: const Icon(Icons.delete_outline),
+                              label: const Text('Remove Schedule'),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                  ],
               ],
             ),
           ),

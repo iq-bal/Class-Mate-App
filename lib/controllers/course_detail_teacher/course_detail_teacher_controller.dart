@@ -13,11 +13,11 @@ class CourseDetailTeacherController {
   CourseDetailTeacherModel? courseDetail; // Store course details
 
 
-  Future<void> fetchCourseDetails(String courseId, String section, String day) async {
+  Future<void> fetchCourseDetails(String courseId) async {
     stateNotifier.value = CourseDetailState.loading;
     errorMessage = '';
     try {
-      courseDetail = await _courseDetailTeacherService.getCourseDetails(courseId,section,day);
+      courseDetail = await _courseDetailTeacherService.getCourseDetails(courseId);
       stateNotifier.value = CourseDetailState.success;
     } catch (e) {
       errorMessage = 'Failed to load course details: $e';

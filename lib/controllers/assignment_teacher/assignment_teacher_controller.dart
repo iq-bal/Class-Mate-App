@@ -27,11 +27,11 @@ class AssignmentTeacherController {
     }
   }
 
-  // Fetch a single submission by assignmentId and studentId.
-  Future<void> fetchSingleSubmission(String assignmentId, String studentId) async {
+  // Fetch a single submission by submissionId.
+  Future<void> fetchSingleSubmission(String submissionId) async {
     stateNotifier.value = AssignmentTeacherState.loading;
     try {
-      evaluationDetail = await _assignmentTeacherServices.getSingleSubmission(assignmentId, studentId);
+      evaluationDetail = await _assignmentTeacherServices.getSingleSubmission(submissionId);
       stateNotifier.value = AssignmentTeacherState.success;
     } catch (error) {
       errorMessage = error.toString();
@@ -43,7 +43,7 @@ class AssignmentTeacherController {
     stateNotifier.value = AssignmentTeacherState.loading;
     try {
       await _assignmentTeacherServices.updateSubmission(submissionId, submissionInput);
-      await fetchSingleSubmission(submissionInput['assignment_id'], submissionInput['student_id']);
+      await fetchSingleSubmission(submissionId);
       stateNotifier.value = AssignmentTeacherState.success;
     } catch (error) {
       errorMessage = error.toString();

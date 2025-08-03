@@ -12,7 +12,12 @@ import 'package:classmate/views/course_detail_teacher/widgets/student_list.dart'
 import 'package:classmate/views/course_detail_teacher/enrollment_management_view.dart';
 
 class CourseDetailScreen extends StatefulWidget {
-  const CourseDetailScreen({super.key});
+  final String courseId;
+  
+  const CourseDetailScreen({
+    super.key, 
+    required this.courseId
+  });
 
   @override
   State<CourseDetailScreen> createState() => _CourseDetailScreenState();
@@ -29,7 +34,9 @@ class _CourseDetailScreenState extends State<CourseDetailScreen> {
   }
 
   void _fetchCourseDetails() {
-    courseDetailTeacherController.fetchCourseDetails('688d0a23c0d300664cba2d43', "A", "Saturday");
+    courseDetailTeacherController.fetchCourseDetails(
+      widget.courseId
+    );
   }
 
   void showCreateAssignmentModal(BuildContext context) {
@@ -43,7 +50,8 @@ class _CourseDetailScreenState extends State<CourseDetailScreen> {
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
       ),
-      builder: (context) => CreateAssignmentModal(courseId: '688d0a23c0d300664cba2d43',
+      builder: (context) => CreateAssignmentModal(
+        courseId: widget.courseId,
         onAssignmentCreated: () {
           _fetchCourseDetails();
         },
@@ -68,7 +76,7 @@ class _CourseDetailScreenState extends State<CourseDetailScreen> {
         borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
       ),
       builder: (context) => CreateClassTestModal(
-        courseId: '688d0a23c0d300664cba2d43',
+        courseId: widget.courseId,
         onClassTestCreated: () {
           _fetchCourseDetails();
         },
@@ -139,11 +147,11 @@ class _CourseDetailScreenState extends State<CourseDetailScreen> {
                       children: [
                         CourseCard(
                           courseCode: course.courseCode ?? 'No Code',
-                          className: 'Class ${course.schedule.section ?? 'Unknown'}',
-                          day: course.schedule.day ?? 'No Day',
-                          time: course.schedule.startTime ?? 'No Time',
+                          className: 'Class ${course.schedules.isNotEmpty ? course.schedules[0].section : 'Unknown'}',
+                          day: course.schedules.isNotEmpty ? course.schedules[0].day : 'No Day',
+                          time: course.schedules.isNotEmpty ? course.schedules[0].startTime : 'No Time',
                           title: course.title ?? 'No Title',
-                          roomNo: course.schedule.roomNo ?? 'No Room',
+                          roomNo: course.schedules.isNotEmpty ? course.schedules[0].roomNo : 'No Room',
                           onAttend: () {
                             print('Attend button pressed');
                           },
@@ -157,6 +165,8 @@ class _CourseDetailScreenState extends State<CourseDetailScreen> {
                               .map((user) => {
                             'name': user.name ?? 'Unknown Student',
                             'id': user.id ?? '',
+                            'roll': user.roll ?? 'No Roll',
+                            'profilePicture': user.profilePicture,
                             'isPresent': false,
                           })
                               .toList(),
@@ -166,7 +176,7 @@ class _CourseDetailScreenState extends State<CourseDetailScreen> {
                               context,
                               MaterialPageRoute(
                                 builder: (context) => EnrollmentManagementView(
-                                  courseId: '688d0a23c0d300664cba2d43',
+                                  courseId: widget.courseId,
                                 ),
                               ),
                             );

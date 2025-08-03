@@ -7,18 +7,19 @@ import 'package:dio/dio.dart';
 
 class CourseDetailTeacherService {
   final dioClient = DioClient();
-  Future<CourseDetailTeacherModel> getCourseDetails(String courseId,String section,String day) async {
+  Future<CourseDetailTeacherModel> getCourseDetails(String courseId) async {
     final String query = '''
     query {
       course(id: "$courseId") {
         title
         course_code
-        enrolled_students(section: "$section"){
+        enrolled_students {
           id
           roll
           name
           email
           section
+          profile_picture
         }
         assignments {
           id
@@ -26,16 +27,16 @@ class CourseDetailTeacherService {
           description
           deadline
           created_at
-          submissions{
-             id
-             assignment_id
-             student_id 
-             file_url
-             plagiarism_score
-             teacher_comments
-             grade
-             submitted_at
-             evaluated_at
+          submissions {
+            id
+            assignment_id
+            student_id
+            file_url
+            plagiarism_score
+            teacher_comments
+            grade
+            submitted_at
+            evaluated_at
           }
         }
         classTests {
@@ -47,7 +48,7 @@ class CourseDetailTeacherService {
           total_marks
           created_at
         }
-        schedule(section: "$section", day: "$day") {
+        schedules {
           section
           room_number
           day
