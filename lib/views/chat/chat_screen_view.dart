@@ -124,18 +124,29 @@ class _ChatScreenViewState extends State<ChatScreenView> {
         // Save edit
         _saveEdit();
       } else {
-        // Check if replying to a temporary message (not yet sent to server)
+        // Handle reply to message (including temporary messages)
         String? validReplyToId;
         if (_replyingToMessage != null) {
           if (_replyingToMessage!.id.startsWith('temp_')) {
-            // Don't reply to temporary messages - show warning
-            ScaffoldMessenger.of(context).showSnackBar(
-              const SnackBar(
-                content: Text('Cannot reply to a message that is still being sent. Please wait and try again.'),
-                backgroundColor: Colors.orange,
-              ),
+            // For temporary messages, try to find the corresponding real message
+            final currentMessages = widget.chatController.messagesNotifier.value;
+            final realMessage = currentMessages.firstWhere(
+              (m) => !m.id.startsWith('temp_') &&
+                     m.content == _replyingToMessage!.content &&
+                     m.senderId == _replyingToMessage!.senderId &&
+                     m.receiverId == _replyingToMessage!.receiverId,
+              orElse: () => _replyingToMessage!,
             );
-            return;
+            
+            // If we found a real message, use its ID; otherwise send without replyToId
+            if (!realMessage.id.startsWith('temp_')) {
+              validReplyToId = realMessage.id;
+              // Update the reference for future use
+              setState(() {
+                _replyingToMessage = realMessage;
+              });
+            }
+            // If still temporary, send without replyToId (no blocking)
           } else {
             validReplyToId = _replyingToMessage!.id;
           }
@@ -174,18 +185,29 @@ class _ChatScreenViewState extends State<ChatScreenView> {
   void _sendImageMessage() async {
     final XFile? image = await _imagePicker.pickImage(source: ImageSource.gallery);
     if (image != null) {
-      // Check if replying to a temporary message (not yet sent to server)
+      // Handle reply to message (including temporary messages)
       String? validReplyToId;
       if (_replyingToMessage != null) {
         if (_replyingToMessage!.id.startsWith('temp_')) {
-          // Don't reply to temporary messages - show warning
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(
-              content: Text('Cannot reply to a message that is still being sent. Please wait and try again.'),
-              backgroundColor: Colors.orange,
-            ),
+          // For temporary messages, try to find the corresponding real message
+          final currentMessages = widget.chatController.messagesNotifier.value;
+          final realMessage = currentMessages.firstWhere(
+            (m) => !m.id.startsWith('temp_') &&
+                   m.content == _replyingToMessage!.content &&
+                   m.senderId == _replyingToMessage!.senderId &&
+                   m.receiverId == _replyingToMessage!.receiverId,
+            orElse: () => _replyingToMessage!,
           );
-          return;
+          
+          // If we found a real message, use its ID; otherwise send without replyToId
+          if (!realMessage.id.startsWith('temp_')) {
+            validReplyToId = realMessage.id;
+            // Update the reference for future use
+            setState(() {
+              _replyingToMessage = realMessage;
+            });
+          }
+          // If still temporary, send without replyToId (no blocking)
         } else {
           validReplyToId = _replyingToMessage!.id;
         }
@@ -210,18 +232,29 @@ class _ChatScreenViewState extends State<ChatScreenView> {
     try {
       final result = await FilePicker.platform.pickFiles();
       if (result != null && result.files.single.path != null) {
-        // Check if replying to a temporary message (not yet sent to server)
+        // Handle reply to message (including temporary messages)
         String? validReplyToId;
         if (_replyingToMessage != null) {
           if (_replyingToMessage!.id.startsWith('temp_')) {
-            // Don't reply to temporary messages - show warning
-            ScaffoldMessenger.of(context).showSnackBar(
-              const SnackBar(
-                content: Text('Cannot reply to a message that is still being sent. Please wait and try again.'),
-                backgroundColor: Colors.orange,
-              ),
+            // For temporary messages, try to find the corresponding real message
+            final currentMessages = widget.chatController.messagesNotifier.value;
+            final realMessage = currentMessages.firstWhere(
+              (m) => !m.id.startsWith('temp_') &&
+                     m.content == _replyingToMessage!.content &&
+                     m.senderId == _replyingToMessage!.senderId &&
+                     m.receiverId == _replyingToMessage!.receiverId,
+              orElse: () => _replyingToMessage!,
             );
-            return;
+            
+            // If we found a real message, use its ID; otherwise send without replyToId
+            if (!realMessage.id.startsWith('temp_')) {
+              validReplyToId = realMessage.id;
+              // Update the reference for future use
+              setState(() {
+                _replyingToMessage = realMessage;
+              });
+            }
+            // If still temporary, send without replyToId (no blocking)
           } else {
             validReplyToId = _replyingToMessage!.id;
           }
@@ -305,18 +338,29 @@ class _ChatScreenViewState extends State<ChatScreenView> {
         if (path != null && path.isNotEmpty) {
           final file = File(path);
           if (await file.exists()) {
-            // Check if replying to a temporary message (not yet sent to server)
+            // Handle reply to message (including temporary messages)
             String? validReplyToId;
             if (_replyingToMessage != null) {
               if (_replyingToMessage!.id.startsWith('temp_')) {
-                // Don't reply to temporary messages - show warning
-                ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(
-                    content: Text('Cannot reply to a message that is still being sent. Please wait and try again.'),
-                    backgroundColor: Colors.orange,
-                  ),
+                // For temporary messages, try to find the corresponding real message
+                final currentMessages = widget.chatController.messagesNotifier.value;
+                final realMessage = currentMessages.firstWhere(
+                  (m) => !m.id.startsWith('temp_') &&
+                         m.content == _replyingToMessage!.content &&
+                         m.senderId == _replyingToMessage!.senderId &&
+                         m.receiverId == _replyingToMessage!.receiverId,
+                  orElse: () => _replyingToMessage!,
                 );
-                return;
+                
+                // If we found a real message, use its ID; otherwise send without replyToId
+                if (!realMessage.id.startsWith('temp_')) {
+                  validReplyToId = realMessage.id;
+                  // Update the reference for future use
+                  setState(() {
+                    _replyingToMessage = realMessage;
+                  });
+                }
+                // If still temporary, send without replyToId (no blocking)
               } else {
                 validReplyToId = _replyingToMessage!.id;
               }
