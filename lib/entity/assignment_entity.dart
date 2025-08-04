@@ -25,8 +25,33 @@ class AssignmentEntity {
       title: json['title'] as String?,
       description: json['description'] as String?,
       deadline: json['deadline'] != null ? DateTime.parse(json['deadline'] as String) : null,
-      createdAt: json['created_at'] != null ? DateTime.parse(json['created_at'] as String) : null,
+      createdAt: json['created_at'] != null ? _parseDateTime(json['created_at']) : null,
       submissionCount: json['submissionCount'] as int?,
     );
+  }
+
+  // Helper method to parse DateTime from various formats
+  static DateTime? _parseDateTime(dynamic dateValue) {
+    if (dateValue == null) return null;
+    
+    try {
+      // If it's a string that looks like a Unix timestamp
+      if (dateValue is String && RegExp(r'^\d+$').hasMatch(dateValue)) {
+        final timestamp = int.parse(dateValue);
+        return DateTime.fromMillisecondsSinceEpoch(timestamp);
+      }
+      // If it's an integer timestamp
+      else if (dateValue is int) {
+        return DateTime.fromMillisecondsSinceEpoch(dateValue);
+      }
+      // Otherwise try to parse as ISO date string
+      else if (dateValue is String) {
+        return DateTime.parse(dateValue);
+      }
+    } catch (e) {
+      // Return null if parsing fails
+      return null;
+    }
+    return null;
   }
 }

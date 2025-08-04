@@ -4,6 +4,7 @@ import 'package:classmate/views/home_teacher/home_teacher_view.dart';
 import 'package:classmate/views/profile/profile_student_view.dart';
 import 'package:classmate/views/profile_teacher/teacher_profile_page.dart';
 import 'package:classmate/views/task/task_view.dart';
+import 'package:classmate/views/drive/drive_view.dart';
 import 'package:flutter/material.dart';
 import 'package:classmate/views/home/home_view.dart';
 import 'package:classmate/views/explore/explore_course_view.dart';
@@ -50,11 +51,13 @@ class _MainLayoutState extends State<MainLayout> {
     if (widget.role.toLowerCase() == 'teacher') {
       _pages = [
         const HomeTeacherView(),
+        const DriveView(),
         const TeacherProfilePage(),
       ];
 
       _navItems = [
         BottomNavItem(icon: Icons.dashboard, label: 'Dashboard'),
+        BottomNavItem(icon: Icons.folder, label: 'Drive'),
         BottomNavItem(icon: Icons.person, label: 'Profile'),
       ];
     } else {

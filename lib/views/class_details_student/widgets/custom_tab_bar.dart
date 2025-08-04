@@ -1,16 +1,29 @@
 import 'package:flutter/material.dart';
 
 class CustomTabBar extends StatefulWidget {
-  const CustomTabBar({super.key});
+  final Function(int)? onTabChanged;
+  final int initialIndex;
+  
+  const CustomTabBar({
+    super.key,
+    this.onTabChanged,
+    this.initialIndex = 0,
+  });
 
   @override
   _CustomTabBarState createState() => _CustomTabBarState();
 }
 
 class _CustomTabBarState extends State<CustomTabBar> {
-  int _selectedIndex = 0; // Track the currently selected tab
+  late int _selectedIndex; // Track the currently selected tab
 
   final List<String> tabs = ['Assignment', 'Forum', 'Materials'];
+
+  @override
+  void initState() {
+    super.initState();
+    _selectedIndex = widget.initialIndex;
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -29,6 +42,7 @@ class _CustomTabBarState extends State<CustomTabBar> {
                     setState(() {
                       _selectedIndex = index; // Update selected tab index
                     });
+                    widget.onTabChanged?.call(index);
                   },
                   child: Column(
                     mainAxisSize: MainAxisSize.min,

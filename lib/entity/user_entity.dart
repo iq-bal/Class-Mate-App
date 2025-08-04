@@ -27,4 +27,16 @@ class UserEntity {
       profilePicture: json['profilePicture'] as String?,
     );
   }
+
+  // Method to convert UserEntity to JSON
+  Map<String, dynamic> toJson() {
+    return {
+      'id': id,
+      'uid': uid,
+      'name': name,
+      'email': email,
+      'role': role,
+      'profilePicture': profilePicture,
+    };
+  }
 }
