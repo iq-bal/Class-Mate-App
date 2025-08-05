@@ -10,6 +10,7 @@ import 'package:classmate/views/course_detail_teacher/widgets/create_class_test_
 import 'package:classmate/views/course_detail_teacher/widgets/custom_app_bar.dart';
 import 'package:classmate/views/course_detail_teacher/widgets/student_list.dart';
 import 'package:classmate/views/course_detail_teacher/enrollment_management_view.dart';
+import 'package:classmate/views/attendance/attendance_view.dart';
 
 class CourseDetailScreen extends StatefulWidget {
   final String courseId;
@@ -153,7 +154,15 @@ class _CourseDetailScreenState extends State<CourseDetailScreen> {
                           title: course.title ?? 'No Title',
                           roomNo: course.schedules.isNotEmpty ? course.schedules[0].roomNo : 'No Room',
                           onAttend: () {
-                            print('Attend button pressed');
+                            Navigator.push(
+                               context,
+                               MaterialPageRoute(
+                                 builder: (context) => AttendanceView(
+                                   courseId: widget.courseId,
+                                   courseTitle: course.title ?? 'Course',
+                                 ),
+                               ),
+                             );
                           },
                           onReschedule: () {
                             print('Reschedule button pressed');

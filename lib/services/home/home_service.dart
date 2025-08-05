@@ -207,13 +207,14 @@ class HomeService {
 
       if (response.statusCode == 200) {
         final data = response.data['data'];
+        print('DEBUG TodaysEnrolledCourses - Response data: ${response.data}');
         if (data != null) {
           return HomePageModel.fromJson(data);
         }
       }
       return null;
     } catch (e) {
-      print('Error fetching student assignments: $e');
+      print('Error fetching today\'s enrolled courses: $e');
       return null;
     }
   }
@@ -278,6 +279,9 @@ class HomeService {
   }
 
   Future<Map<String, dynamic>?> getCurrentClassForStudent(String day, String currentTime) async {
+    print("----------------------------------------------");
+    print(currentTime);
+    print("-----------------------------------------------");
     try {
       const String query = '''
         query CurrentClassForStudent(\$day: String!, \$current_time: String!) {
@@ -303,6 +307,11 @@ class HomeService {
         }
       ''';
 
+      print('DEBUG getCurrentClassForStudent - Sending request:');
+      print('Day: $day');
+      print('Current Time: $currentTime');
+      print('Query: $query');
+
       final response = await _dioClient.getDio(AppConfig.graphqlServer).post(
         '/',
         data: {
@@ -314,10 +323,29 @@ class HomeService {
         },
       );
 
+      print('DEBUG getCurrentClassForStudent - Response status: ${response.statusCode}');
+      print('DEBUG getCurrentClassForStudent - Response data: ${response.data}');
+
       if (response.statusCode == 200) {
         final data = response.data['data'];
         if (data != null && data['currentClassForStudent'] != null) {
-          return data['currentClassForStudent'];
+          final currentClassData = data['currentClassForStudent'];
+          print('DEBUG getCurrentClassForStudent - Found current class: $currentClassData');
+          
+          // Handle case where backend returns a List instead of a single object
+          if (currentClassData is List && currentClassData.isNotEmpty) {
+            print('DEBUG getCurrentClassForStudent - Returning first item from list');
+            return currentClassData.first as Map<String, dynamic>;
+          } else if (currentClassData is Map<String, dynamic>) {
+            print('DEBUG getCurrentClassForStudent - Returning single object');
+            return currentClassData;
+          } else {
+            print('DEBUG getCurrentClassForStudent - Unexpected data type: ${currentClassData.runtimeType}');
+            return null;
+          }
+        } else {
+          print('DEBUG getCurrentClassForStudent - No current class found');
+          print('DEBUG getCurrentClassForStudent - Full response data: ${response.data}');
         }
       }
       return null;

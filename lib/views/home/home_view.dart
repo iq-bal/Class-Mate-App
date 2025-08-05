@@ -32,8 +32,10 @@ class _HomeViewState extends State<HomeView> {
     final now = DateTime.now();
     final dayNames = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
     final currentDay = dayNames[now.weekday - 1];
-    final currentTime = '${now.hour.toString().padLeft(2, '0')}:${now.minute.toString().padLeft(2, '0')}';
-    
+    // final currentTime = '${now.hour.toString().padLeft(2, '0')}:${now.minute.toString().padLeft(2, '0')}';
+    print("---------------");
+    final currentTime = "10:30";
+    print("----------------");
     print('DEBUG: Current day: $currentDay, Current time: $currentTime');
     
     // Fetch current class for HomeHeader
@@ -115,12 +117,14 @@ class _HomeViewState extends State<HomeView> {
     // Extract current class and instructor from the new data structure
     String currentClass = "No current class";
     String currentInstructor = "No instructor";
+    String? courseId;
     
     if (currentClassData != null && currentClassData['courses'] != null) {
       final courses = currentClassData['courses'] as List<dynamic>;
       if (courses.isNotEmpty) {
         final course = courses.first;
         currentClass = course['title'] ?? "No current class";
+        courseId = course['_id'] ?? course['id'];
         if (course['teacher'] != null && course['teacher']['user_id'] != null) {
           currentInstructor = course['teacher']['user_id']['name'] ?? "No instructor";
         }
@@ -134,7 +138,7 @@ class _HomeViewState extends State<HomeView> {
           userName: user?.name ?? "Student",
           currentClass: currentClass,
           currentInstructor: currentInstructor,
-          onJoinClass: () => print("Joining class..."),
+          courseId: courseId,
           onNotificationTap: () => print("Notification clicked"),
         ),
 
