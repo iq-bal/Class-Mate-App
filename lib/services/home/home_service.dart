@@ -354,4 +354,116 @@ class HomeService {
       return null;
     }
   }
+  
+  Future<Map<String, dynamic>?> getMyEnrolledCourses() async {
+    try {
+      const String query = '''
+        query MyEnrolledCourses { 
+          myApprovedEnrollments { 
+            id 
+            status 
+            enrolled_at 
+            courses { 
+              id 
+              title 
+              course_code 
+              description 
+              credit 
+              image 
+              excerpt 
+              created_at 
+              
+              # Teacher information 
+              teacher { 
+                id 
+                name 
+                department 
+                designation 
+                profile_picture 
+                about 
+                user_id { 
+                  email 
+                } 
+              } 
+              
+              # Schedule information 
+              schedules { 
+                id 
+                day 
+                section 
+                start_time 
+                end_time 
+                room_number 
+              } 
+            } 
+          } 
+        } 
+      ''';
+
+      final response = await _dioClient.getDio(AppConfig.graphqlServer).post(
+        '/',
+        data: {
+          'query': query,
+        },
+      );
+
+      if (response.statusCode == 200) {
+        final data = response.data['data'];
+        if (data != null && data['myApprovedEnrollments'] != null) {
+          return data;
+        }
+      }
+      return null;
+    } catch (e) {
+      print('Error fetching enrolled courses: $e');
+      return null;
+    }
+  }
+  
+  Future<Map<String, dynamic>?> getAllAssignments() async {
+    try {
+      const String query = '''
+        query StudentEnrolledCourseAssignments { 
+          assignmentsForEnrolledCourses { 
+            id 
+            title 
+            description 
+            deadline 
+            created_at 
+            course { 
+              id 
+              title 
+              course_code 
+            } 
+            teacher { 
+              id 
+              user{ 
+                id 
+                name 
+                profile_picture 
+              } 
+            } 
+          } 
+        }
+      ''';
+
+      final response = await _dioClient.getDio(AppConfig.graphqlServer).post(
+        '/',
+        data: {
+          'query': query,
+        },
+      );
+
+      if (response.statusCode == 200) {
+        final data = response.data['data'];
+        if (data != null) {
+          return data;
+        }
+      }
+      return null;
+    } catch (e) {
+      print('Error fetching all assignments: $e');
+      return null;
+    }
+  }
 }

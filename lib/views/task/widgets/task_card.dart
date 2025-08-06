@@ -1,16 +1,74 @@
 import 'package:flutter/material.dart';
 import 'package:classmate/models/task/task_model.dart';
+import 'package:classmate/views/task/widgets/edit_task_bottom_sheet.dart';
+import 'package:classmate/controllers/task/task_controller.dart';
 import 'package:intl/intl.dart';
 
 class TaskCard extends StatelessWidget {
   final TaskModel task;
   final int index;
+  final TaskController taskController = TaskController();
 
-  const TaskCard({
+  TaskCard({
     super.key,
     required this.task,
     required this.index,
   });
+  
+  void _showEditTaskBottomSheet(BuildContext context) {
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (context) => EditTaskBottomSheet(task: task),
+    );
+  }
+  
+  void _showDeleteConfirmationDialog(BuildContext context) {
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: const Text('Delete Task'),
+          content: Text('Are you sure you want to delete "${task.title}"?'),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(context).pop(),
+              child: const Text('Cancel'),
+            ),
+            TextButton(
+              onPressed: () async {
+                Navigator.of(context).pop();
+                // Show loading indicator
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(content: Text('Deleting task...')),
+                );
+                
+                try {
+                  await taskController.deleteTask(task.id!);
+                  
+                  // Show success message
+                  if (context.mounted) {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(content: Text('Task deleted successfully')),
+                    );
+                  }
+                } catch (e) {
+                  // Show error message
+                  if (context.mounted) {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(content: Text('Failed to delete task: $e')),
+                    );
+                  }
+                }
+              },
+              child: const Text('Delete', style: TextStyle(color: Colors.red)),
+            ),
+          ],
+        );
+      },
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -142,7 +200,11 @@ class TaskCard extends StatelessWidget {
                         icon: Icon(Icons.more_vert, color: Colors.grey[600]),
                         elevation: 2,
                         onSelected: (value) {
-                          // Handle menu item selection
+                          if (value == 'edit') {
+                            _showEditTaskBottomSheet(context);
+                          } else if (value == 'delete') {
+                            _showDeleteConfirmationDialog(context);
+                          }
                         },
                         itemBuilder: (BuildContext context) => [
                           const PopupMenuItem(
@@ -151,7 +213,7 @@ class TaskCard extends StatelessWidget {
                           ),
                           const PopupMenuItem(
                             value: 'delete',
-                            child: Text('Delete Task'),
+                            child: Text('Delete Task', style: TextStyle(color: Colors.red)),
                           ),
                         ],
                       ),

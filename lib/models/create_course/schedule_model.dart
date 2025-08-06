@@ -22,7 +22,9 @@ class ScheduleModel {
   factory ScheduleModel.fromJson(Map<String, dynamic> json) {
     return ScheduleModel(
       id: json['id'] as String,
-      courseId: json['course_id'] as String,
+      courseId: json['course_id'] is Map<String, dynamic> 
+          ? json['course_id']['id'] as String
+          : json['course_id'] as String,
       day: json['day'] as String,
       section: json['section'] as String,
       startTime: json['start_time'] as String,

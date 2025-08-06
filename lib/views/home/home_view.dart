@@ -1,5 +1,7 @@
 import 'package:classmate/views/assignment/assignment_detail_view.dart';
+import 'package:classmate/views/assignment/assignment_list_view.dart';
 import 'package:classmate/views/class_details_student/class_details_student_view.dart';
+import 'package:classmate/views/course_routine/course_routine_view.dart';
 import 'package:classmate/views/home/widgets/home_header.dart';
 import 'package:classmate/views/home/widgets/next_class_card.dart';
 import 'package:classmate/views/home/widgets/assignment_card.dart';
@@ -7,6 +9,7 @@ import 'package:classmate/views/home/widgets/class_test_card.dart';
 import 'package:classmate/views/home/widgets/section_header.dart';
 import 'package:classmate/controllers/home/home_controller.dart';
 import 'package:classmate/models/home/home_page_model.dart';
+import 'package:classmate/views/notification/notification_list_view.dart';
 import 'package:flutter/material.dart';
 
 class HomeView extends StatefulWidget {
@@ -67,6 +70,15 @@ class _HomeViewState extends State<HomeView> {
         print('DEBUG: setState called to rebuild UI');
       });
     }
+  }
+
+  void _handleNotificationTap() {
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => const NotificationListView(),
+      ),
+    );
   }
 
   @override
@@ -139,7 +151,7 @@ class _HomeViewState extends State<HomeView> {
           currentClass: currentClass,
           currentInstructor: currentInstructor,
           courseId: courseId,
-          onNotificationTap: () => print("Notification clicked"),
+          onNotificationTap: _handleNotificationTap,
         ),
 
         const SizedBox(height: 16),
@@ -149,13 +161,30 @@ class _HomeViewState extends State<HomeView> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                SectionHeader(title: "Next Classes", onSeeAll: () {}),
+                SectionHeader(title: "Next Classes", onSeeAll: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => const CourseRoutineView(),
+                    ),
+                  );
+                }),
                 const SizedBox(height: 12),
 
                 _buildNextClassesSection(),
 
                 const SizedBox(height: 16),
-                SectionHeader(title: "Assignment", onSeeAll: () {}),
+                SectionHeader(
+                  title: "Assignment", 
+                  onSeeAll: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => const AssignmentListView(),
+                      ),
+                    );
+                  },
+                ),
                 const SizedBox(height: 12),
 
                 _buildAssignmentsSection(),

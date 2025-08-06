@@ -11,6 +11,7 @@ class CourseDetailTeacherService {
     final String query = '''
     query {
       course(id: "$courseId") {
+        id
         title
         course_code
         enrolled_students {
@@ -49,11 +50,15 @@ class CourseDetailTeacherService {
           created_at
         }
         schedules {
+          id
           section
           room_number
           day
           start_time
           end_time
+          course_id {
+            id
+          }
         }
       }
     }

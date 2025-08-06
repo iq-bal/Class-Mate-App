@@ -159,4 +159,90 @@ class TaskService {
     }
   }
 
+  Future<void> updateTask(String id, TaskModel task) async {
+    try {
+      final dio = dioClient.getDio(AppConfig.graphqlServer);
+      const String mutation = r'''
+        mutation UpdateTask($id: ID!, $taskInput: TaskInput!) { 
+          updateTask(id: $id, taskInput: $taskInput) { 
+            id 
+            title 
+            category 
+            date 
+            start_time 
+            end_time 
+            status 
+            participants { 
+              id 
+              name 
+              email 
+              status 
+            } 
+          } 
+        } 
+      ''';
+
+      final response = await dio.post(
+        '/',
+        data: {
+          'query': mutation,
+          'variables': {
+            'id': id,
+            'taskInput': task.toJson()
+          },
+        },
+      );
+
+      if (response.statusCode == 200) {
+        if (response.data['errors'] != null) {
+          throw Exception('GraphQL errors: ${response.data['errors']}');
+        }
+        // Task updated successfully
+        print('Task updated successfully: ${response.data}');
+      } else {
+        throw Exception('Failed to update task: ${response.statusCode}');
+      }
+    } catch (e) {
+      print('Error updating task: $e');
+      throw Exception('Failed to update task: $e');
+    }
+  }
+
+  Future<void> deleteTask(String id) async {
+    try {
+      final dio = dioClient.getDio(AppConfig.graphqlServer);
+      const String mutation = r'''
+        mutation DeleteTask($id: ID!) { 
+          deleteTask(id: $id) { 
+            id 
+            title 
+          } 
+        } 
+      ''';
+
+      final response = await dio.post(
+        '/',
+        data: {
+          'query': mutation,
+          'variables': {
+            'id': id
+          },
+        },
+      );
+
+      if (response.statusCode == 200) {
+        if (response.data['errors'] != null) {
+          throw Exception('GraphQL errors: ${response.data['errors']}');
+        }
+        // Task deleted successfully
+        print('Task deleted successfully: ${response.data}');
+      } else {
+        throw Exception('Failed to delete task: ${response.statusCode}');
+      }
+    } catch (e) {
+      print('Error deleting task: $e');
+      throw Exception('Failed to delete task: $e');
+    }
+  }
+
 }

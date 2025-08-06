@@ -158,6 +158,42 @@ class HomeController {
     }
   }
   
+  // Fetch all enrolled courses for routine view
+  Future<Map<String, dynamic>?> fetchAllEnrolledCourses() async {
+    try {
+      final data = await _homeService.getMyEnrolledCourses();
+      if (_disposed) return null;
+      if (data != null) {
+        print('All enrolled courses fetched successfully');
+        return data;
+      } else {
+        print('No enrolled courses data received');
+        return null;
+      }
+    } catch (e) {
+      print('Error fetching all enrolled courses: $e');
+      return null;
+    }
+  }
+  
+  // Fetch all assignments for assignment list view
+  Future<Map<String, dynamic>?> fetchAllAssignments() async {
+    try {
+      final data = await _homeService.getAllAssignments();
+      if (_disposed) return null;
+      if (data != null) {
+        print('All assignments fetched successfully');
+        return data;
+      } else {
+        print('No assignments data received');
+        return null;
+      }
+    } catch (e) {
+      print('Error fetching all assignments: $e');
+      return null;
+    }
+  }
+  
   Future<void> fetchHomePageData() async {
     try {
       if (_disposed) return;

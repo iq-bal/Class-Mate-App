@@ -1,4 +1,5 @@
 class ScheduleModel{
+  final String? id;
   final String section;
   final String roomNo;
   final String day;
@@ -7,6 +8,7 @@ class ScheduleModel{
 
 
   ScheduleModel({
+    this.id,
     required this.section,
     required this.roomNo,
     required this.day,
@@ -17,6 +19,7 @@ class ScheduleModel{
   // Factory constructor to create a ScheduleModel object from a JSON map
   factory ScheduleModel.fromJson(Map<String, dynamic> json) {
     return ScheduleModel(
+        id: json['_id']?.toString() ?? json['id']?.toString(),
         section: json['section']?.toString() ?? '',
         roomNo: json['room_number']?.toString() ?? '',
         day: json['day']?.toString() ?? '',

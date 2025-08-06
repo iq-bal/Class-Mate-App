@@ -48,6 +48,33 @@ class TaskController {
       stateNotifier.value = TaskState.error;
     }
   }
+  
+  Future<void> updateTask(String id, TaskModel task) async {
+    stateNotifier.value = TaskState.loading;
+    errorMessage = '';
+    try {
+      await _taskService.updateTask(id, task);
+      await getTasks(); // Refresh tasks after update
+      stateNotifier.value = TaskState.success;
+    } catch (e) {
+      print("Error updating task: $e");
+      errorMessage = 'Failed to update task: $e';
+      stateNotifier.value = TaskState.error;
+    }
+  }
 
+  Future<void> deleteTask(String id) async {
+    stateNotifier.value = TaskState.loading;
+    errorMessage = '';
+    try {
+      await _taskService.deleteTask(id);
+      await getTasks(); // Refresh tasks after deletion
+      stateNotifier.value = TaskState.success;
+    } catch (e) {
+      print("Error deleting task: $e");
+      errorMessage = 'Failed to delete task: $e';
+      stateNotifier.value = TaskState.error;
+    }
+  }
 
 }

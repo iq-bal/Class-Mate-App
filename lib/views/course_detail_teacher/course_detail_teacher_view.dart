@@ -9,8 +9,11 @@ import 'package:classmate/views/course_detail_teacher/widgets/create_assignment_
 import 'package:classmate/views/course_detail_teacher/widgets/create_class_test_modal.dart';
 import 'package:classmate/views/course_detail_teacher/widgets/custom_app_bar.dart';
 import 'package:classmate/views/course_detail_teacher/widgets/student_list.dart';
+import 'package:classmate/views/course_detail_teacher/widgets/reschedule_modal.dart';
 import 'package:classmate/views/course_detail_teacher/enrollment_management_view.dart';
 import 'package:classmate/views/attendance/attendance_view.dart';
+import 'package:classmate/models/create_course/schedule_model.dart';
+import 'package:classmate/services/notification/notification_service.dart';
 
 class CourseDetailScreen extends StatefulWidget {
   final String courseId;
@@ -27,14 +30,42 @@ class CourseDetailScreen extends StatefulWidget {
 class _CourseDetailScreenState extends State<CourseDetailScreen> {
   bool _isModalOpen = false;
   final CourseDetailTeacherController courseDetailTeacherController = CourseDetailTeacherController();
+  final SocketNotificationService _notificationService = SocketNotificationService();
 
   @override
   void initState() {
     super.initState();
     _fetchCourseDetails();
+    _initializeNotifications();
   }
 
-  void _fetchCourseDetails() {
+  void _initializeNotifications() async {
+    try {
+      await _notificationService.initialize();
+      
+      // Subscribe to course notifications
+      _notificationService.subscribeToCourse(widget.courseId);
+      
+      // Set up callback for course reschedule events
+      _notificationService.setCourseRescheduledCallback((data) {
+        // Handle course reschedule notification
+        if (mounted && data['courseId'] == widget.courseId) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text('Course schedule has been updated'),
+              backgroundColor: Colors.green,
+            ),
+          );
+          // Refresh course details to show updated schedule
+          _fetchCourseDetails();
+        }
+      });
+    } catch (e) {
+       print('Failed to initialize notifications: $e');
+     }
+   }
+
+   void _fetchCourseDetails() {
     courseDetailTeacherController.fetchCourseDetails(
       widget.courseId
     );
@@ -152,7 +183,7 @@ class _CourseDetailScreenState extends State<CourseDetailScreen> {
                           day: course.schedules.isNotEmpty ? course.schedules[0].day : 'No Day',
                           time: course.schedules.isNotEmpty ? course.schedules[0].startTime : 'No Time',
                           title: course.title ?? 'No Title',
-                          roomNo: course.schedules.isNotEmpty ? course.schedules[0].roomNo : 'No Room',
+                          roomNo: course.schedules.isNotEmpty ? course.schedules[0].roomNumber : 'No Room',
                           onAttend: () {
                             Navigator.push(
                                context,
@@ -165,7 +196,7 @@ class _CourseDetailScreenState extends State<CourseDetailScreen> {
                              );
                           },
                           onReschedule: () {
-                            print('Reschedule button pressed');
+                            _showRescheduleModal(context, course);
                           },
                         ),
                         const SizedBox(height: 24),
@@ -252,5 +283,50 @@ class _CourseDetailScreenState extends State<CourseDetailScreen> {
           ),
       ],
     );
+  }
+
+  void _showRescheduleModal(BuildContext context, dynamic course) {
+    if (course.schedules.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('No schedule found for this course'),
+          backgroundColor: Colors.red,
+        ),
+      );
+      return;
+    }
+
+    final schedule = course.schedules[0]; // Get the first schedule
+
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (context) => RescheduleModal(
+        scheduleId: schedule.id ?? '',
+        courseId: course.id ?? '',
+        currentSchedule: schedule,
+        onScheduleUpdated: () {
+          // Refresh the course details after successful reschedule
+          _fetchCourseDetails();
+          
+          // Show success message
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text('Course schedule updated successfully'),
+              backgroundColor: Colors.green,
+            ),
+          );
+        },
+      ),
+    );
+   }
+
+  @override
+  void dispose() {
+    // Clean up notification service
+    _notificationService.unsubscribeFromCourse(widget.courseId);
+    _notificationService.dispose();
+    super.dispose();
   }
 }

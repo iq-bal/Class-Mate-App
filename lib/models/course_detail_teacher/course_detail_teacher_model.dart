@@ -2,7 +2,7 @@ import 'package:classmate/models/assignment_model.dart';
 import 'package:classmate/models/authentication/user_model.dart';
 import 'package:classmate/models/course_detail_teacher/assignment_entity.dart';
 import 'package:classmate/models/course_detail_teacher/class_test_entity.dart';
-import 'package:classmate/models/schedule_model.dart';
+import 'package:classmate/models/create_course/schedule_model.dart';
 import 'package:classmate/models/student_model.dart';
 
 class CourseDetailTeacherModel {
