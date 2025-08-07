@@ -2,6 +2,9 @@ import 'package:classmate/views/assignment/assignment_detail_view.dart';
 import 'package:classmate/views/assignment/assignment_list_view.dart';
 import 'package:classmate/views/class_details_student/class_details_student_view.dart';
 import 'package:classmate/views/course_routine/course_routine_view.dart';
+import 'package:classmate/views/course_routine/class_routine_new.dart';
+import 'package:classmate/views/home/widgets/assignment_list_view_new.dart';
+import 'package:classmate/views/home/widgets/class_routine.dart';
 import 'package:classmate/views/home/widgets/home_header.dart';
 import 'package:classmate/views/home/widgets/next_class_card.dart';
 import 'package:classmate/views/home/widgets/assignment_card.dart';
@@ -165,7 +168,7 @@ class _HomeViewState extends State<HomeView> {
                   Navigator.push(
                     context,
                     MaterialPageRoute(
-                      builder: (context) => const CourseRoutineView(),
+                      builder: (context) => const ClassRoutineNew(),
                     ),
                   );
                 }),
@@ -180,7 +183,7 @@ class _HomeViewState extends State<HomeView> {
                     Navigator.push(
                       context,
                       MaterialPageRoute(
-                        builder: (context) => const AssignmentListView(),
+                        builder: (context) => const AssignmentListViewNew(),
                       ),
                     );
                   },

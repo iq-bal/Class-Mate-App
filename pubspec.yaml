@@ -98,6 +98,7 @@ flutter:
     - assets/images/teacher.png
     - assets/images/avatar.png
     - assets/images/background.png
+    - assets/atom.png
 
   # An image asset can refer to one or more resolution-specific "variants", see
   # https://flutter.dev/to/resolution-aware-images

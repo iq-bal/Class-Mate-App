@@ -40,28 +40,36 @@ class ClassTestCard extends StatelessWidget {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Row( // ✅ Row for icon + subject
+                Row(
                   children: [
-                    Icon(Icons.menu_book_outlined, size: 24),
+                    Container(
+                      padding: EdgeInsets.all(10),
+                      decoration: BoxDecoration(
+                        color: Colors.blue.shade50,
+                        borderRadius: BorderRadius.circular(8), // rectangular with slight rounding
+                      ),
+                      child: Icon(Icons.menu_book_outlined, size: 24, color: Colors.blue),
+                    ),
                     SizedBox(width: 8),
                     Text(
                       subject,
-                      style: TextStyle(
+                      style: const TextStyle(
                         fontSize: 16,
                         fontWeight: FontWeight.w500,
                       ),
                     ),
                   ],
                 ),
+
                 SizedBox(height: 8),
                 Text(
                   title,
-                  style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+                  style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
                 ),
                 SizedBox(height: 4),
                 Text(
                   description,
-                  style: TextStyle(fontSize: 14, color: Colors.black87),
+                  style: const TextStyle(fontSize: 14, color: Colors.black87),
                 ),
                 SizedBox(height: 16),
                 Row(
