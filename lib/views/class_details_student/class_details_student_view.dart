@@ -206,24 +206,27 @@ class _ClassDetailsStudentState extends State<ClassDetailsStudent> {
           ),
           const SizedBox(height: 16),
           ...details.assignments.map((assignment) {
-            return AssignmentCard(
-              title: assignment.title ?? "No Title",
-              description: assignment.description ?? "No Description",
-              dueDate: assignment.deadline != null
-                  ? HelperFunction.formatISODate(assignment.deadline.toString())
-                  : 'No Due Date',
-              iconText: HelperFunction.getFirstTwoLettersUppercase(
-                assignment.title ?? "",
+            return Padding(
+              padding: const EdgeInsets.only(bottom: 16.0), // Added padding for gap between cards
+              child: AssignmentCard(
+                title: assignment.title ?? "No Title",
+                description: assignment.description ?? "No Description",
+                dueDate: assignment.deadline != null
+                    ? HelperFunction.formatISODate(assignment.deadline.toString())
+                    : 'No Due Date',
+                iconText: HelperFunction.getFirstTwoLettersUppercase(
+                  assignment.title ?? "",
+                ),
+                totalItems: assignment.submissionCount ?? 0,
+                onTap: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => AssignmentDetailPage(assignmentId: assignment.id ?? ''),
+                    ),
+                  );
+                },
               ),
-              totalItems: assignment.submissionCount ?? 0,
-              onTap: () {
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                    builder: (context) => AssignmentDetailPage(assignmentId: assignment.id ?? ''),
-                  ),
-                );
-              },
             );
           }).toList(),
         ],
@@ -233,8 +236,89 @@ class _ClassDetailsStudentState extends State<ClassDetailsStudent> {
 
   Widget _buildForumContent() {
     return Container(
-      height: 500, // Set a fixed height for the forum content
-      child: ForumView(courseId: widget.courseId),
+      margin: EdgeInsets.zero,
+      decoration: BoxDecoration(
+        color: Colors.transparent,
+        borderRadius: BorderRadius.circular(16),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [          
+          // Forum content
+          SizedBox(
+            height: MediaQuery.of(context).size.height * 0.75,
+            child: ForumView(courseId: widget.courseId),
+          ),
+        ],
+      ),
+    );
+  }
+  
+  void _showForumBottomSheet(BuildContext context) {
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (context) {
+        return DraggableScrollableSheet(
+          initialChildSize: 0.9,
+          minChildSize: 0.5,
+          maxChildSize: 0.95,
+          builder: (context, scrollController) {
+            return Container(
+              decoration: const BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.only(
+                  topLeft: Radius.circular(24),
+                  topRight: Radius.circular(24),
+                ),
+              ),
+              child: Column(
+                children: [
+                  // Bottom sheet handle
+                  Container(
+                    margin: const EdgeInsets.only(top: 12, bottom: 8),
+                    width: 40,
+                    height: 5,
+                    decoration: BoxDecoration(
+                      color: Colors.grey[300],
+                      borderRadius: BorderRadius.circular(3),
+                    ),
+                  ),
+                  // Header
+                  Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        Text(
+                          'Course Forum',
+                          style: GoogleFonts.poppins(
+                            fontSize: 20,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                        IconButton(
+                          onPressed: () => Navigator.pop(context),
+                          icon: const Icon(Icons.close),
+                          style: IconButton.styleFrom(
+                            backgroundColor: Colors.grey[100],
+                            foregroundColor: Colors.grey[700],
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  // Forum content
+                  Expanded(
+                    child: ForumView(courseId: widget.courseId),
+                  ),
+                ],
+              ),
+            );
+          },
+        );
+      },
     );
   }
 
@@ -299,52 +383,107 @@ class _ClassDetailsStudentState extends State<ClassDetailsStudent> {
 
                     return Column(
                       children: files.map((file) {
-                        return Card(
-                          margin: const EdgeInsets.symmetric(vertical: 4),
-                          child: ListTile(
-                            leading: CircleAvatar(
-                              backgroundColor: const Color(0xFF6366F1).withOpacity(0.1),
-                              child: Text(
-                                _driveController.getFileIcon(file.fileType),
-                                style: const TextStyle(fontSize: 20),
-                              ),
-                            ),
-                            title: Text(
-                              file.fileName ?? 'Unknown File',
-                              style: GoogleFonts.poppins(
-                                fontWeight: FontWeight.w500,
-                              ),
-                            ),
-                            subtitle: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Text(
-                                  'Size: ${_driveController.formatFileSize(file.fileSize)}',
-                                  style: GoogleFonts.poppins(
-                                    fontSize: 12,
-                                    color: Colors.grey[600],
-                                  ),
-                                ),
-                                if (file.description != null && file.description!.isNotEmpty)
-                                  Text(
-                                    file.description!,
-                                    style: GoogleFonts.poppins(
-                                      fontSize: 12,
-                                      color: Colors.grey[700],
-                                    ),
-                                  ),
-                                Text(
-                                  'Uploaded by: ${file.teacher?.name ?? 'Unknown'}',
-                                  style: GoogleFonts.poppins(
-                                    fontSize: 11,
-                                    color: Colors.grey[500],
-                                  ),
+                        return GestureDetector(
+                          onTap: () => _openFile(file.fileUrl),
+                          child: Container(
+                            margin: const EdgeInsets.only(bottom: 16),
+                            decoration: BoxDecoration(
+                              color: Colors.white,
+                              borderRadius: BorderRadius.circular(12),
+                              boxShadow: [
+                                BoxShadow(
+                                  color: Colors.grey.withOpacity(0.08),
+                                  spreadRadius: 2,
+                                  blurRadius: 10,
+                                  offset: const Offset(0, 3),
                                 ),
                               ],
                             ),
-                            trailing: IconButton(
-                              icon: const Icon(Icons.open_in_new),
-                              onPressed: () => _openFile(file.fileUrl),
+                            child: Padding(
+                              padding: const EdgeInsets.all(16.0),
+                              child: Row(
+                                children: [
+                                  // File icon with modern container
+                                  Container(
+                                    width: 50,
+                                    height: 50,
+                                    decoration: BoxDecoration(
+                                      color: const Color(0xFF6366F1).withOpacity(0.1),
+                                      borderRadius: BorderRadius.circular(10),
+                                    ),
+                                    child: Center(
+                                      child: Text(
+                                        _driveController.getFileIcon(file.fileType),
+                                        style: const TextStyle(fontSize: 24),
+                                      ),
+                                    ),
+                                  ),
+                                  const SizedBox(width: 16),
+                                  // File details
+                                  Expanded(
+                                    child: Column(
+                                      crossAxisAlignment: CrossAxisAlignment.start,
+                                      children: [
+                                        Text(
+                                          file.fileName ?? 'Unknown File',
+                                          style: GoogleFonts.poppins(
+                                            fontWeight: FontWeight.w600,
+                                            fontSize: 16,
+                                          ),
+                                        ),
+                                        const SizedBox(height: 4),
+                                        if (file.description != null && file.description!.isNotEmpty)
+                                          Padding(
+                                            padding: const EdgeInsets.only(bottom: 4.0),
+                                            child: Text(
+                                              file.description!,
+                                              style: GoogleFonts.poppins(
+                                                fontSize: 13,
+                                                color: Colors.grey[700],
+                                              ),
+                                            ),
+                                          ),
+                                        Row(
+                                          children: [
+                                            Icon(Icons.storage, size: 14, color: Colors.grey[600]),
+                                            const SizedBox(width: 4),
+                                            Text(
+                                              _driveController.formatFileSize(file.fileSize),
+                                              style: GoogleFonts.poppins(
+                                                fontSize: 12,
+                                                color: Colors.grey[600],
+                                              ),
+                                            ),
+                                            const SizedBox(width: 12),
+                                            Icon(Icons.person, size: 14, color: Colors.grey[600]),
+                                            const SizedBox(width: 4),
+                                            Text(
+                                              file.teacher?.name ?? 'Unknown',
+                                              style: GoogleFonts.poppins(
+                                                fontSize: 12,
+                                                color: Colors.grey[600],
+                                              ),
+                                            ),
+                                          ],
+                                        ),
+                                      ],
+                                    ),
+                                  ),
+                                  // Download icon
+                                  Container(
+                                    width: 40,
+                                    height: 40,
+                                    decoration: BoxDecoration(
+                                      color: Colors.blue.withOpacity(0.1),
+                                      borderRadius: BorderRadius.circular(8),
+                                    ),
+                                    child: const Icon(
+                                      Icons.download_rounded,
+                                      color: Colors.blue,
+                                    ),
+                                  ),
+                                ],
+                              ),
                             ),
                           ),
                         );
@@ -365,12 +504,22 @@ class _ClassDetailsStudentState extends State<ClassDetailsStudent> {
       try {
         final Uri url = Uri.parse(fileUrl);
         if (await canLaunchUrl(url)) {
-          await launchUrl(url, mode: LaunchMode.externalApplication);
+          // Use LaunchMode.platformDefault to download the file instead of just opening it
+          await launchUrl(url, mode: LaunchMode.platformDefault);
+          
+          if (mounted) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              const SnackBar(
+                content: Text('Downloading file...'),
+                backgroundColor: Colors.green,
+              ),
+            );
+          }
         } else {
           if (mounted) {
             ScaffoldMessenger.of(context).showSnackBar(
               const SnackBar(
-                content: Text('Could not open file'),
+                content: Text('Could not download file'),
                 backgroundColor: Colors.red,
               ),
             );
@@ -380,7 +529,7 @@ class _ClassDetailsStudentState extends State<ClassDetailsStudent> {
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
-              content: Text('Error opening file: $e'),
+              content: Text('Error downloading file: $e'),
               backgroundColor: Colors.red,
             ),
           );

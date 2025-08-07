@@ -159,7 +159,7 @@ class _HomeViewState extends State<HomeView> {
 
         const SizedBox(height: 16),
 
-        Expanded(
+        Expanded(   
           child: SingleChildScrollView(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,

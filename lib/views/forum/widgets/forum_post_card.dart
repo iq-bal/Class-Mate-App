@@ -22,24 +22,28 @@ class ForumPostCard extends StatelessWidget {
     final forumController = ForumController();
     
     return Card(
-      margin: const EdgeInsets.only(bottom: 12),
-      elevation: 2,
+      margin: const EdgeInsets.symmetric(vertical: 8),
+      elevation: 0,
+      color: Colors.white,
+      shadowColor: Colors.transparent,
       shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(12),
+        borderRadius: BorderRadius.circular(16),
+        side: BorderSide(color: Colors.grey.withOpacity(0.1), width: 0.5),
       ),
       child: InkWell(
         onTap: onTap,
-        borderRadius: BorderRadius.circular(12),
+        borderRadius: BorderRadius.circular(16),
         child: Padding(
-          padding: const EdgeInsets.all(16),
+          padding: const EdgeInsets.fromLTRB(16, 16, 16, 8), // Reduced bottom padding
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              // Header with author and status
+              // Author and status indicators
               Row(
+                crossAxisAlignment: CrossAxisAlignment.center,
                 children: [
                   CircleAvatar(
-                    radius: 16,
+                    radius: 18,
                     backgroundColor: const Color(0xFF6366F1).withOpacity(0.1),
                     backgroundImage: post.author?.profilePicture != null
                         ? NetworkImage(post.author!.profilePicture!)
@@ -65,8 +69,10 @@ class ForumPostCard extends StatelessWidget {
                           style: GoogleFonts.poppins(
                             fontSize: 14,
                             fontWeight: FontWeight.w600,
+                            color: Colors.black87,
                           ),
                         ),
+                        const SizedBox(height: 2),
                         Text(
                           forumController.formatTimeAgo(post.createdAt),
                           style: GoogleFonts.poppins(
@@ -77,96 +83,110 @@ class ForumPostCard extends StatelessWidget {
                       ],
                     ),
                   ),
-                  // Status indicators
-                  if (post.isPinned == true)
-                    Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                      decoration: BoxDecoration(
-                        color: Colors.orange.withOpacity(0.1),
-                        borderRadius: BorderRadius.circular(12),
-                      ),
-                      child: Row(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          const Icon(Icons.push_pin, size: 12, color: Colors.orange),
-                          const SizedBox(width: 4),
-                          Text(
-                            'Pinned',
-                            style: GoogleFonts.poppins(
-                              fontSize: 10,
-                              fontWeight: FontWeight.w500,
-                              color: Colors.orange,
-                            ),
+                  Row(
+                    children: [
+                      if (post.isPinned == true)
+                        Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                          decoration: BoxDecoration(
+                            color: Colors.orange.withOpacity(0.1),
+                            borderRadius: BorderRadius.circular(16),
+                            border: Border.all(color: Colors.orange.withOpacity(0.2), width: 0.5),
                           ),
-                        ],
-                      ),
-                    ),
-                  if (post.isResolved == true)
-                    Container(
-                      margin: EdgeInsets.only(left: post.isPinned == true ? 8 : 0),
-                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                      decoration: BoxDecoration(
-                        color: Colors.green.withOpacity(0.1),
-                        borderRadius: BorderRadius.circular(12),
-                      ),
-                      child: Row(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          const Icon(Icons.check_circle, size: 12, color: Colors.green),
-                          const SizedBox(width: 4),
-                          Text(
-                            'Resolved',
-                            style: GoogleFonts.poppins(
-                              fontSize: 10,
-                              fontWeight: FontWeight.w500,
-                              color: Colors.green,
-                            ),
+                          child: Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              const Icon(Icons.push_pin, size: 12, color: Colors.orange),
+                              const SizedBox(width: 4),
+                              Text(
+                                'Pinned',
+                                style: GoogleFonts.poppins(
+                                  fontSize: 10,
+                                  fontWeight: FontWeight.w600,
+                                  color: Colors.orange,
+                                ),
+                              ),
+                            ],
                           ),
-                        ],
-                      ),
-                    ),
+                        ),
+                      if (post.isResolved == true)
+                        Container(
+                          margin: EdgeInsets.only(left: post.isPinned == true ? 8 : 0),
+                          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                          decoration: BoxDecoration(
+                            color: Colors.green.withOpacity(0.1),
+                            borderRadius: BorderRadius.circular(16),
+                            border: Border.all(color: Colors.green.withOpacity(0.2), width: 0.5),
+                          ),
+                          child: Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              const Icon(Icons.check_circle, size: 12, color: Colors.green),
+                              const SizedBox(width: 4),
+                              Text(
+                                'Resolved',
+                                style: GoogleFonts.poppins(
+                                  fontSize: 10,
+                                  fontWeight: FontWeight.w600,
+                                  color: Colors.green,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                    ],
+                  ),
                 ],
               ),
-              const SizedBox(height: 12),
+              const SizedBox(height: 16),
               
               // Title
-              Text(
-                post.title ?? 'Untitled Post',
-                style: GoogleFonts.poppins(
-                  fontSize: 16,
-                  fontWeight: FontWeight.w600,
-                  color: Colors.black87,
+              Container(
+                margin: const EdgeInsets.only(right: 8),
+                child: Text(
+                  post.title ?? 'Untitled Post',
+                  style: GoogleFonts.poppins(
+                    fontSize: 16,
+                    fontWeight: FontWeight.w600,
+                    color: Colors.black.withOpacity(0.85),
+                    height: 1.3,
+                  ),
+                  maxLines: 2,
+                  overflow: TextOverflow.ellipsis,
                 ),
-                maxLines: 2,
-                overflow: TextOverflow.ellipsis,
               ),
-              const SizedBox(height: 8),
+              const SizedBox(height: 10),
               
               // Content preview
               if (post.content != null && post.content!.isNotEmpty)
-                Text(
-                  post.content!,
-                  style: GoogleFonts.poppins(
-                    fontSize: 14,
-                    color: Colors.grey[700],
-                    height: 1.4,
+                Container(
+                  margin: const EdgeInsets.only(right: 8),
+                  child: Text(
+                    post.content!,
+                    style: GoogleFonts.poppins(
+                      fontSize: 14,
+                      color: Colors.grey[700],
+                      height: 1.5,
+                      letterSpacing: 0.1,
+                    ),
+                    maxLines: 3,
+                    overflow: TextOverflow.ellipsis,
                   ),
-                  maxLines: 3,
-                  overflow: TextOverflow.ellipsis,
                 ),
-              const SizedBox(height: 12),
+              const SizedBox(height: 16),
               
               // Tags
               if (post.tags != null && post.tags!.isNotEmpty)
                 Wrap(
                   spacing: 8,
-                  runSpacing: 4,
+                  runSpacing: 8,
                   children: post.tags!.take(3).map((tag) {
                     return Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
                       decoration: BoxDecoration(
-                        color: const Color(0xFF6366F1).withOpacity(0.1),
-                        borderRadius: BorderRadius.circular(12),
+                        color: const Color(0xFF6366F1).withOpacity(0.08),
+                        borderRadius: BorderRadius.circular(16),
+                        border: Border.all(color: const Color(0xFF6366F1).withOpacity(0.15), width: 0.5),
                       ),
                       child: Text(
                         '#$tag',
@@ -180,104 +200,147 @@ class ForumPostCard extends StatelessWidget {
                   }).toList(),
                 ),
               if (post.tags != null && post.tags!.isNotEmpty)
-                const SizedBox(height: 12),
+                const SizedBox(height: 8), // Reduced gap between tags and upvote/downvote section
               
               // Footer with stats and actions
-              Row(
-                children: [
-                  // Upvote/Downvote
-                  Row(
-                    children: [
-                      InkWell(
-                        onTap: onUpvote,
+              Container(
+                padding: const EdgeInsets.only(top: 4, bottom: 0), // Reduced padding
+                decoration: BoxDecoration(
+                  border: Border(top: BorderSide(color: Colors.grey.withOpacity(0.1), width: 0.5)),
+                ),
+                child: Row(
+                  children: [
+                    // Upvote/Downvote
+                    Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                      decoration: BoxDecoration(
+                        color: Colors.grey.withOpacity(0.05),
                         borderRadius: BorderRadius.circular(20),
-                        child: Padding(
-                          padding: const EdgeInsets.all(4),
-                          child: Row(
-                            mainAxisSize: MainAxisSize.min,
-                            children: [
-                              const Icon(Icons.keyboard_arrow_up, size: 20, color: Colors.green),
-                              Text(
-                                '${post.upvoteCount ?? 0}',
-                                style: GoogleFonts.poppins(
-                                  fontSize: 12,
-                                  fontWeight: FontWeight.w500,
-                                  color: Colors.green,
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
                       ),
-                      const SizedBox(width: 8),
-                      InkWell(
-                        onTap: onDownvote,
+                      child: Row(
+                        children: [
+                          InkWell(
+                            onTap: onUpvote,
+                            borderRadius: BorderRadius.circular(20),
+                            child: Container(
+                              padding: const EdgeInsets.all(4),
+                              child: Row(
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  Icon(Icons.keyboard_arrow_up, size: 18, color: Colors.green.shade600),
+                                  const SizedBox(width: 2),
+                                  Text(
+                                    '${post.upvoteCount ?? 0}',
+                                    style: GoogleFonts.poppins(
+                                      fontSize: 12,
+                                      fontWeight: FontWeight.w600,
+                                      color: Colors.green.shade600,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ),
+                          const SizedBox(width: 4),
+                          Container(
+                            height: 12,
+                            width: 1,
+                            color: Colors.grey.withOpacity(0.2),
+                          ),
+                          const SizedBox(width: 4),
+                          InkWell(
+                            onTap: onDownvote,
+                            borderRadius: BorderRadius.circular(20),
+                            child: Container(
+                              padding: const EdgeInsets.all(4),
+                              child: Row(
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  Icon(Icons.keyboard_arrow_down, size: 18, color: Colors.red.shade600),
+                                  const SizedBox(width: 2),
+                                  Text(
+                                    '${post.downvoteCount ?? 0}',
+                                    style: GoogleFonts.poppins(
+                                      fontSize: 12,
+                                      fontWeight: FontWeight.w600,
+                                      color: Colors.red.shade600,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                    const SizedBox(width: 12),
+                    
+                    // Comments count
+                    Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                      decoration: BoxDecoration(
+                        color: Colors.grey.withOpacity(0.05),
                         borderRadius: BorderRadius.circular(20),
-                        child: Padding(
-                          padding: const EdgeInsets.all(4),
-                          child: Row(
-                            mainAxisSize: MainAxisSize.min,
-                            children: [
-                              const Icon(Icons.keyboard_arrow_down, size: 20, color: Colors.red),
-                              Text(
-                                '${post.downvoteCount ?? 0}',
-                                style: GoogleFonts.poppins(
-                                  fontSize: 12,
-                                  fontWeight: FontWeight.w500,
-                                  color: Colors.red,
-                                ),
-                              ),
-                            ],
+                      ),
+                      child: Row(
+                        children: [
+                          Icon(Icons.comment_outlined, size: 14, color: Colors.grey.shade700),
+                          const SizedBox(width: 4),
+                          Text(
+                            '${post.commentCount ?? 0}',
+                            style: GoogleFonts.poppins(
+                              fontSize: 12,
+                              fontWeight: FontWeight.w500,
+                              color: Colors.grey.shade700,
+                            ),
                           ),
-                        ),
+                        ],
                       ),
-                    ],
-                  ),
-                  const SizedBox(width: 16),
-                  
-                  // Comments count
-                  Row(
-                    children: [
-                      const Icon(Icons.comment_outlined, size: 16, color: Colors.grey),
-                      const SizedBox(width: 4),
-                      Text(
-                        '${post.commentCount ?? 0}',
-                        style: GoogleFonts.poppins(
-                          fontSize: 12,
-                          color: Colors.grey[600],
-                        ),
+                    ),
+                    const SizedBox(width: 12),
+                    
+                    // Views count
+                    Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                      decoration: BoxDecoration(
+                        color: Colors.grey.withOpacity(0.05),
+                        borderRadius: BorderRadius.circular(20),
                       ),
-                    ],
-                  ),
-                  const SizedBox(width: 16),
-                  
-                  // Views count
-                  Row(
-                    children: [
-                      const Icon(Icons.visibility_outlined, size: 16, color: Colors.grey),
-                      const SizedBox(width: 4),
-                      Text(
-                        '${post.views ?? 0}',
-                        style: GoogleFonts.poppins(
-                          fontSize: 12,
-                          color: Colors.grey[600],
-                        ),
+                      child: Row(
+                        children: [
+                          Icon(Icons.visibility_outlined, size: 14, color: Colors.grey.shade700),
+                          const SizedBox(width: 4),
+                          Text(
+                            '${post.views ?? 0}',
+                            style: GoogleFonts.poppins(
+                              fontSize: 12,
+                              fontWeight: FontWeight.w500,
+                              color: Colors.grey.shade700,
+                            ),
+                          ),
+                        ],
                       ),
-                    ],
-                  ),
-                  
-                  const Spacer(),
-                  
-                  // More options
-                  IconButton(
-                    onPressed: () {
-                      // Show more options menu
-                    },
-                    icon: const Icon(Icons.more_vert, size: 20, color: Colors.grey),
-                    padding: EdgeInsets.zero,
-                    constraints: const BoxConstraints(),
-                  ),
+                    ),
+                    
+                    const Spacer(),
+                    
+                    // More options
+                    Container(
+                      decoration: BoxDecoration(
+                        color: Colors.grey.withOpacity(0.05),
+                        shape: BoxShape.circle,
+                      ),
+                      child: IconButton(
+                        onPressed: () {
+                          // Show more options menu
+                        },
+                        icon: Icon(Icons.more_horiz, size: 18, color: Colors.grey.shade700),
+                        padding: const EdgeInsets.all(8),
+                        constraints: const BoxConstraints(),
+                      ),
+                    ),
                 ],
+              ),
               ),
             ],
           ),
