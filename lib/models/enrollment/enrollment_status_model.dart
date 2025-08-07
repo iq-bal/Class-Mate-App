@@ -15,7 +15,16 @@ class EnrollmentStatusModel {
   static String _formatDate(String dateString) {
     if (dateString.isEmpty) return '';
     try {
-      final DateTime date = DateTime.parse(dateString);
+      DateTime date;
+      // Check if the dateString is a Unix timestamp (all digits)
+      if (RegExp(r'^\d+$').hasMatch(dateString)) {
+        // Convert timestamp to DateTime
+        final timestamp = int.parse(dateString);
+        date = DateTime.fromMillisecondsSinceEpoch(timestamp);
+      } else {
+        // Parse as ISO date string
+        date = DateTime.parse(dateString);
+      }
       return DateFormat('MMM d, yyyy').format(date);
     } catch (e) {
       return dateString; // Return original if parsing fails

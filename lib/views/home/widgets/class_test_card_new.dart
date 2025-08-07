@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:classmate/core/helper_function.dart';
 
 class ClassTestCard extends StatelessWidget {
   final String subject;
@@ -84,7 +85,7 @@ class ClassTestCard extends StatelessWidget {
           ),
           SizedBox(height: 12),
           Text(
-            dueText,
+            HelperFunction.formatTimestamp(dueText),
             style: TextStyle(
               fontWeight: FontWeight.w600,
               color: Colors.black87,

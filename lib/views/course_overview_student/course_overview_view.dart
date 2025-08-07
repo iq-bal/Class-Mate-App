@@ -108,24 +108,73 @@ class _CourseOverviewViewState extends State<CourseOverviewView> {
                               
                               // Show status message if enrolled or if we have enrollment status
                               if (enrollState == CourseOverviewState.enrolled || _controller.enrollmentStatus != null) {
-                                return Padding(
+                                final status = _controller.enrollmentStatus?.status ?? 'Successfully enrolled';
+                                final isApproved = status.toLowerCase() == 'approved';
+                                
+                                return Container(
+                                  margin: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
+                                  decoration: BoxDecoration(
+                                    gradient: LinearGradient(
+                                      colors: isApproved 
+                                        ? [Colors.green.shade50, Colors.green.shade100]
+                                        : [Colors.orange.shade50, Colors.orange.shade100],
+                                      begin: Alignment.topLeft,
+                                      end: Alignment.bottomRight,
+                                    ),
+                                    borderRadius: BorderRadius.circular(12),
+                                    boxShadow: [
+                                      BoxShadow(
+                                        color: Colors.grey.withOpacity(0.2),
+                                        spreadRadius: 1,
+                                        blurRadius: 4,
+                                        offset: const Offset(0, 2),
+                                      ),
+                                    ],
+                                  ),
                                   padding: const EdgeInsets.all(16.0),
                                   child: Column(
                                     children: [
-                                      Text(
-                                        'Status: ${_controller.enrollmentStatus?.status ?? 'Successfully enrolled'}',
-                                        style: const TextStyle(color: Colors.green, fontWeight: FontWeight.bold),
-                                        textAlign: TextAlign.center,
+                                      Row(
+                                        mainAxisAlignment: MainAxisAlignment.center,
+                                        children: [
+                                          Icon(
+                                            isApproved ? Icons.check_circle : Icons.pending,
+                                            color: isApproved ? Colors.green : Colors.orange,
+                                            size: 20,
+                                          ),
+                                          const SizedBox(width: 8),
+                                          Text(
+                                            'Status: $status',
+                                            style: TextStyle(
+                                              color: isApproved ? Colors.green.shade800 : Colors.orange.shade800,
+                                              fontWeight: FontWeight.bold,
+                                              fontSize: 16,
+                                            ),
+                                          ),
+                                        ],
                                       ),
                                       if (_controller.enrollmentStatus?.enrolledAt != null)
                                         Padding(
-                                          padding: const EdgeInsets.only(top: 8.0),
-                                          child: Text(
-                                            'Enrolled on: ${_controller.enrollmentStatus!.formattedDate}',
-                                            style: const TextStyle(color: Colors.grey),
-                                            textAlign: TextAlign.center,
+                                          padding: const EdgeInsets.only(top: 12.0),
+                                          child: Row(
+                                            mainAxisAlignment: MainAxisAlignment.center,
+                                            children: [
+                                              const Icon(
+                                                Icons.calendar_today,
+                                                color: Colors.grey,
+                                                size: 16,
+                                              ),
+                                              const SizedBox(width: 8),
+                                              Text(
+                                                'Enrolled on: ${_controller.enrollmentStatus!.formattedDate}',
+                                                style: const TextStyle(
+                                                  color: Colors.grey,
+                                                  fontSize: 14,
+                                                ),
+                                              ),
+                                            ],
                                           ),
-                                        ),
+                                        ), 
                                     ],
                                   ),
                                 );
