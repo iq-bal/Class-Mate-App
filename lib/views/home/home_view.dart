@@ -5,7 +5,7 @@ import 'package:classmate/views/course_routine/course_routine_view.dart';
 import 'package:classmate/views/home/widgets/home_header.dart';
 import 'package:classmate/views/home/widgets/next_class_card.dart';
 import 'package:classmate/views/home/widgets/assignment_card.dart';
-import 'package:classmate/views/home/widgets/class_test_card.dart';
+import 'package:classmate/views/home/widgets/class_test_card_new.dart';
 import 'package:classmate/views/home/widgets/section_header.dart';
 import 'package:classmate/controllers/home/home_controller.dart';
 import 'package:classmate/models/home/home_page_model.dart';
@@ -363,192 +363,27 @@ class _HomeViewState extends State<HomeView> {
         final classTest = item['classTest'] as ClassTestHomeModel;
         final courseTitle = item['courseTitle'] as String;
         
-        return Container(
-            margin: const EdgeInsets.only(bottom: 16),
-            padding: const EdgeInsets.all(16),
-            decoration: BoxDecoration(
-              color: Colors.white,
-              borderRadius: BorderRadius.circular(16),
-              boxShadow: [
-                BoxShadow(
-                  color: Colors.grey.withOpacity(0.1),
-                  spreadRadius: 4,
-                  blurRadius: 12,
-                  offset: const Offset(0, 6),
-                ),
-              ],
-            ),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              // Top Row: Title and Status Badge
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  Expanded(
-                     child: Text(
-                       classTest.title,
-                       style: const TextStyle(
-                         fontSize: 20,
-                         fontWeight: FontWeight.w700,
-                         color: Color(0xFF1A1A1A),
-                         letterSpacing: -0.5,
-                       ),
-                     ),
-                   ),
-                   Container(
-                      padding: const EdgeInsets.symmetric(vertical: 6, horizontal: 12),
-                      decoration: BoxDecoration(
-                        color: Colors.blue[100],
-                        borderRadius: BorderRadius.circular(12),
-                      ),
-                      child: Text(
-                        "Test",
-                        style: TextStyle(
-                          fontSize: 12,
-                          fontWeight: FontWeight.w500,
-                          color: Colors.blue[800],
-                        ),
-                      ),
-                    ),
-                ],
-              ),
-              const SizedBox(height: 12),
-              
-              // Course Title
-               Container(
-                 padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-                 decoration: BoxDecoration(
-                   color: Colors.blue.shade50,
-                   borderRadius: BorderRadius.circular(12),
-                   border: Border.all(color: Colors.blue.shade100),
-                 ),
-                 child: Text(
-                   courseTitle,
-                   style: TextStyle(
-                     fontSize: 14,
-                     color: Colors.blue.shade700,
-                     fontWeight: FontWeight.w600,
-                     letterSpacing: 0.2,
-                   ),
-                 ),
-               ),
-               
-               if (classTest.description.isNotEmpty) ...[
-                 const SizedBox(height: 12),
-                 Text(
-                   classTest.description,
-                   style: TextStyle(
-                     fontSize: 15,
-                     color: Colors.grey[700],
-                     height: 1.5,
-                     fontWeight: FontWeight.w400,
-                   ),
-                   maxLines: 2,
-                   overflow: TextOverflow.ellipsis,
-                 ),
-               ],
-              
-              const SizedBox(height: 16),
-              
-              // Info Row with Icons
-               Row(
-                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                 children: [
-                   // Date Info
-                   Expanded(
-                     child: Row(
-                       children: [
-                         Container(
-                            padding: const EdgeInsets.all(8),
-                            decoration: BoxDecoration(
-                              color: _getDateBackgroundColor(classTest.date),
-                              borderRadius: BorderRadius.circular(8),
-                            ),
-                            child: Icon(
-                              Icons.calendar_today,
-                              size: 16,
-                              color: _getDateColor(classTest.date),
-                            ),
-                          ),
-                          const SizedBox(width: 8),
-                          Flexible(
-                            child: Text(
-                              _formatClassTestDate(classTest.date),
-                              style: TextStyle(
-                                fontSize: 13,
-                                fontWeight: FontWeight.w600,
-                                color: _getDateColor(classTest.date),
-                              ),
-                              overflow: TextOverflow.ellipsis,
-                            ),
-                          ),
-                       ],
-                     ),
-                   ),
-                   
-                   // Duration Info
-                   Expanded(
-                     child: Row(
-                       mainAxisAlignment: MainAxisAlignment.center,
-                       children: [
-                         Container(
-                           padding: const EdgeInsets.all(8),
-                           decoration: BoxDecoration(
-                             color: Colors.grey.shade100,
-                             borderRadius: BorderRadius.circular(8),
-                           ),
-                           child: Icon(
-                             Icons.timer,
-                             size: 16,
-                             color: Colors.grey.shade600,
-                           ),
-                         ),
-                         const SizedBox(width: 8),
-                         Text(
-                           '${classTest.duration}m',
-                           style: TextStyle(
-                             fontSize: 13,
-                             fontWeight: FontWeight.w500,
-                             color: Colors.black.withOpacity(0.7),
-                           ),
-                         ),
-                       ],
-                     ),
-                   ),
-                   
-                   // Marks Info
-                   Expanded(
-                     child: Row(
-                       mainAxisAlignment: MainAxisAlignment.end,
-                       children: [
-                         Container(
-                           padding: const EdgeInsets.all(8),
-                           decoration: BoxDecoration(
-                             color: Colors.grey.shade100,
-                             borderRadius: BorderRadius.circular(8),
-                           ),
-                           child: Icon(
-                             Icons.grade,
-                             size: 16,
-                             color: Colors.grey.shade600,
-                           ),
-                         ),
-                         const SizedBox(width: 8),
-                         Text(
-                           '${classTest.totalMarks}pts',
-                           style: TextStyle(
-                             fontSize: 13,
-                             fontWeight: FontWeight.w500,
-                             color: Colors.black.withOpacity(0.7),
-                           ),
-                         ),
-                       ],
-                     ),
-                   ),
-                 ],
-               ),
-            ],
+        // Calculate due text based on the date
+        String dueText = _formatDueDate(classTest.date);
+        
+        // Convert duration string to int for minutes
+        int durationMin = 0;
+        try {
+          durationMin = int.parse(classTest.duration);
+        } catch (e) {
+          // If parsing fails, use 0 as default
+          print('Failed to parse duration: ${classTest.duration}');
+        }
+        
+        return Padding(
+          padding: const EdgeInsets.only(bottom: 16),
+          child: ClassTestCard(
+            subject: courseTitle,
+            title: classTest.title,
+            description: classTest.description,
+            durationMin: durationMin,
+            points: classTest.totalMarks,
+            dueText: dueText,
           ),
         );
       },
