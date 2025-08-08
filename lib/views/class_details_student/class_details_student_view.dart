@@ -741,30 +741,335 @@ class _ClassDetailsStudentState extends State<ClassDetailsStudent> {
   void _showQuizResultDialog(StudentQuizSubmission submission) {
     showDialog(
       context: context,
-      builder: (context) => AlertDialog(
-        title: Text(
-          'Quiz Results',
-          style: GoogleFonts.inter(fontWeight: FontWeight.bold),
+      builder: (context) => Dialog.fullscreen(
+        child: Scaffold(
+          appBar: AppBar(
+            title: Text(
+              'Quiz Results',
+              style: GoogleFonts.inter(
+                fontSize: 20,
+                fontWeight: FontWeight.bold,
+                color: Colors.black87,
+              ),
+            ),
+            backgroundColor: Colors.blue.shade50,
+            elevation: 0,
+            leading: IconButton(
+              onPressed: () => Navigator.pop(context),
+              icon: const Icon(Icons.close),
+            ),
+          ),
+          body: Column(
+            children: [
+              // Summary Stats
+              Container(
+                padding: const EdgeInsets.all(20.0),
+                color: Colors.blue.shade50,
+                child: Row(
+                  children: [
+                    Expanded(
+                      child: _buildStatCard(
+                        'Score',
+                        '${submission.score}/${submission.totalMarks}',
+                        Icons.score,
+                        Colors.green,
+                      ),
+                    ),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: _buildStatCard(
+                        'Percentage',
+                        '${submission.percentage.toStringAsFixed(1)}%',
+                        Icons.percent,
+                        Colors.blue,
+                      ),
+                    ),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: _buildStatCard(
+                        'Time',
+                        '${submission.timeTaken}m',
+                        Icons.timer,
+                        Colors.orange,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              
+              // Questions and Answers
+              Expanded(
+                child: Container(
+                  padding: const EdgeInsets.all(20.0),
+                  child: submission.quiz?.questions != null
+                      ? ListView.builder(
+                          itemCount: submission.quiz!.questions!.length,
+                          itemBuilder: (context, index) {
+                            final question = submission.quiz!.questions![index];
+                            final userAnswer = submission.answers?.firstWhere(
+                              (a) => a.questionId == question.id,
+                              orElse: () => StudentQuizAnswer(
+                                questionId: question.id,
+                                selectedAnswer: '',
+                                isCorrect: false,
+                              ),
+                            );
+                            
+                            return Container(
+                              margin: const EdgeInsets.only(bottom: 20),
+                              padding: const EdgeInsets.all(16),
+                              decoration: BoxDecoration(
+                                color: Colors.white,
+                                borderRadius: BorderRadius.circular(12),
+                                border: Border.all(
+                                  color: userAnswer?.isCorrect == true 
+                                      ? Colors.green.shade300 
+                                      : Colors.red.shade300,
+                                  width: 2,
+                                ),
+                                boxShadow: [
+                                  BoxShadow(
+                                    color: Colors.grey.withOpacity(0.1),
+                                    spreadRadius: 1,
+                                    blurRadius: 5,
+                                    offset: const Offset(0, 2),
+                                  ),
+                                ],
+                              ),
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  // Question header
+                                  Row(
+                                    children: [
+                                      Container(
+                                        padding: const EdgeInsets.symmetric(
+                                          horizontal: 8,
+                                          vertical: 4,
+                                        ),
+                                        decoration: BoxDecoration(
+                                          color: userAnswer?.isCorrect == true 
+                                              ? Colors.green.shade100 
+                                              : Colors.red.shade100,
+                                          borderRadius: BorderRadius.circular(8),
+                                        ),
+                                        child: Row(
+                                          mainAxisSize: MainAxisSize.min,
+                                          children: [
+                                            Icon(
+                                              userAnswer?.isCorrect == true 
+                                                  ? Icons.check_circle 
+                                                  : Icons.cancel,
+                                              size: 16,
+                                              color: userAnswer?.isCorrect == true 
+                                                  ? Colors.green.shade600 
+                                                  : Colors.red.shade600,
+                                            ),
+                                            const SizedBox(width: 4),
+                                            Text(
+                                              'Question ${index + 1}',
+                                              style: GoogleFonts.inter(
+                                                fontSize: 12,
+                                                fontWeight: FontWeight.w600,
+                                                color: userAnswer?.isCorrect == true 
+                                                    ? Colors.green.shade700 
+                                                    : Colors.red.shade700,
+                                              ),
+                                            ),
+                                          ],
+                                        ),
+                                      ),
+                                      const Spacer(),
+                                      Text(
+                                        userAnswer?.isCorrect == true ? 'Correct' : 'Incorrect',
+                                        style: GoogleFonts.inter(
+                                          fontSize: 12,
+                                          fontWeight: FontWeight.w600,
+                                          color: userAnswer?.isCorrect == true 
+                                              ? Colors.green.shade600 
+                                              : Colors.red.shade600,
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                  
+                                  const SizedBox(height: 12),
+                                  
+                                  // Question text
+                                  Text(
+                                    question.question,
+                                    style: GoogleFonts.inter(
+                                      fontSize: 16,
+                                      fontWeight: FontWeight.w600,
+                                      color: Colors.black87,
+                                    ),
+                                  ),
+                                  
+                                  const SizedBox(height: 16),
+                                  
+                                  // Options
+                                  ..._buildResultOptions(question, userAnswer),
+                                  
+                                  if (userAnswer?.isCorrect == false) ...[
+                                    const SizedBox(height: 12),
+                                    Container(
+                                      padding: const EdgeInsets.all(12),
+                                      decoration: BoxDecoration(
+                                        color: Colors.green.shade50,
+                                        borderRadius: BorderRadius.circular(8),
+                                        border: Border.all(color: Colors.green.shade200),
+                                      ),
+                                      child: Row(
+                                        children: [
+                                          Icon(
+                                            Icons.lightbulb_outline,
+                                            size: 16,
+                                            color: Colors.green.shade600,
+                                          ),
+                                          const SizedBox(width: 8),
+                                          Text(
+                                            'Correct answer: ${question.answer}',
+                                            style: GoogleFonts.inter(
+                                              fontSize: 13,
+                                              fontWeight: FontWeight.w600,
+                                              color: Colors.green.shade700,
+                                            ),
+                                          ),
+                                        ],
+                                      ),
+                                    ),
+                                  ],
+                                ],
+                              ),
+                            );
+                          },
+                        )
+                      : Center(
+                          child: Text(
+                            'No detailed results available',
+                            style: GoogleFonts.inter(
+                              fontSize: 16,
+                              color: Colors.grey.shade600,
+                            ),
+                          ),
+                        ),
+                ),
+              ),
+            ],
+          ),
         ),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            _buildResultRow('Score', '${submission.score}/${submission.totalMarks}'),
-            _buildResultRow('Percentage', '${submission.percentage.toStringAsFixed(1)}%'),
-            _buildResultRow('Time Taken', '${submission.timeTaken} minutes'),
-            _buildResultRow('Attempt', '${submission.attemptNumber}'),
-            _buildResultRow('Submitted At', submission.submittedAt),
-          ],
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: Text('Close'),
+      ),
+    );
+  }
+
+  Widget _buildStatCard(String label, String value, IconData icon, Color color) {
+    return Container(
+      padding: const EdgeInsets.all(12),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: color.withOpacity(0.3)),
+      ),
+      child: Column(
+        children: [
+          Icon(icon, color: color, size: 20),
+          const SizedBox(height: 4),
+          Text(
+            value,
+            style: GoogleFonts.inter(
+              fontSize: 16,
+              fontWeight: FontWeight.bold,
+              color: color,
+            ),
+          ),
+          Text(
+            label,
+            style: GoogleFonts.inter(
+              fontSize: 11,
+              color: Colors.grey.shade600,
+            ),
           ),
         ],
       ),
     );
+  }
+
+  List<Widget> _buildResultOptions(StudentQuizQuestionWithAnswer question, StudentQuizAnswer? userAnswer) {
+    final options = [
+      ('A', question.options.a),
+      ('B', question.options.b),
+      ('C', question.options.c),
+      ('D', question.options.d),
+    ];
+
+    return options.map((option) {
+      final optionKey = option.$1;
+      final optionText = option.$2;
+      final isUserSelected = userAnswer?.selectedAnswer == optionKey;
+      final isCorrectAnswer = question.answer == optionKey;
+      
+      Color backgroundColor = Colors.grey.shade50;
+      Color borderColor = Colors.grey.shade300;
+      Color textColor = Colors.grey.shade700;
+      Widget? trailing;
+
+      if (isCorrectAnswer) {
+        backgroundColor = Colors.green.shade50;
+        borderColor = Colors.green.shade300;
+        textColor = Colors.green.shade700;
+        trailing = Icon(Icons.check, color: Colors.green.shade600, size: 20);
+      } else if (isUserSelected && !isCorrectAnswer) {
+        backgroundColor = Colors.red.shade50;
+        borderColor = Colors.red.shade300;
+        textColor = Colors.red.shade700;
+        trailing = Icon(Icons.close, color: Colors.red.shade600, size: 20);
+      }
+
+      return Container(
+        margin: const EdgeInsets.only(bottom: 8),
+        padding: const EdgeInsets.all(12),
+        decoration: BoxDecoration(
+          color: backgroundColor,
+          borderRadius: BorderRadius.circular(8),
+          border: Border.all(color: borderColor),
+        ),
+        child: Row(
+          children: [
+            Container(
+              width: 24,
+              height: 24,
+              decoration: BoxDecoration(
+                color: isCorrectAnswer ? Colors.green.shade600 : 
+                       isUserSelected ? Colors.red.shade600 : Colors.grey.shade400,
+                shape: BoxShape.circle,
+              ),
+              child: Center(
+                child: Text(
+                  optionKey,
+                  style: GoogleFonts.inter(
+                    fontSize: 12,
+                    fontWeight: FontWeight.bold,
+                    color: Colors.white,
+                  ),
+                ),
+              ),
+            ),
+            const SizedBox(width: 12),
+            Expanded(
+              child: Text(
+                optionText,
+                style: GoogleFonts.inter(
+                  fontSize: 14,
+                  color: textColor,
+                  fontWeight: FontWeight.w500,
+                ),
+              ),
+            ),
+            if (trailing != null) trailing,
+          ],
+        ),
+      );
+    }).toList();
   }
 
   Widget _buildResultRow(String label, String value) {

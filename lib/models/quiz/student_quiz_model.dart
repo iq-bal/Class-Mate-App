@@ -128,11 +128,13 @@ class StudentQuizInfo {
   final String id;
   final String testTitle;
   final StudentCourseInfo? course;
+  final List<StudentQuizQuestionWithAnswer>? questions;
 
   StudentQuizInfo({
     required this.id,
     required this.testTitle,
     this.course,
+    this.questions,
   });
 
   factory StudentQuizInfo.fromJson(Map<String, dynamic> json) {
@@ -142,6 +144,34 @@ class StudentQuizInfo {
       course: json['course'] != null 
           ? StudentCourseInfo.fromJson(json['course'])
           : null,
+      questions: json['questions'] != null 
+          ? (json['questions'] as List)
+              .map((q) => StudentQuizQuestionWithAnswer.fromJson(q))
+              .toList()
+          : null,
+    );
+  }
+}
+
+class StudentQuizQuestionWithAnswer {
+  final int id;
+  final String question;
+  final StudentQuizOptions options;
+  final String answer; // Correct answer
+
+  StudentQuizQuestionWithAnswer({
+    required this.id,
+    required this.question,
+    required this.options,
+    required this.answer,
+  });
+
+  factory StudentQuizQuestionWithAnswer.fromJson(Map<String, dynamic> json) {
+    return StudentQuizQuestionWithAnswer(
+      id: json['id'] ?? 0,
+      question: json['question']?.toString() ?? '',
+      options: StudentQuizOptions.fromJson(json['options'] ?? {}),
+      answer: json['answer']?.toString() ?? '',
     );
   }
 }

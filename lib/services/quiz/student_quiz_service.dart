@@ -190,9 +190,25 @@ class StudentQuizService {
             time_taken
             submitted_at
             attempt_number
+            answers {
+              question_id
+              is_correct
+              selected_answer
+            }
             quiz {
               id
               testTitle
+              questions {
+                id
+                question
+                options {
+                  A
+                  B
+                  C
+                  D
+                }
+                answer
+              }
               course {
                 title
                 course_code
