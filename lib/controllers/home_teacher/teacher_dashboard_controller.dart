@@ -47,6 +47,54 @@ class TeacherDashboardController {
     }
   }
   
+  Future<bool> updateCourse({
+    required String courseId,
+    required String title,
+    required String courseCode,
+    required String description,
+    required int credit,
+    required String excerpt,
+    required Map<String, List<String>> syllabus,
+  }) async {
+    if (_disposed) return false;
+    
+    try {
+      final updatedCourse = await _service.updateCourse(
+        courseId: courseId,
+        title: title,
+        courseCode: courseCode,
+        description: description,
+        credit: credit,
+        excerpt: excerpt,
+        syllabus: syllabus,
+      );
+      
+      if (updatedCourse != null && _dashboardData != null) {
+        // Update the course in the local data
+        final courseIndex = _dashboardData!.user.courses.indexWhere((course) => course.id == courseId);
+        if (courseIndex != -1) {
+          // Create a new list with the updated course
+          final updatedCourses = List<CourseModel>.from(_dashboardData!.user.courses);
+          updatedCourses[courseIndex] = updatedCourse;
+          
+          // Update the dashboard data
+          _dashboardData = TeacherDashboardModel(
+            user: UserModel(courses: updatedCourses),
+          );
+          
+          _stateNotifier.value = TeacherDashboardState.success;
+          return true;
+        }
+      }
+      return false;
+    } catch (e) {
+      if (_disposed) return false;
+      _errorMessage = e.toString();
+      print('Error updating course: $e');
+      return false;
+    }
+  }
+  
   void dispose() {
     _disposed = true;
     _stateNotifier.dispose();

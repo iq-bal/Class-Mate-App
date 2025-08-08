@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:classmate/controllers/home_teacher/teacher_dashboard_controller.dart';
 import 'package:classmate/views/home_teacher/widgets/teacher_course_card.dart';
+import 'package:classmate/views/home_teacher/widgets/update_course_dialog.dart';
 import 'package:classmate/views/course_detail_teacher/course_detail_teacher_view.dart';
 
 class HomeTeacherView extends StatefulWidget {
@@ -28,6 +29,27 @@ class _HomeTeacherViewState extends State<HomeTeacherView> {
 
   Future<void> _fetchCourses() async {
     await _controller.fetchMyCreatedCourses();
+  }
+
+  Future<void> _handleUpdateCourse(String courseId, Map<String, dynamic> updateData) async {
+    final success = await _controller.updateCourse(
+      courseId: courseId,
+      title: updateData['title'],
+      courseCode: updateData['courseCode'],
+      description: updateData['description'],
+      credit: updateData['credit'],
+      excerpt: updateData['excerpt'],
+      syllabus: updateData['syllabus'],
+    );
+
+    if (!success && mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Failed to update course'),
+          backgroundColor: Colors.red,
+        ),
+      );
+    }
   }
 
   @override
@@ -124,7 +146,6 @@ class _HomeTeacherViewState extends State<HomeTeacherView> {
       case TeacherDashboardState.success:
         return _buildSuccessState();
       case TeacherDashboardState.idle:
-      default:
         return const Center(
           child: CircularProgressIndicator(),
         );
@@ -244,6 +265,15 @@ class _HomeTeacherViewState extends State<HomeTeacherView> {
                           courseId: course.id,
                         ),
                       ),
+                    );
+                  },
+                  onEdit: () async {
+                    await showUpdateCourseDialog(
+                      context: context,
+                      course: course,
+                      onUpdate: (updateData) async {
+                        await _handleUpdateCourse(course.id, updateData);
+                      },
                     );
                   },
                 );

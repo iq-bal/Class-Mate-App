@@ -6,11 +6,13 @@ import 'package:classmate/config/app_config.dart';
 class TeacherCourseCard extends StatelessWidget {
   final CourseModel course;
   final VoidCallback? onTap;
+  final VoidCallback? onEdit;
 
   const TeacherCourseCard({
     super.key,
     required this.course,
     this.onTap,
+    this.onEdit,
   });
 
   @override
@@ -34,39 +36,74 @@ class TeacherCourseCard extends StatelessWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // Course Image
-            Container(
-              height: 120,
-              width: double.infinity,
-              decoration: BoxDecoration(
-                borderRadius: const BorderRadius.only(
-                  topLeft: Radius.circular(16),
-                  topRight: Radius.circular(16),
+                          // Course Image with Edit Button
+            Stack(
+              children: [
+                Container(
+                  height: 120,
+                  width: double.infinity,
+                  decoration: BoxDecoration(
+                    borderRadius: const BorderRadius.only(
+                      topLeft: Radius.circular(16),
+                      topRight: Radius.circular(16),
+                    ),
+                    gradient: LinearGradient(
+                      begin: Alignment.topLeft,
+                      end: Alignment.bottomRight,
+                      colors: [
+                        Colors.blue.shade400,
+                        Colors.blue.shade600,
+                      ],
+                    ),
+                  ),
+                  child: course.image != null
+                      ? ClipRRect(
+                          borderRadius: const BorderRadius.only(
+                            topLeft: Radius.circular(16),
+                            topRight: Radius.circular(16),
+                          ),
+                          child: Image.network(
+                            '${AppConfig.imageServer}${course.image}',
+                            fit: BoxFit.cover,
+                            errorBuilder: (context, error, stackTrace) {
+                              return _buildDefaultImage();
+                            },
+                          ),
+                        )
+                      : _buildDefaultImage(),
                 ),
-                gradient: LinearGradient(
-                  begin: Alignment.topLeft,
-                  end: Alignment.bottomRight,
-                  colors: [
-                    Colors.blue.shade400,
-                    Colors.blue.shade600,
-                  ],
-                ),
-              ),
-              child: course.image != null
-                  ? ClipRRect(
-                      borderRadius: const BorderRadius.only(
-                        topLeft: Radius.circular(16),
-                        topRight: Radius.circular(16),
+                // Edit Button
+                if (onEdit != null)
+                  Positioned(
+                    top: 8,
+                    right: 8,
+                    child: GestureDetector(
+                      onTap: () {
+                        // Prevent the card's onTap from firing
+                        onEdit?.call();
+                      },
+                      child: Container(
+                        padding: const EdgeInsets.all(8),
+                        decoration: BoxDecoration(
+                          color: Colors.white.withOpacity(0.9),
+                          borderRadius: BorderRadius.circular(8),
+                          boxShadow: [
+                            BoxShadow(
+                              color: Colors.black.withOpacity(0.1),
+                              blurRadius: 4,
+                              offset: const Offset(0, 2),
+                            ),
+                          ],
+                        ),
+                        child: Icon(
+                          Icons.edit,
+                          size: 18,
+                          color: Colors.blue.shade600,
+                        ),
                       ),
-                      child: Image.network(
-                        '${AppConfig.imageServer}${course.image}',
-                        fit: BoxFit.cover,
-                        errorBuilder: (context, error, stackTrace) {
-                          return _buildDefaultImage();
-                        },
-                      ),
-                    )
-                  : _buildDefaultImage(),
+                    ),
+                  ),
+              ],
             ),
             
             // Course Content

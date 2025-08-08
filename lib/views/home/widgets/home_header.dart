@@ -25,19 +25,41 @@ class HomeHeader extends StatefulWidget {
   State<HomeHeader> createState() => _HomeHeaderState();
 }
 
-class _HomeHeaderState extends State<HomeHeader> {
+class _HomeHeaderState extends State<HomeHeader> with SingleTickerProviderStateMixin {
+  // Using TickerProvider from State for animations
   IO.Socket? _socket;
   Timer? _reconnectTimer;
   Timer? _sessionCheckTimer;
-  bool _isJoinButtonEnabled = false;
   bool _hasActiveSession = false;
-  String? _currentSessionId;
   final TokenStorage _tokenStorage = TokenStorage();
+
+  late final AnimationController _liveBlinkController;
+  late final Animation<double> _liveBlinkScale;
 
   @override
   void initState() {
     super.initState();
+    _liveBlinkController = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 900),
+    )..repeat(reverse: true);
+    _liveBlinkScale = Tween<double>(begin: 0.7, end: 1.0).animate(
+      CurvedAnimation(parent: _liveBlinkController, curve: Curves.easeInOut),
+    );
     _initializeSocket();
+  }
+
+  @override
+  void didUpdateWidget(HomeHeader oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (oldWidget.courseId != widget.courseId) {
+      if (oldWidget.courseId != null) {
+        _socket?.emit('unsubscribeFromCourse', {
+          'course_id': oldWidget.courseId,
+        });
+      }
+      _subscribeToCourse();
+    }
   }
 
   @override
@@ -46,6 +68,7 @@ class _HomeHeaderState extends State<HomeHeader> {
     _sessionCheckTimer?.cancel();
     _unsubscribeFromCourse();
     _socket?.disconnect();
+    _liveBlinkController.dispose();
     super.dispose();
   }
 
@@ -115,23 +138,8 @@ class _HomeHeaderState extends State<HomeHeader> {
         
         setState(() {
           _hasActiveSession = directSessionId != null || activeSessions.isNotEmpty;
-          _isJoinButtonEnabled = directSessionId != null || activeSessions.isNotEmpty;
-          
-          if (directSessionId != null) {
-               // Use direct session ID from response
-               _currentSessionId = directSessionId;
-             } else if (activeSessions.isNotEmpty) {
-               // Extract sessionId from activeSessions array (camelCase as per data structure)
-               _currentSessionId = activeSessions.first['sessionId'] ?? 
-                                 activeSessions.first['session_id'] ?? 
-                                 activeSessions.first['_id'] ?? 
-                                 activeSessions.first['id'];
-          } else {
-            _currentSessionId = null;
-          }
         });
-        
-        print('📊 Button state from current sessions - hasActiveSession: $_hasActiveSession, isEnabled: $_isJoinButtonEnabled, sessionId: $_currentSessionId');
+        print('📊 Live state from current sessions - hasActiveSession: $_hasActiveSession');
       }
     });
 
@@ -143,8 +151,6 @@ class _HomeHeaderState extends State<HomeHeader> {
       if (mounted && data['course_id'] == widget.courseId) {
         setState(() {
           _hasActiveSession = true;
-          _isJoinButtonEnabled = true;
-          _currentSessionId = data['session_id'];
         });
         // Show notification that session started
         ScaffoldMessenger.of(context).showSnackBar(
@@ -162,8 +168,6 @@ class _HomeHeaderState extends State<HomeHeader> {
       if (mounted && data['course_id'] == widget.courseId) {
         setState(() {
           _hasActiveSession = false;
-          _isJoinButtonEnabled = false;
-          _currentSessionId = null;
         });
         // Show notification that session ended
         ScaffoldMessenger.of(context).showSnackBar(
@@ -201,23 +205,8 @@ class _HomeHeaderState extends State<HomeHeader> {
           
           setState(() {
             _hasActiveSession = directSessionId != null || activeSessions.isNotEmpty;
-            _isJoinButtonEnabled = directSessionId != null || activeSessions.isNotEmpty;
-            
-            if (directSessionId != null) {
-               // Use direct session ID from response
-               _currentSessionId = directSessionId;
-             } else if (activeSessions.isNotEmpty) {
-               // Extract sessionId from activeSessions array (camelCase as per data structure)
-               _currentSessionId = activeSessions.first['sessionId'] ?? 
-                                 activeSessions.first['session_id'] ?? 
-                                 activeSessions.first['_id'] ?? 
-                                 activeSessions.first['id'];
-            } else {
-              _currentSessionId = null;
-            }
           });
-          
-          print('📊 Button state updated - hasActiveSession: $_hasActiveSession, isEnabled: $_isJoinButtonEnabled, sessionId: $_currentSessionId');
+          print('📊 Live state updated - hasActiveSession: $_hasActiveSession');
         } else {
           print('📊 Ignoring data for different course: ${data['course_id']} vs ${widget.courseId}');
         }
@@ -229,38 +218,12 @@ class _HomeHeaderState extends State<HomeHeader> {
       print('Active sessions error: ${error['message']}');
       if (mounted) {
         setState(() {
-          _isJoinButtonEnabled = false;
           _hasActiveSession = false;
         });
       }
     });
 
-    // Listen for attendance session join responses
-    _socket?.on('attendanceSessionJoined', (data) {
-      print('✅ Successfully joined attendance session: ${data['session_id']}');
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('✅ Successfully joined attendance session'),
-            backgroundColor: Colors.green,
-            duration: const Duration(seconds: 3),
-          ),
-        );
-      }
-    });
-
-    _socket?.on('attendanceError', (error) {
-      print('❌ Failed to join attendance session: ${error['message']}');
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('❌ Failed to join session: ${error['message']}'),
-            backgroundColor: Colors.red,
-            duration: const Duration(seconds: 3),
-          ),
-        );
-      }
-    });
+    // Remove join listeners; not needed in live-indicator-only UI
   }
 
   void _subscribeToCourse() {
@@ -277,7 +240,13 @@ class _HomeHeaderState extends State<HomeHeader> {
       print('📡 Requested current active sessions for course: ${widget.courseId}');
       
       // Start periodic session check as fallback
-      _startSessionCheck();
+      _sessionCheckTimer?.cancel();
+      _sessionCheckTimer = Timer.periodic(const Duration(seconds: 30), (timer) {
+        if (widget.courseId != null && _socket?.connected == true) {
+          print('🔄 Periodic session check for course: ${widget.courseId}');
+          _socket?.emit('getActiveSessions', {'course_id': widget.courseId});
+        }
+      });
     } else {
       print('❌ Cannot subscribe - courseId: ${widget.courseId}, socket connected: ${_socket?.connected}');
     }
@@ -292,49 +261,8 @@ class _HomeHeaderState extends State<HomeHeader> {
     }
   }
 
-  void _startSessionCheck() {
-    _sessionCheckTimer?.cancel();
-    _sessionCheckTimer = Timer.periodic(const Duration(seconds: 30), (timer) {
-      if (widget.courseId != null && _socket?.connected == true) {
-        print('🔄 Periodic session check for course: ${widget.courseId}');
-        _socket?.emit('getActiveSessions', {'course_id': widget.courseId});
-      }
-    });
-  }
 
-  void _joinAttendanceSession() {
-    if (_currentSessionId != null && _socket?.connected == true) {
-      print('🚀 Joining attendance session: $_currentSessionId');
-      _socket?.emit('joinAttendanceSession', {
-        'session_id': _currentSessionId,
-      });
-    } else {
-      print('❌ Cannot join session - sessionId: $_currentSessionId, socket connected: ${_socket?.connected}');
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('❌ Unable to join session. Please try again.'),
-            backgroundColor: Colors.red,
-            duration: Duration(seconds: 2),
-          ),
-        );
-      }
-    }
-  }
-
-  @override
-  void didUpdateWidget(HomeHeader oldWidget) {
-    super.didUpdateWidget(oldWidget);
-    if (oldWidget.courseId != widget.courseId) {
-      // Unsubscribe from old course and subscribe to new one
-      if (oldWidget.courseId != null) {
-        _socket?.emit('unsubscribeFromCourse', {
-          'course_id': oldWidget.courseId,
-        });
-      }
-      _subscribeToCourse();
-    }
-  }
+  // Join flow removed; we only indicate live status visually
 
   List<DateTime> _generateWeekDates() {
     final today = DateTime.now();
@@ -453,7 +381,7 @@ class _HomeHeaderState extends State<HomeHeader> {
           ),
           const SizedBox(height: 16),
 
-          // Current Class
+          // Current Class + Live indicator (no join button)
           Container(
             decoration: BoxDecoration(
               color: Colors.yellow[100],
@@ -484,34 +412,63 @@ class _HomeHeaderState extends State<HomeHeader> {
                     ),
                   ],
                 ),
-                ElevatedButton(
-                  onPressed: _isJoinButtonEnabled ? () {
-                    print('🚀 Join button pressed - courseId: ${widget.courseId}');
-                    _joinAttendanceSession();
-                  } : () {
-                    print('❌ Join button pressed but disabled - hasActiveSession: $_hasActiveSession');
-                    // Show a message to user about why button is disabled
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(
-                        content: Text('No active attendance session found. Please wait for teacher to start the session.'),
-                        backgroundColor: Colors.orange,
-                        duration: Duration(seconds: 2),
-                      ),
-                    );
-                  },
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: _isJoinButtonEnabled ? Colors.blue[900] : Colors.grey[400],
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(8),
-                    ),
-                    padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+                  decoration: BoxDecoration(
+                    gradient: _hasActiveSession
+                        ? LinearGradient(
+                            colors: [Colors.green.shade400, Colors.green.shade600],
+                            begin: Alignment.topLeft,
+                            end: Alignment.bottomRight,
+                          )
+                        : null,
+                    color: _hasActiveSession ? null : Colors.grey.shade200,
+                    borderRadius: BorderRadius.circular(20),
+                    boxShadow: _hasActiveSession
+                        ? [
+                            BoxShadow(
+                              color: Colors.green.withOpacity(0.25),
+                              blurRadius: 10,
+                              offset: const Offset(0, 4),
+                            ),
+                          ]
+                        : null,
                   ),
-                  child: Text(
-                    _hasActiveSession ? "Join Session" : "No Active Session",
-                    style: TextStyle(
-                      fontSize: 14, 
-                      color: _isJoinButtonEnabled ? Colors.white : Colors.grey[600],
-                    ),
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      if (_hasActiveSession)
+                        ScaleTransition(
+                          scale: _liveBlinkScale,
+                          child: Container(
+                            width: 10,
+                            height: 10,
+                            decoration: const BoxDecoration(
+                              color: Colors.white,
+                              shape: BoxShape.circle,
+                            ),
+                          ),
+                        )
+                      else ...[
+                        Container(
+                          width: 8,
+                          height: 8,
+                          decoration: BoxDecoration(
+                            color: Colors.grey,
+                            shape: BoxShape.circle,
+                          ),
+                        ),
+                        const SizedBox(width: 8),
+                      ],
+                      Text(
+                        _hasActiveSession ? 'Online' : 'Offline',
+                        style: TextStyle(
+                          color: _hasActiveSession ? Colors.white : Colors.grey,
+                          fontWeight: FontWeight.bold,
+                          letterSpacing: _hasActiveSession ? 1.0 : 0.2,
+                        ),
+                      ),
+                    ],
                   ),
                 ),
               ],

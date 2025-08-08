@@ -1,5 +1,3 @@
-import 'package:classmate/services/notification/notification_service.dart';
-import 'package:classmate/services/notification_service.dart';
 import 'package:flutter/material.dart';
 import 'package:classmate/controllers/attendance/attendance_controller.dart';
 import 'package:classmate/controllers/attendance/realtime_attendance_controller.dart';
@@ -26,7 +24,6 @@ class AttendanceView extends StatefulWidget {
 class _AttendanceViewState extends State<AttendanceView> {
   final AttendanceController _attendanceController = AttendanceController();
   final RealtimeAttendanceController _realtimeController = RealtimeAttendanceController();
-  final SocketNotificationService _notificationService = SocketNotificationService();
 
   bool _isSessionActive = false;
   String? _currentSessionId;
@@ -35,27 +32,8 @@ class _AttendanceViewState extends State<AttendanceView> {
   void initState() {
     super.initState();
     _fetchApprovedStudents();
-    // _initializeRealtimeController();
   }
 
-  Future<void> _initializeRealtimeController() async {
-    try {
-      
-      await _realtimeController.initialize();
-      
-      // Listen for session updates
-      _realtimeController.isSessionActive.addListener(() {
-        if (mounted) {
-          setState(() {
-            _isSessionActive = _realtimeController.isSessionActive.value;
-            _currentSessionId = _realtimeController.activeSessionId.value;
-          });
-        }
-      });
-    } catch (e) {
-      debugPrint('Failed to initialize realtime controller: $e');
-    }
-  }
 
   Future<void> _fetchApprovedStudents() async {
     await _attendanceController.fetchApprovedStudents(widget.courseId);
@@ -147,12 +125,7 @@ class _AttendanceViewState extends State<AttendanceView> {
         throw Exception('No active session');
       }
       await _attendanceController.markAttendance(_currentSessionId!, studentId, status);
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text('Student marked as $status'),
-          backgroundColor: status == 'present' ? Colors.green : Colors.red,
-        ),
-      );
+      // No success snackbar per requirement
     } catch (e) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
@@ -163,35 +136,7 @@ class _AttendanceViewState extends State<AttendanceView> {
     }
   }
 
-  String _formatTime(DateTime dateTime) {
-    final now = DateTime.now();
-    final difference = now.difference(dateTime);
-    
-    if (difference.inMinutes < 1) {
-      return 'just now';
-    } else if (difference.inMinutes < 60) {
-      return '${difference.inMinutes}m ago';
-    } else if (difference.inHours < 24) {
-      return '${difference.inHours}h ago';
-    } else {
-      return '${dateTime.hour.toString().padLeft(2, '0')}:${dateTime.minute.toString().padLeft(2, '0')}';
-    }
-  }
-
-  Color _getStatusColor(String status) {
-    switch (status.toLowerCase()) {
-      case 'present':
-        return Colors.green;
-      case 'absent':
-        return Colors.red;
-      case 'late':
-        return Colors.orange;
-      case 'excused':
-        return Colors.blue;
-      default:
-        return Colors.grey;
-    }
-  }
+  
 
   @override
   Widget build(BuildContext context) {
@@ -422,7 +367,7 @@ class _AttendanceViewState extends State<AttendanceView> {
                           child: AttendanceStudentTile(
                             enrollment: enrollment,
                             isSessionActive: _isSessionActive,
-                            attendanceStatus: _realtimeController.getStudentAttendanceStatus(enrollment.student.id),
+                            attendanceStatus: _attendanceController.getStudentAttendanceStatus(enrollment.student.id),
                             isOnline: isOnline,
                             onMarkPresent: () => _markAttendance(enrollment.student.id, 'present'),
                             onMarkAbsent: () => _markAttendance(enrollment.student.id, 'absent'),

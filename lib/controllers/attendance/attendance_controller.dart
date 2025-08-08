@@ -1,4 +1,4 @@
-import 'package:classmate/services/notification/notification_service.dart';
+// import 'package:classmate/services/notification/notification_service.dart';
 import 'package:flutter/foundation.dart';
 import 'package:classmate/models/course_detail_teacher/enrollment_model.dart';
 import 'package:classmate/services/attendance/attendance_service.dart';
@@ -26,13 +26,21 @@ class AttendanceController {
   List<EnrollmentModel> get approvedStudents => _approvedStudents;
   String? get errorMessage => _errorMessage;
 
-  final SocketNotificationService _notificationService = SocketNotificationService();
+  // SocketNotificationService retained for future use; currently unused
+  // final SocketNotificationService _notificationService = SocketNotificationService();
   
   int get presentCount => _studentAttendanceStatus.values.where((status) => status == 'present').length;
-  int get absentCount => _studentAttendanceStatus.values.where((status) => status == 'absent').length;
+  int get absentCount => _approvedStudents.length - presentCount;
   
   String? getStudentAttendanceStatus(String studentId) {
-    return _studentAttendanceStatus[studentId];
+    // Return 'absent' by default if student hasn't been explicitly marked
+    return _studentAttendanceStatus[studentId] ?? 'absent';
+  }
+
+  // Force UI to rebuild without toggling the enum value
+  void _notifyStateListeners() {
+    // ignore: invalid_use_of_protected_member, invalid_use_of_visible_for_testing_member
+    _stateNotifier.notifyListeners();
   }
   
   Future<void> fetchApprovedStudents(String courseId) async {
@@ -112,13 +120,16 @@ class AttendanceController {
   
   Future<void> markAttendance(String sessionId, String studentId, String status) async {
     try {
-      if(status=="present"){
+      // Optimistically update local state so UI reflects immediately
+      _studentAttendanceStatus[studentId] = status.toLowerCase();
+      _notifyStateListeners();
+
+      // Send event to server
+      if (status.toLowerCase() == "present") {
         _realtimeService.markStudentPresent(sessionId, studentId);
-      }
-      else{
+      } else {
         _realtimeService.markStudentAbsent(sessionId, studentId);
       }
-      _stateNotifier.value = AttendanceState.success;
     } catch (e) {
       if (kDebugMode) {
         print('Error marking attendance: $e');
@@ -147,7 +158,7 @@ class AttendanceController {
       if (studentId != null) {
         // Mark student as present when they join
         _studentAttendanceStatus[studentId] = 'present';
-        _stateNotifier.value = AttendanceState.success; // Trigger UI update
+        _notifyStateListeners();
       }
     });
     
@@ -160,7 +171,7 @@ class AttendanceController {
       if (studentId != null) {
         // Mark student as absent when they leave
         _studentAttendanceStatus[studentId] = 'absent';
-        _stateNotifier.value = AttendanceState.success; // Trigger UI update
+        _notifyStateListeners();
       }
     });
     
@@ -173,7 +184,53 @@ class AttendanceController {
       final status = data['status'] as String?;
       if (studentId != null && status != null) {
         _studentAttendanceStatus[studentId] = status;
-        _stateNotifier.value = AttendanceState.success; // Trigger UI update
+        _notifyStateListeners();
+      }
+    });
+    
+    // Listen for student marked present events (teacher notification)
+    _realtimeService.onStudentMarkedPresent((data) {
+      if (kDebugMode) {
+        print('Student marked present: $data');
+      }
+      final studentId = data['student_id'] as String?;
+      // final attendanceRecord = data['attendanceRecord'] as Map<String, dynamic>?;
+      
+      if (studentId != null) {
+        // Update attendance status to present
+        _studentAttendanceStatus[studentId] = 'present';
+        _notifyStateListeners();
+        
+        if (kDebugMode) {
+          print('Updated student $studentId attendance status to present');
+        }
+        
+        // Find student name for notification
+        // final student = _approvedStudents.firstWhere(
+        //   (enrollment) => enrollment.student.id == studentId,
+        //   orElse: () => _approvedStudents.first,
+        // );
+        
+        // No UI toast/notification required by current UX
+      }
+    });
+    
+    // Listen for student marked absent events (teacher notification)
+    _realtimeService.onStudentMarkedAbsent((data) {
+      if (kDebugMode) {
+        print('Student marked absent: $data');
+      }
+      final studentId = data['student_id'] as String?;
+      // final attendanceRecord = data['attendanceRecord'] as Map<String, dynamic>?;
+      
+      if (studentId != null) {
+        // Update attendance status to absent
+        _studentAttendanceStatus[studentId] = 'absent';
+        _notifyStateListeners();
+        
+        if (kDebugMode) {
+          print('Updated student $studentId attendance status to absent');
+        }
       }
     });
     
@@ -195,6 +252,8 @@ class AttendanceController {
       _stateNotifier.value = AttendanceState.error;
     });
   }
+
+  // Notification hook intentionally disabled based on current UX
 
   void dispose() {
     _realtimeService.removeAllListeners();
