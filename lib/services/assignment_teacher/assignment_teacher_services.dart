@@ -106,8 +106,13 @@ class AssignmentTeacherServices {
           created_at
           teacher {
             id
-            name
-            profile_picture
+            department
+            designation
+            user {
+              id
+              name
+              profile_picture
+            }
           }
         }
       }

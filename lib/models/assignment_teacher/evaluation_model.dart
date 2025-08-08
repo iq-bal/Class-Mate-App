@@ -51,7 +51,22 @@ class EvaluationModel {
     final submission = SubmissionEntity.fromJson(adjustedJson);
     final student = StudentEntity.fromJson(submissionJson['student'] as Map<String, dynamic>);
     final assignment = AssignmentEntity.fromJson(submissionJson['assignment'] as Map<String, dynamic>);
-    final teacher = TeacherEntity.fromJson(submissionJson['assignment']['teacher'] as Map<String, dynamic>);
+    
+    // Handle the new nested teacher structure
+    final teacherData = submissionJson['assignment']['teacher'] as Map<String, dynamic>;
+    final userData = teacherData['user'] as Map<String, dynamic>;
+    
+    // Merge teacher and user data for TeacherEntity
+    final mergedTeacherData = {
+      'id': teacherData['id'],
+      'department': teacherData['department'],
+      'designation': teacherData['designation'],
+      'name': userData['name'],
+      'profile_picture': userData['profile_picture'],
+      'user_id': userData['id'],
+    };
+    
+    final teacher = TeacherEntity.fromJson(mergedTeacherData);
 
     return EvaluationModel(
       submission: submission,

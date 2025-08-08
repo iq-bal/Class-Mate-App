@@ -5,6 +5,7 @@ import 'package:classmate/views/assignment/widgets/custom_app_bar.dart';
 import 'package:classmate/views/assignment/widgets/info_card.dart';
 import 'package:classmate/views/assignment/widgets/evaluation_card.dart';
 import 'package:classmate/views/assignment/widgets/feedback_card.dart';
+import 'package:classmate/utils/image_helper.dart';
 
 class AssessmentsView extends StatelessWidget {
   final AssignmentDetailModel assignmentDetail;
@@ -36,6 +37,8 @@ class AssessmentsView extends StatelessWidget {
       return 'Invalid date';
     }
   }
+
+
 
   @override
   Widget build(BuildContext context) {
@@ -94,7 +97,7 @@ class AssessmentsView extends StatelessWidget {
                     ),
                     const SizedBox(height: 16),
                     FeedbackCard(
-                      avatarUrl: assignmentDetail.teacher?.profilePicture ?? 'https://via.placeholder.com/150',
+                      avatarUrl: ImageHelper.getFullImageUrl(assignmentDetail.teacher?.profilePicture),
                       date: _formatEvaluatedDate(assignmentDetail.submission?.evaluatedAt),
                       feedback: assignmentDetail.submission?.teacherComments?.isNotEmpty == true 
                           ? assignmentDetail.submission!.teacherComments! 

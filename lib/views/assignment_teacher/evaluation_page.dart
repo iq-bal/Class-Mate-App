@@ -1,5 +1,3 @@
-import 'dart:math';
-
 import 'package:flutter/material.dart';
 import 'package:classmate/views/assignment/widgets/info_card.dart';
 import 'package:classmate/views/assignment/widgets/evaluation_card.dart';
@@ -7,6 +5,7 @@ import 'package:classmate/views/assignment/widgets/feedback_card.dart';
 import '../../controllers/assignment_teacher/assignment_teacher_controller.dart';
 import 'pdf_viewer_page.dart';
 import 'package:classmate/utils/custom_app_bar.dart';
+import 'package:classmate/utils/image_helper.dart';
 import 'package:intl/intl.dart';
 
 class EvaluationPage extends StatefulWidget {
@@ -287,6 +286,8 @@ class _EvaluationPageState extends State<EvaluationPage> {
     }
   }
 
+
+
   // Build the main content using the updated CustomAppBar with a popup menu.
   Widget buildMainContent(BuildContext context) {
     final bottomPadding = MediaQuery.of(context).viewInsets.bottom;
@@ -356,7 +357,7 @@ class _EvaluationPageState extends State<EvaluationPage> {
                       ),
                       const SizedBox(height: 16),
                       FeedbackCard(
-                        avatarUrl: evaluation.teacher.profilePicture ?? 'https://via.placeholder.com/150',
+                        avatarUrl: ImageHelper.getFullImageUrl(evaluation.teacher.profilePicture),
                         date: _formatEvaluatedDate(evaluation.submission.evaluatedAt),
                         feedback: evaluation.submission.teacherComments ?? 'No feedback provided yet',
                         author: evaluation.teacher.name ?? 'Teacher',
