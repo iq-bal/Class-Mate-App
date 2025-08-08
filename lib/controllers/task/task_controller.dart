@@ -36,6 +36,20 @@ class TaskController {
     }
   }
 
+  Future<void> getTasksByDate(DateTime date) async {
+    stateNotifier.value = TaskState.loading;
+    errorMessage = '';
+    try {
+      // Format date as YYYY-MM-DD
+      final formattedDate = '${date.year}-${date.month.toString().padLeft(2, '0')}-${date.day.toString().padLeft(2, '0')}';
+      tasks = await _taskService.getTasksByDate(formattedDate);
+      stateNotifier.value = TaskState.success;
+    } catch (e) {
+      errorMessage = 'Failed to get tasks by date: $e';
+      stateNotifier.value = TaskState.error;
+    }
+  }
+
   Future<void> createTask(TaskModel task) async {
     stateNotifier.value = TaskState.loading;
     errorMessage = '';

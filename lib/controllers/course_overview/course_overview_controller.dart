@@ -33,11 +33,14 @@ class CourseOverviewController {
       enrollmentStatus = await _courseOverviewService.getEnrollmentStatus(courseId);
       if (enrollmentStatus != null) {
         enrollButtonText = enrollmentStatus!.status;
+        print('Enrollment status found: ${enrollmentStatus!.status}');
       } else {
         enrollButtonText = 'Enroll';
+        print('No enrollment status found - user can enroll');
       }
     } catch (error) {
       errorMessage = error.toString();
+      enrollButtonText = 'Enroll'; // Fallback to enroll if there's an error
       // Don't change the state here, just log the error
       print('Error checking enrollment status: $error');
     }
@@ -47,7 +50,7 @@ class CourseOverviewController {
     stateNotifier.value = CourseOverviewState.enrolling;
     try {
       final result = await _courseOverviewService.enrollInCourse(courseId);
-      if (result != null && result['id'] != null) {
+      if (result['id'] != null) {
         // Update enrollment status after successful enrollment
         await checkEnrollmentStatus(courseId);
         stateNotifier.value = CourseOverviewState.enrolled;

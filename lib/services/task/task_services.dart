@@ -115,6 +115,59 @@ class TaskService {
     }
   }
 
+  Future<List<TaskModel>> getTasksByDate(String date) async {
+    try {
+      final dio = dioClient.getDio(AppConfig.graphqlServer);
+      const String query = r'''
+      query GetTasksByDate($date: String!) {
+        tasksByUserAndDate(date: $date) {
+          id
+          title
+          category
+          date
+          start_time
+          end_time
+          status
+          participants {
+            id
+            name
+            email
+            status
+            profile_picture
+          }
+        }
+      }
+      ''';
+      
+      final response = await dio.post(
+        '/',
+        data: {
+          'query': query,
+          'variables': {
+            'date': date,
+          },
+        },
+      );
+
+      if (response.statusCode == 200) {
+        if (response.data['errors'] != null) {
+          throw Exception('GraphQL errors: ${response.data['errors']}');
+        }
+        
+        // Debug print to see the response structure
+        print('Tasks by date response: ${response.data}');
+        
+        final tasks = response.data['data']['tasksByUserAndDate'] as List;
+        return tasks.map((task) => TaskModel.fromJson(task)).toList();
+      } else {
+        throw Exception('Failed to get tasks by date');
+      }
+    } catch (e) {
+      print('Error in getTasksByDate: $e'); // Debug print
+      throw Exception('Failed to get tasks by date: $e');
+    }
+  }
+
 
   Future<void> respondToInvitation(String taskId, String response) async {
     try {

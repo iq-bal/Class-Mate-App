@@ -165,7 +165,7 @@ class HomeService {
     try {
       const String query = '''
         query StudentAllAssignments {
-          enrollments {
+          myApprovedEnrollments {
             id
             status
             enrolled_at
@@ -223,7 +223,7 @@ class HomeService {
     try {
       const String query = '''
         query StudentAllClassTests {
-          enrollments {
+          myApprovedEnrollments {
             id
             status
             enrolled_at

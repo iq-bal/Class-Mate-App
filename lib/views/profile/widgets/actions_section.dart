@@ -6,7 +6,7 @@ import '../../../controllers/authentication/auth_controller.dart';
 import '../../../controllers/profile_student/profile_student_controller.dart';
 import '../../../models/profile_student/profile_student_model.dart';
 import '../../authentication/landing.dart';
-import 'edit_profile_dialog.dart';
+import 'edit_profile_bottom_sheet.dart';
 
 class ActionsSection extends StatelessWidget {
   final ProfileStudentModel? profile;
@@ -53,11 +53,20 @@ class ActionsSection extends StatelessWidget {
           iconColor: Colors.indigo,
           onTap: () {
             if (profile != null && controller != null) {
-              showDialog(
+              showModalBottomSheet(
                 context: context,
-                builder: (context) => EditProfileDialog(
-                  profile: profile!,
-                  controller: controller!,
+                isScrollControlled: true,
+                backgroundColor: Colors.transparent,
+                enableDrag: true,
+                showDragHandle: false,
+                builder: (context) => DraggableScrollableSheet(
+                  initialChildSize: 0.85,
+                  minChildSize: 0.5,
+                  maxChildSize: 0.95,
+                  builder: (context, scrollController) => EditProfileBottomSheet(
+                    profile: profile!,
+                    controller: controller!,
+                  ),
                 ),
               );
             }
@@ -103,11 +112,11 @@ class ActionsSection extends StatelessWidget {
 
   BoxDecoration _glassBox() {
     return BoxDecoration(
-      color: Colors.white.withOpacity(0.9),
+      color: Colors.white.withValues(alpha: 0.9),
       borderRadius: BorderRadius.circular(20),
       boxShadow: [
         BoxShadow(
-          color: Colors.black.withOpacity(0.04),
+          color: Colors.black.withValues(alpha: 0.04),
           blurRadius: 12,
           offset: const Offset(0, 5),
         ),

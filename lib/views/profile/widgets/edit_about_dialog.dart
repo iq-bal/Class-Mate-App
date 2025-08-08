@@ -89,7 +89,7 @@ class _EditAboutDialogState extends State<EditAboutDialog> {
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Row(
+            const Row(
               children: [
                 const Icon(
                   Icons.edit_note_rounded,

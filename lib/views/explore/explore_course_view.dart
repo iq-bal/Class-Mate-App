@@ -53,6 +53,14 @@ class _ExploreCourseViewState extends State<ExploreCourseView> {
   Color getRandomCourseColor() => courseColors[Random().nextInt(courseColors.length)];
   IconData getRandomCourseIcon() => courseIcons[Random().nextInt(courseIcons.length)];
 
+  Future<void> _refreshData() async {
+    // Clear search if user is refreshing
+    if (searchController.text.isNotEmpty) {
+      searchController.clear();
+    }
+    await exploreCourseController.refreshData();
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -68,42 +76,46 @@ class _ExploreCourseViewState extends State<ExploreCourseView> {
       body: ValueListenableBuilder<ExploreCourseState>(
         valueListenable: exploreCourseController.stateNotifier,
         builder: (context, state, _) {
-          return SingleChildScrollView(
-            child: Padding(
-              padding: const EdgeInsets.all(16.0),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  const Text("What's new to learn?", style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold)),
-                  const SizedBox(height: 16),
-                  SearchSection(
-                    searchController: searchController,
-                    onSearch: (value) {
-                      if (value.isNotEmpty) {
-                        exploreCourseController.searchCourses(value);
-                      }
-                    },
-                  ),
-                  const SizedBox(height: 24),
-                  SearchResultSection(
-                    state: state,
-                    controller: exploreCourseController,
-                    getRandomIcon: getRandomCourseIcon,
-                    getRandomColor: getRandomCourseColor,
-                  ),
-                  const SizedBox(height: 24),
-                  RecommendedSection(
-                    getRandomIcon: getRandomCourseIcon,
-                    getRandomColor: getRandomCourseColor,
-                    courses: exploreCourseController.allCourses ?? [],
-                  ),
-                  const SizedBox(height: 24),
-                  exploreCourseController.popularCourses == null ||
-                      exploreCourseController.popularCourses!.isEmpty
-                      ? const Text('No popular courses found.')
-                      : PopularSection(course: exploreCourseController.popularCourses![0]),
-
-                ],
+          return RefreshIndicator(
+            onRefresh: () => _refreshData(),
+            child: SingleChildScrollView(
+              physics: const AlwaysScrollableScrollPhysics(),
+              child: Padding(
+                padding: const EdgeInsets.all(16.0),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    const Text("What's new to learn?", style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold)),
+                    const SizedBox(height: 16),
+                    SearchSection(
+                      searchController: searchController,
+                      onSearch: (value) {
+                        if (value.isNotEmpty) {
+                          exploreCourseController.searchCourses(value);
+                        }
+                      },
+                    ),
+                    const SizedBox(height: 24),
+                    SearchResultSection(
+                      state: state,
+                      controller: exploreCourseController,
+                      getRandomIcon: getRandomCourseIcon,
+                      getRandomColor: getRandomCourseColor,
+                    ),
+                    const SizedBox(height: 24),
+                    RecommendedSection(
+                      getRandomIcon: getRandomCourseIcon,
+                      getRandomColor: getRandomCourseColor,
+                      courses: exploreCourseController.allCourses ?? [],
+                    ),
+                    const SizedBox(height: 24),
+                    exploreCourseController.popularCourses == null ||
+                        exploreCourseController.popularCourses!.isEmpty
+                        ? const Text('No popular courses found.')
+                        : PopularSection(course: exploreCourseController.popularCourses![0]),
+                    const SizedBox(height: 20), // Add some bottom padding for better UX
+                  ],
+                ),
               ),
             ),
           );

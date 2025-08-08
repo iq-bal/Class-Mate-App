@@ -237,7 +237,7 @@ class _HomeViewState extends State<HomeView> {
               teacherName: course?.teacher.userId.name ?? 'Unknown Teacher',
               timeRange: '${schedule.startTime} - ${schedule.endTime}',
               icon: Icons.school,
-              onTap: () {
+              onTap: () { 
                 if (course != null) {
                   Navigator.push(
                     context,

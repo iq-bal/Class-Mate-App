@@ -12,6 +12,7 @@ class TaskList extends StatelessWidget {
   Widget build(BuildContext context) {
     return SubtleGridBackground(
       child: ListView.builder(
+        physics: const AlwaysScrollableScrollPhysics(),
         padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
         itemCount: taskController.tasks?.length ?? 0,
         itemBuilder: (context, index) {

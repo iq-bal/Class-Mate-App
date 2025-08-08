@@ -62,6 +62,6 @@ class ClassDetailsStudentServices {
       }
     } catch (e) {
       throw Exception('Error occurred: $e');
-    } 
+    }
   }
 }

@@ -164,12 +164,15 @@ class _EditTaskBottomSheetState extends State<EditTaskBottomSheet> {
           selectedParticipants: _selectedParticipants,
           onParticipantSelected: (user) {
             setState(() {
-              _selectedParticipants.add(user);
+              // Check if participant is not already selected by ID
+              if (!_selectedParticipants.any((participant) => participant["id"] == user["id"])) {
+                _selectedParticipants.add(user);
+              }
             });
           },
           onParticipantRemoved: (user) {
             setState(() {
-              _selectedParticipants.remove(user);
+              _selectedParticipants.removeWhere((participant) => participant["id"] == user["id"]);
             });
           },
         );
@@ -512,7 +515,7 @@ class _EditTaskBottomSheetState extends State<EditTaskBottomSheet> {
                         GestureDetector(
                           onTap: () {
                             setState(() {
-                              _selectedParticipants.remove(participant);
+                              _selectedParticipants.removeWhere((p) => p["id"] == participant["id"]);
                             });
                           },
                           child: const Icon(Icons.close, size: 16, color: Colors.grey),

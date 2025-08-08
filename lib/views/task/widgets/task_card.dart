@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:classmate/models/task/task_model.dart';
 import 'package:classmate/views/task/widgets/edit_task_bottom_sheet.dart';
 import 'package:classmate/controllers/task/task_controller.dart';
+import 'package:classmate/config/app_config.dart';
 import 'package:intl/intl.dart';
 
 class TaskCard extends StatelessWidget {
@@ -111,7 +112,7 @@ class TaskCard extends StatelessWidget {
                       border: Border.all(color: Colors.white, width: 3),
                       boxShadow: [
                         BoxShadow(
-                          color: colors[index % colors.length].withOpacity(0.5),
+                          color: colors[index % colors.length].withValues(alpha: 0.5),
                           spreadRadius: 2,
                           blurRadius: 6,
                         ),
@@ -161,7 +162,7 @@ class TaskCard extends StatelessWidget {
                 ),
                 boxShadow: [
                   BoxShadow(
-                    color: Colors.grey.withOpacity(0.2),
+                    color: Colors.grey.withValues(alpha: 0.2),
                     spreadRadius: 2,
                     blurRadius: 8,
                     offset: const Offset(0, 4),
@@ -182,7 +183,7 @@ class TaskCard extends StatelessWidget {
                           vertical: 6,
                         ),
                         decoration: BoxDecoration(
-                          color: colors[index % colors.length].withOpacity(0.2),
+                          color: colors[index % colors.length].withValues(alpha: 0.2),
                           borderRadius: BorderRadius.circular(8),
                         ),
                         child: Text(
@@ -270,8 +271,11 @@ class TaskCard extends StatelessWidget {
                                   backgroundImage: task.participants![i]
                                       .profilePicture !=
                                       null
-                                      ? NetworkImage(task.participants![i]
-                                      .profilePicture!)
+                                      ? NetworkImage(
+                                          task.participants![i].profilePicture!.startsWith('http')
+                                              ? task.participants![i].profilePicture!
+                                              : '${AppConfig.imageServer}${task.participants![i].profilePicture!}'
+                                      )
                                       : const AssetImage(
                                       'assets/images/avatar.png')
                                   as ImageProvider,

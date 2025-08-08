@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:classmate/controllers/profile_student/profile_student_controller.dart';
 import 'package:classmate/models/profile_student/profile_student_model.dart';
-import 'package:classmate/config/app_config.dart';
+
 import 'widgets/profile_header.dart';
 import 'widgets/about_section.dart';
 import 'widgets/academic_info_card.dart';
@@ -46,12 +46,8 @@ class _ProfileStudentViewState extends State<ProfileStudentView> {
             child: Column(
               children: [
                 ProfileHeader(
-                   coverImageUrl: profile.userId.coverPicture != null
-                     ? '${AppConfig.imageServer}${profile.userId.coverPicture}'
-                     : 'https://i.pravatar.cc/150?img=47',
-                 profileImageUrl: profile.userId.profilePicture != null
-                     ? '${AppConfig.imageServer}${profile.userId.profilePicture}'
-                     : 'https://i.pravatar.cc/150?img=47',
+                   coverImageUrl: profile.userId.coverPicture ?? 'https://i.pravatar.cc/150?img=47',
+                 profileImageUrl: profile.userId.profilePicture ?? 'https://i.pravatar.cc/150?img=47',
                    onCoverImageEdit: _controller.updateCoverPhoto,
                    onProfileImageEdit: _controller.updateProfilePicture,
                  ),

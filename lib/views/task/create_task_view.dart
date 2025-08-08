@@ -121,12 +121,15 @@ class _CreateTaskViewState extends State<CreateTaskView> {
           selectedParticipants: selectedParticipants,
           onParticipantSelected: (user) {
             setState(() {
-              selectedParticipants.add(user);
+              // Check if participant is not already selected by ID
+              if (!selectedParticipants.any((participant) => participant["id"] == user["id"])) {
+                selectedParticipants.add(user);
+              }
             });
           },
           onParticipantRemoved: (user) {
             setState(() {
-              selectedParticipants.remove(user);
+              selectedParticipants.removeWhere((participant) => participant["id"] == user["id"]);
             });
           },
         );
@@ -214,7 +217,7 @@ class _CreateTaskViewState extends State<CreateTaskView> {
                         onAddParticipant: () => _openParticipantSelector(),
                         onRemoveParticipant: (participant) {
                           setState(() {
-                            selectedParticipants.remove(participant);
+                            selectedParticipants.removeWhere((p) => p["id"] == participant["id"]);
                           });
                         },
                       ),
@@ -223,38 +226,94 @@ class _CreateTaskViewState extends State<CreateTaskView> {
                     Center(
                       child: ElevatedButton(
                         onPressed: () async {
-                          await taskController.createTask(TaskModel(
-                            title: taskTitle!,
-                            date: selectedDate,
-                            startTime: startTime?.format(context).toLowerCase(),
-                            endTime: endTime?.format(context).toLowerCase(),
-                            category: selectedCategory?.toLowerCase(),
-                            participants: selectedParticipants
-                                .map((participant) => TaskParticipant(
-                                      id: participant["id"],
-                                      profilePicture: participant["avatar"],
-                                    ))
-                                .toList(),
-                          )); 
-                          
-                          if(taskController.stateNotifier.value == TaskState.loading){
-                            showDialog(
-                              context: context,
-                              builder: (_) => const Center(child: CircularProgressIndicator()),
+                          // Validate required fields
+                          if (taskTitle == null || taskTitle!.isEmpty) {
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              const SnackBar(content: Text('Please enter a task title')),
                             );
+                            return;
                           }
-                          if (taskController.stateNotifier.value == TaskState.success) {
-                            await HelperFunction.showNotification(
-                                "Task",
-                                "Your task has been created successfully!"
+                          if (selectedDate == null) {
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              const SnackBar(content: Text('Please select a date')),
                             );
-                            Navigator.pop(context);
+                            return;
                           }
-                          else {
+                          if (selectedCategory == null) {
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              const SnackBar(content: Text('Please select a category')),
+                            );
+                            return;
+                          }
+                          if (startTime == null || endTime == null) {
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              const SnackBar(content: Text('Please select start and end times')),
+                            );
+                            return;
+                          }
+
+                          // Show loading dialog
+                          showDialog(
+                            context: context,
+                            barrierDismissible: false,
+                            builder: (_) => const Center(child: CircularProgressIndicator()),
+                          );
+
+                          try {
+                            await taskController.createTask(TaskModel(
+                              title: taskTitle!,
+                              date: selectedDate,
+                              startTime: startTime?.format(context).toLowerCase(),
+                              endTime: endTime?.format(context).toLowerCase(),
+                              category: selectedCategory?.toLowerCase(),
+                              participants: selectedParticipants
+                                  .map((participant) => TaskParticipant(
+                                        id: participant["id"],
+                                        profilePicture: participant["avatar"],
+                                      ))
+                                  .toList(),
+                            )); 
+
+                            // Close loading dialog
+                            if (mounted) Navigator.pop(context);
+                            
+                            if (taskController.stateNotifier.value == TaskState.success) {
+                              await HelperFunction.showNotification(
+                                  "Task",
+                                  "Your task has been created successfully!"
+                              );
+                              // Return true to indicate successful creation
+                              if (mounted) Navigator.pop(context, true);
+                            } else {
+                              await HelperFunction.showNotification(
+                                  "Task",
+                                  "Task creation failed"
+                              );
+                              if (mounted) {
+                                ScaffoldMessenger.of(context).showSnackBar(
+                                  SnackBar(
+                                    content: Text(taskController.errorMessage ?? 'Failed to create task'),
+                                    backgroundColor: Colors.red,
+                                  ),
+                                );
+                              }
+                            }
+                          } catch (e) {
+                            // Close loading dialog
+                            if (mounted) Navigator.pop(context);
+                            
                             await HelperFunction.showNotification(
                                 "Task",
                                 "Task creation failed"
                             );
+                            if (mounted) {
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                SnackBar(
+                                  content: Text('Failed to create task: $e'),
+                                  backgroundColor: Colors.red,
+                                ),
+                              );
+                            }
                           }
                         },
                         style: ElevatedButton.styleFrom(

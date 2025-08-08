@@ -53,4 +53,21 @@ class ExploreCourseController {
     }
   }
 
+  // Refresh all course data
+  Future<void> refreshData() async {
+    stateNotifier.value = ExploreCourseState.loading;
+    errorMessage = '';
+    try {
+      // Load both all courses and popular courses in parallel
+      await Future.wait([
+        _exploreCourseService.getCourses().then((courses) => allCourses = courses),
+        _exploreCourseService.getPopularCourses().then((popular) => popularCourses = popular),
+      ]);
+      stateNotifier.value = ExploreCourseState.success;
+    } catch (e) {
+      errorMessage = 'Failed to refresh data: $e';
+      stateNotifier.value = ExploreCourseState.error;
+    }
+  }
+
 }

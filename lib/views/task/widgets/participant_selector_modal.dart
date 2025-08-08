@@ -99,7 +99,7 @@ class _ParticipantSelectorModalState extends State<ParticipantSelectorModal> {
                     final user = filteredUsers[index];
                     final isSelected = widget.selectedParticipants
                         .any((participant) =>
-                    participant["name"] == user["name"]);
+                    participant["id"] == user["id"]);
 
                     return ListTile(
                       leading: CircleAvatar(
