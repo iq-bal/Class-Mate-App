@@ -4,12 +4,16 @@ class CustomAppBar extends StatelessWidget {
   final String title;
   final VoidCallback? onBackPress;
   final VoidCallback? onMorePress;
+  final List<PopupMenuEntry<String>>? menuItems;
+  final Function(String)? onMenuSelected;
 
   const CustomAppBar({
     super.key,
     required this.title,
     this.onBackPress,
     this.onMorePress,
+    this.menuItems,
+    this.onMenuSelected,
   });
 
   @override
@@ -37,10 +41,18 @@ class CustomAppBar extends StatelessWidget {
             ],
           ),
           const Spacer(),
-          GestureDetector(
-            onTap: onMorePress,
-            child: const Icon(Icons.more_vert, color: Colors.black54),
-          ),
+          if (menuItems != null && menuItems!.isNotEmpty)
+            PopupMenuButton<String>(
+              onSelected: onMenuSelected,
+              itemBuilder: (BuildContext context) => menuItems!,
+              icon: const Icon(Icons.more_vert, color: Colors.black54),
+              offset: const Offset(0, 40),
+            )
+          else if (onMorePress != null)
+            GestureDetector(
+              onTap: onMorePress,
+              child: const Icon(Icons.more_vert, color: Colors.black54),
+            ),
         ],
       ),
     );

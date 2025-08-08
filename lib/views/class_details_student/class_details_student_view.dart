@@ -9,6 +9,7 @@ import 'package:classmate/views/class_details_student/widgets/custom_tab_bar.dar
 import 'package:classmate/views/assignment/widgets/custom_app_bar.dart';
 import 'package:classmate/entity/drive_file_entity.dart';
 import 'package:classmate/views/forum/forum_view.dart';
+import 'package:classmate/views/course_overview_student/widgets/review_bottom_sheet.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:google_fonts/google_fonts.dart';
 
@@ -52,6 +53,41 @@ class _ClassDetailsStudentState extends State<ClassDetailsStudent> {
     _controller.fetchClassDetails(widget.courseId, widget.day, widget.teacherId);
   }
 
+  List<PopupMenuEntry<String>> _buildMenuItems() {
+    // Show review option for enrolled students
+    return [
+      const PopupMenuItem<String>(
+        value: 'add_review',
+        child: Row(
+          children: [
+            Icon(Icons.star_outline, size: 20, color: Colors.black54),
+            SizedBox(width: 8),
+            Text('Add Review'),
+          ],
+        ),
+      ),
+    ];
+  }
+
+  void _handleMenuSelection(String value) {
+    switch (value) {
+      case 'add_review':
+        _showReviewBottomSheet();
+        break;
+    }
+  }
+
+  void _showReviewBottomSheet() {
+    showReviewBottomSheet(
+      context: context,
+      courseId: widget.courseId,
+      onReviewSubmitted: () {
+        // Refresh the class details to show updated reviews
+        _fetchClassDetails();
+      },
+    );
+  }
+
 
   @override
   Widget build(BuildContext context) {
@@ -90,9 +126,8 @@ class _ClassDetailsStudentState extends State<ClassDetailsStudent> {
                             onBackPress: () {
                               Navigator.pop(context);
                             },
-                            onMorePress: () {
-                              print("More options clicked");
-                            },
+                            menuItems: _buildMenuItems(),
+                            onMenuSelected: _handleMenuSelection,
                           ),
                           Padding(
                             padding: const EdgeInsets.symmetric(horizontal: 16.0),

@@ -5,6 +5,7 @@ import 'package:classmate/views/course_overview_student/widgets/expandable_lesso
 import 'package:classmate/views/course_overview_student/widgets/gradient_button.dart';
 import 'package:classmate/views/course_overview_student/widgets/instructor_info.dart';
 import 'package:classmate/views/course_overview_student/widgets/section_header.dart';
+import 'package:classmate/views/course_overview_student/widgets/review_bottom_sheet.dart';
 import 'package:classmate/controllers/course_overview/course_overview_controller.dart';
 import 'package:flutter/material.dart';
 
@@ -26,6 +27,48 @@ class _CourseOverviewViewState extends State<CourseOverviewView> {
     super.initState();
     _controller.getCourseOverview(widget.courseId);
     _controller.checkEnrollmentStatus(widget.courseId);
+  }
+
+  List<PopupMenuEntry<String>> _buildMenuItems() {
+    // Only show review option if user is enrolled with approved status
+    final isApproved = _controller.enrollmentStatus != null && 
+        _controller.enrollmentStatus!.status != null &&
+        _controller.enrollmentStatus!.status!.toLowerCase() == 'approved';
+    
+    if (isApproved) {
+      return [
+        const PopupMenuItem<String>(
+          value: 'add_review',
+          child: Row(
+            children: [
+              Icon(Icons.star_outline, size: 20, color: Colors.black54),
+              SizedBox(width: 8),
+              Text('Add Review'),
+            ],
+          ),
+        ),
+      ];
+    }
+    return [];
+  }
+
+  void _handleMenuSelection(String value) {
+    switch (value) {
+      case 'add_review':
+        _showReviewBottomSheet();
+        break;
+    }
+  }
+
+  void _showReviewBottomSheet() {
+    showReviewBottomSheet(
+      context: context,
+      courseId: widget.courseId,
+      onReviewSubmitted: () {
+        // Refresh the course overview to show updated reviews
+        _controller.getCourseOverview(widget.courseId);
+      },
+    );
   }
 
   @override
@@ -52,6 +95,8 @@ class _CourseOverviewViewState extends State<CourseOverviewView> {
                     onBackPress: () {
                       Navigator.pop(context);
                     },
+                    menuItems: _buildMenuItems(),
+                    onMenuSelected: _handleMenuSelection,
                   ),
                   Expanded(
                     child: SingleChildScrollView(
@@ -158,7 +203,7 @@ class _CourseOverviewViewState extends State<CourseOverviewView> {
                                           padding: const EdgeInsets.only(top: 12.0),
                                           child: Row(
                                             mainAxisAlignment: MainAxisAlignment.center,
-                                            children: [
+                                            children: [ 
                                               const Icon(
                                                 Icons.calendar_today,
                                                 color: Colors.grey,
@@ -174,7 +219,7 @@ class _CourseOverviewViewState extends State<CourseOverviewView> {
                                               ),
                                             ],
                                           ),
-                                        ), 
+                                        ),
                                     ],
                                   ),
                                 );

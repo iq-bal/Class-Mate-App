@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:classmate/models/course_overview/course_overview_model.dart';
+import 'package:classmate/config/app_config.dart';
 
 class CourseReviews extends StatelessWidget {
   final List<ReviewModel> reviews;
@@ -156,7 +157,7 @@ class ReviewCard extends StatelessWidget {
                   child: CircleAvatar(
                     backgroundColor: Colors.blue.shade100,
                     backgroundImage: review.commentedBy.profilePicture.isNotEmpty
-                        ? NetworkImage(review.commentedBy.profilePicture)
+                        ? NetworkImage('${AppConfig.imageServer}${review.commentedBy.profilePicture}')
                         : null,
                     child: review.commentedBy.profilePicture.isEmpty
                         ? Text(
@@ -246,7 +247,17 @@ class ReviewCard extends StatelessWidget {
 
   String _formatDate(String dateString) {
     try {
-      final date = DateTime.parse(dateString);
+      DateTime date;
+      // Check if it's a Unix timestamp (numeric string)
+      if (RegExp(r'^\d+$').hasMatch(dateString)) {
+        // Convert Unix timestamp to DateTime
+        final timestamp = int.parse(dateString);
+        date = DateTime.fromMillisecondsSinceEpoch(timestamp);
+      } else {
+        // Try to parse as ISO date string
+        date = DateTime.parse(dateString);
+      }
+      
       final months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
       return '${months[date.month - 1]} ${date.day}, ${date.year}';
     } catch (e) {
