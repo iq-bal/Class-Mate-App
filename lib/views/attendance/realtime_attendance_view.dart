@@ -103,7 +103,7 @@ class _RealtimeAttendanceViewState extends State<RealtimeAttendanceView>
       // End GraphQL session if there's an active session ID
       final sessionId = _realtimeController.teacherActiveSessionId.value;
       if (sessionId != null) {
-        await _attendanceController.endAttendanceSession(sessionId);
+        _attendanceController.endAttendanceSession(sessionId);
       }
       
       ScaffoldMessenger.of(context).showSnackBar(

@@ -1,3 +1,4 @@
+import 'package:classmate/services/notification/notification_service.dart';
 import 'package:flutter/foundation.dart';
 import 'package:classmate/models/course_detail_teacher/enrollment_model.dart';
 import 'package:classmate/services/attendance/attendance_service.dart';
@@ -24,6 +25,8 @@ class AttendanceController {
   ValueNotifier<AttendanceState> get stateNotifier => _stateNotifier;
   List<EnrollmentModel> get approvedStudents => _approvedStudents;
   String? get errorMessage => _errorMessage;
+
+  final SocketNotificationService _notificationService = SocketNotificationService();
   
   int get presentCount => _studentAttendanceStatus.values.where((status) => status == 'present').length;
   int get absentCount => _studentAttendanceStatus.values.where((status) => status == 'absent').length;
@@ -51,34 +54,28 @@ class AttendanceController {
     }
   }
   
-  Future<String?> startAttendanceSession(String courseId) async {
+  Future<String?> startAttendanceSession(
+    String courseId, {
+    required String topic,
+    String? meetingLink,
+  }) async {
     try {
-      // First create a session
-      final now = DateTime.now();
-      final date = '${now.year}-${now.month.toString().padLeft(2, '0')}-${now.day.toString().padLeft(2, '0')}';
-      final startTime = '${now.hour.toString().padLeft(2, '0')}:${now.minute.toString().padLeft(2, '0')}';
-      final endTime = '${(now.hour + 1).toString().padLeft(2, '0')}:${now.minute.toString().padLeft(2, '0')}';
-      
-      final session = await _sessionService.createSession(
+      // Create a session with user-provided data
+      final session = await _sessionService.createAttendanceSession(
         courseId: courseId,
-        title: 'Attendance Session',
-        description: 'Real-time attendance tracking session',
-        date: date,
-        startTime: startTime,
-        endTime: endTime,
-        meetingLink: 'https://zoom.us/j/123456789',
+        topic: topic,
+        meetingLink: meetingLink,
       );
       
       if (session.id == null) {
         throw Exception('Failed to create session: No session ID returned');
       }
-
-      print("----------- ever came here: ${session.id} -------------");
+      
       
       // Initialize realtime service and start the session (for teacher)
          await _realtimeService.initializeAttendanceSocket();
          
-         // Wait for socket to be connected before starting session
+        //  Wait for socket to be connected before starting session
          int attempts = 0;
          while (!_realtimeService.isConnected && attempts < 10) {
            await Future.delayed(const Duration(milliseconds: 500));
@@ -92,7 +89,6 @@ class AttendanceController {
          } else {
            throw Exception('Failed to connect to attendance socket');
          }
-      
       _studentAttendanceStatus.clear(); // Reset attendance status for new session
       return session.id;
     } catch (e) {
@@ -103,9 +99,9 @@ class AttendanceController {
     }
   }
   
-  Future<void> endAttendanceSession(String sessionId) async {
+  void endAttendanceSession(String sessionId)  {
     try {
-      await _attendanceService.endAttendanceSession(sessionId);
+      _realtimeService.endAttendanceSession(sessionId);
     } catch (e) {
       if (kDebugMode) {
         print('Error ending attendance session: $e');
@@ -116,9 +112,12 @@ class AttendanceController {
   
   Future<void> markAttendance(String sessionId, String studentId, String status) async {
     try {
-      await _attendanceService.markAttendance(sessionId, studentId, status);
-      _studentAttendanceStatus[studentId] = status;
-      // Trigger UI update
+      if(status=="present"){
+        _realtimeService.markStudentPresent(sessionId, studentId);
+      }
+      else{
+        _realtimeService.markStudentAbsent(sessionId, studentId);
+      }
       _stateNotifier.value = AttendanceState.success;
     } catch (e) {
       if (kDebugMode) {

@@ -43,8 +43,10 @@ class RealtimeAttendanceController {
   // Initialize the controller
   Future<void> initialize() async {
     try {
+      print("DEBUG 1");
       isLoading.value = true;
       await _loadUserInfo();
+      print("DEBUG 2");
       await _socketService.initializeAttendanceSocket();
       _setupEventListeners();
       isConnected.value = _socketService.isConnected;
@@ -60,6 +62,7 @@ class RealtimeAttendanceController {
   Future<void> _loadUserInfo() async {
     try {
       final token = await _tokenStorage.retrieveAccessToken();
+     
       if (token != null) {
         final decodedToken = JwtDecoder.decode(token);
         _currentUserId = decodedToken['id'] ?? decodedToken['userId'];
@@ -90,6 +93,7 @@ class RealtimeAttendanceController {
     // Student events
     _socketService.onAttendanceSessionStarted(_handleSessionStarted);
     _socketService.onAttendanceSessionEnded(_handleSessionEnded);
+    _socketService.onAttendanceSessionEndedConfirm(_handleSessionEndedConfirm);
     _socketService.onAttendanceMarked(_handleAttendanceMarked);
     
     // Teacher events
@@ -365,6 +369,31 @@ class RealtimeAttendanceController {
       );
     } catch (e) {
       debugPrint('Error handling session ended: $e');
+    }
+  }
+  
+  void _handleSessionEndedConfirm(Map<String, dynamic> data) {
+    try {
+      final sessionId = data['session_id'] as String?;
+      final finalData = data['finalData'];
+      
+      debugPrint('Session ended confirmation received for session: $sessionId');
+      debugPrint('Final session data: $finalData');
+      
+      // Ensure all teacher state is properly reset
+      isTeacherSessionActive.value = false;
+      teacherActiveSessionId.value = null;
+      onlineStudents.value = [];
+      attendanceStatus.value = {};
+      sessionStatistics.value = null;
+      
+      // Show confirmation notification to teacher
+      _showLocalNotification(
+        title: 'Session Ended Successfully',
+        body: 'The attendance session has been terminated and data saved.',
+      );
+    } catch (e) {
+      debugPrint('Error handling session ended confirmation: $e');
     }
   }
   

@@ -21,13 +21,13 @@ class RealtimeAttendanceService {
   Future<void> initializeAttendanceSocket() async {
     try {
       final token = await _tokenStorage.retrieveAccessToken();
-      print("bondhu token peyechi");
-      print(token);
+      
       if (token == null) {
         throw Exception('No access token found');
       }
       
       await _connectAttendanceSocket(token);
+
     } catch (e) {
       debugPrint('Failed to initialize attendance socket: $e');
       rethrow;
@@ -45,9 +45,8 @@ class RealtimeAttendanceService {
             .setAuth({'token': token})
             .build(),
       );
-      print("bondhu socket to connect hoyei gelo");
-      
       _setupEventListeners();
+      print(_isConnected);
     } catch (e) {
       debugPrint('Failed to connect attendance socket: $e');
       rethrow;
@@ -112,16 +111,13 @@ class RealtimeAttendanceService {
   
   // Start an attendance session
   void startAttendanceSession(String sessionId) {
-    print("bondhu socker er moddhe eshechi");
     if (!_isConnected) {
       debugPrint('Socket not connected, cannot start session');
       return;
     }
-    
     _attendanceSocket?.emit('startAttendanceSession', {
       'session_id': sessionId,
-    });
-    
+    });    
     debugPrint('Starting attendance session for session: $sessionId');
   }
   
@@ -133,9 +129,8 @@ class RealtimeAttendanceService {
     }
     
     _attendanceSocket?.emit('endAttendanceSession', {
-      'sessionId': sessionId,
+      'session_id': sessionId,
     });
-    
     debugPrint('Ending attendance session: $sessionId');
   }
   
@@ -214,6 +209,14 @@ class RealtimeAttendanceService {
   void onAttendanceSessionEnded(Function(Map<String, dynamic>) callback) {
     _attendanceSocket?.on('attendanceSessionEnded', (data) {
       debugPrint('Attendance session ended: $data');
+      callback(Map<String, dynamic>.from(data));
+    });
+  }
+  
+  // Listen for session ended confirmation events (teacher only)
+  void onAttendanceSessionEndedConfirm(Function(Map<String, dynamic>) callback) {
+    _attendanceSocket?.on('attendanceSessionEndedConfirm', (data) {
+      debugPrint('Attendance session ended confirmation: $data');
       callback(Map<String, dynamic>.from(data));
     });
   }

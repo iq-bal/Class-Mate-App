@@ -1,10 +1,13 @@
+import 'package:classmate/services/notification/notification_service.dart';
+import 'package:classmate/services/notification_service.dart';
 import 'package:flutter/material.dart';
 import 'package:classmate/controllers/attendance/attendance_controller.dart';
 import 'package:classmate/controllers/attendance/realtime_attendance_controller.dart';
-import 'package:classmate/models/course_detail_teacher/enrollment_model.dart';
+
 import 'package:classmate/models/attendance/attendance_session_model.dart';
 import 'package:classmate/views/attendance/widgets/attendance_student_tile.dart';
 import 'package:classmate/views/course_detail_teacher/widgets/custom_app_bar.dart';
+import 'package:classmate/views/attendance/widgets/session_input_bottom_sheet.dart';
 
 class AttendanceView extends StatefulWidget {
   final String courseId;
@@ -20,24 +23,26 @@ class AttendanceView extends StatefulWidget {
   State<AttendanceView> createState() => _AttendanceViewState();
 }
 
-class _AttendanceViewState extends State<AttendanceView> with SingleTickerProviderStateMixin {
+class _AttendanceViewState extends State<AttendanceView> {
   final AttendanceController _attendanceController = AttendanceController();
   final RealtimeAttendanceController _realtimeController = RealtimeAttendanceController();
+  final SocketNotificationService _notificationService = SocketNotificationService();
+
   bool _isSessionActive = false;
   String? _currentSessionId;
-  late TabController _tabController;
 
   @override
   void initState() {
     super.initState();
-    _tabController = TabController(length: 2, vsync: this);
     _fetchApprovedStudents();
-    _initializeRealtimeController();
+    // _initializeRealtimeController();
   }
 
   Future<void> _initializeRealtimeController() async {
     try {
+      
       await _realtimeController.initialize();
+      
       // Listen for session updates
       _realtimeController.isSessionActive.addListener(() {
         if (mounted) {
@@ -56,10 +61,29 @@ class _AttendanceViewState extends State<AttendanceView> with SingleTickerProvid
     await _attendanceController.fetchApprovedStudents(widget.courseId);
   }
 
-  Future<void> _startAttendanceSession() async {
+  Future<void> _showSessionInputBottomSheet() async {
+    final result = await showSessionInputBottomSheet(
+      context: context,
+      courseId: widget.courseId,
+    );
+    
+    if (result != null) {
+      await _startAttendanceSession(
+        topic: result['topic'] as String,
+        meetingLink: result['meetingLink'] as String?,
+      );
+    }
+  }
+
+  Future<void> _startAttendanceSession({
+    required String topic,
+    String? meetingLink,
+  }) async {
     try {
       final sessionId = await _attendanceController.startAttendanceSession(
         widget.courseId,
+        topic: topic,
+        meetingLink: meetingLink,
       );
       
       if (sessionId != null) {
@@ -71,7 +95,7 @@ class _AttendanceViewState extends State<AttendanceView> with SingleTickerProvid
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
-              content: Text('Attendance session started! Session ID: $_currentSessionId'),
+              content: Text('Attendance session "$topic" started!'),
               backgroundColor: Colors.green,
             ),
           );
@@ -89,16 +113,14 @@ class _AttendanceViewState extends State<AttendanceView> with SingleTickerProvid
     }
   }
 
-  Future<void> _endAttendanceSession() async {
+  void _endAttendanceSession()  {
     if (_currentSessionId == null) return;
-    
     try {
-      await _attendanceController.endAttendanceSession(_currentSessionId!);
+      _attendanceController.endAttendanceSession(_currentSessionId!);
       setState(() {
         _isSessionActive = false;
         _currentSessionId = null;
       });
-      
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
@@ -121,12 +143,10 @@ class _AttendanceViewState extends State<AttendanceView> with SingleTickerProvid
 
   void _markAttendance(String studentId, String status) async {
     try {
-      if (status == 'present') {
-        await _realtimeController.markStudentPresent(studentId);
-      } else {
-        await _realtimeController.markStudentAbsent(studentId);
+      if(_currentSessionId == null){
+        throw Exception('No active session');
       }
-      
+      await _attendanceController.markAttendance(_currentSessionId!, studentId, status);
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text('Student marked as $status'),
@@ -176,6 +196,7 @@ class _AttendanceViewState extends State<AttendanceView> with SingleTickerProvid
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      backgroundColor: Colors.grey.shade50,
       appBar: CustomAppBar(
         title: 'Attendance - ${widget.courseTitle}',
         onBackPressed: () {
@@ -187,107 +208,115 @@ class _AttendanceViewState extends State<AttendanceView> with SingleTickerProvid
       ),
       body: Column(
         children: [
-          // Session Control Header
+          // Modern Session Control Header
           Container(
-            width: double.infinity,
-            padding: const EdgeInsets.all(16),
+            margin: const EdgeInsets.all(16),
+            padding: const EdgeInsets.all(20),
             decoration: BoxDecoration(
-              color: _isSessionActive ? Colors.green.shade50 : Colors.grey.shade50,
-              border: Border(
-                bottom: BorderSide(color: Colors.grey.shade300),
+              gradient: LinearGradient(
+                colors: _isSessionActive 
+                    ? [Colors.green.shade400, Colors.green.shade600]
+                    : [Colors.blue.shade400, Colors.blue.shade600],
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
               ),
+              borderRadius: BorderRadius.circular(16),
+              boxShadow: [
+                BoxShadow(
+                  color: (_isSessionActive ? Colors.green : Colors.blue).withOpacity(0.3),
+                  blurRadius: 12,
+                  offset: const Offset(0, 4),
+                ),
+              ],
             ),
             child: Column(
               children: [
                 Row(
                   children: [
-                    Icon(
-                      _isSessionActive ? Icons.radio_button_checked : Icons.radio_button_unchecked,
-                      color: _isSessionActive ? Colors.green : Colors.grey,
-                      size: 20,
-                    ),
-                    const SizedBox(width: 8),
-                    Text(
-                      _isSessionActive ? 'Session Active' : 'Session Inactive',
-                      style: TextStyle(
-                        fontWeight: FontWeight.w600,
-                        color: _isSessionActive ? Colors.green : Colors.grey,
+                    Container(
+                      padding: const EdgeInsets.all(8),
+                      decoration: BoxDecoration(
+                        color: Colors.white.withOpacity(0.2),
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      child: Icon(
+                        _isSessionActive ? Icons.play_circle_filled : Icons.pause_circle_filled,
+                        color: Colors.white,
+                        size: 24,
                       ),
                     ),
-                    const Spacer(),
-                    if (_isSessionActive)
-                      Text(
-                        'Session ID: ${_currentSessionId?.substring(0, 8)}...',
-                        style: TextStyle(
-                          fontSize: 12,
-                          color: Colors.grey.shade600,
-                        ),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            _isSessionActive ? 'Session Active' : 'Ready to Start',
+                            style: const TextStyle(
+                              color: Colors.white,
+                              fontSize: 18,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                          if (_isSessionActive)
+                            Text(
+                              'ID: ${_currentSessionId?.substring(0, 8)}...',
+                              style: TextStyle(
+                                color: Colors.white.withOpacity(0.8),
+                                fontSize: 12,
+                              ),
+                            ),
+                        ],
                       ),
+                    ),
                   ],
                 ),
-                const SizedBox(height: 12),
+                const SizedBox(height: 16),
                 SizedBox(
                   width: double.infinity,
                   child: ElevatedButton(
-                    onPressed: _isSessionActive ? _endAttendanceSession : _startAttendanceSession,
+                    onPressed: _isSessionActive ? _endAttendanceSession : _showSessionInputBottomSheet,
                     style: ElevatedButton.styleFrom(
-                      backgroundColor: _isSessionActive ? Colors.red : Colors.green,
-                      foregroundColor: Colors.white,
-                      padding: const EdgeInsets.symmetric(vertical: 12),
+                      backgroundColor: Colors.white,
+                      foregroundColor: _isSessionActive ? Colors.red : Colors.green,
+                      padding: const EdgeInsets.symmetric(vertical: 14),
                       shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(8),
+                        borderRadius: BorderRadius.circular(12),
                       ),
+                      elevation: 0,
                     ),
-                    child: Text(
-                      _isSessionActive ? 'End Session' : 'Start Attendance Session',
-                      style: const TextStyle(fontWeight: FontWeight.w600),
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Icon(
+                          _isSessionActive ? Icons.stop : Icons.play_arrow,
+                          size: 20,
+                        ),
+                        const SizedBox(width: 8),
+                        Text(
+                          _isSessionActive ? 'End Session' : 'Start Attendance Session',
+                          style: const TextStyle(
+                            fontWeight: FontWeight.w600,
+                            fontSize: 16,
+                          ),
+                        ),
+                      ],
                     ),
                   ),
                 ),
               ],
             ),
           ),
-          // Tab Bar
-          Container(
-            decoration: BoxDecoration(
-              color: Colors.white,
-              border: Border(
-                bottom: BorderSide(color: Colors.grey.shade300),
-              ),
-            ),
-            child: TabBar(
-              controller: _tabController,
-              labelColor: Colors.blue,
-              unselectedLabelColor: Colors.grey,
-              indicatorColor: Colors.blue,
-              tabs: const [
-                Tab(
-                  icon: Icon(Icons.people),
-                  text: 'All Students',
-                ),
-                Tab(
-                  icon: Icon(Icons.wifi),
-                  text: 'Online',
-                ),
-              ],
-            ),
-          ),
-          // Tab Content
+          // Students List
           Expanded(
-            child: TabBarView(
-              controller: _tabController,
-              children: [
-                _buildAllStudentsTab(),
-                _buildOnlineStudentsTab(),
-              ],
-            ),
+            child: _buildStudentsSection(),
           ),
         ],
       ),
     );
   }
 
-  Widget _buildAllStudentsTab() {
+  Widget _buildStudentsSection() {
     return ValueListenableBuilder<AttendanceState>(
       valueListenable: _attendanceController.stateNotifier,
       builder: (context, state, child) {
@@ -342,91 +371,45 @@ class _AttendanceViewState extends State<AttendanceView> with SingleTickerProvid
 
           return Column(
             children: [
-              // Statistics Header
+              // Modern Statistics Cards
               Container(
-                width: double.infinity,
-                padding: const EdgeInsets.all(16),
-                decoration: BoxDecoration(
-                  color: Colors.blue.shade50,
-                  border: Border(
-                    bottom: BorderSide(color: Colors.grey.shade300),
-                  ),
-                ),
+                margin: const EdgeInsets.symmetric(horizontal: 16),
                 child: Row(
                   children: [
                     Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            'Total Students',
-                            style: TextStyle(
-                              fontSize: 12,
-                              color: Colors.grey.shade600,
-                            ),
-                          ),
-                          Text(
-                            '${approvedStudents.length}',
-                            style: const TextStyle(
-                              fontSize: 20,
-                              fontWeight: FontWeight.bold,
-                              color: Colors.blue,
-                            ),
-                          ),
-                        ],
+                      child: _buildStatCard(
+                        'Total',
+                        '${approvedStudents.length}',
+                        Icons.people,
+                        Colors.blue,
                       ),
                     ),
+                    const SizedBox(width: 12),
                     Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            'Present',
-                            style: TextStyle(
-                              fontSize: 12,
-                              color: Colors.grey.shade600,
-                            ),
-                          ),
-                          Text(
-                            '${_attendanceController.presentCount}',
-                            style: const TextStyle(
-                              fontSize: 20,
-                              fontWeight: FontWeight.bold,
-                              color: Colors.green,
-                            ),
-                          ),
-                        ],
+                      child: _buildStatCard(
+                        'Present',
+                        '${_attendanceController.presentCount}',
+                        Icons.check_circle,
+                        Colors.green,
                       ),
                     ),
+                    const SizedBox(width: 12),
                     Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            'Absent',
-                            style: TextStyle(
-                              fontSize: 12,
-                              color: Colors.grey.shade600,
-                            ),
-                          ),
-                          Text(
-                            '${_attendanceController.absentCount}',
-                            style: const TextStyle(
-                              fontSize: 20,
-                              fontWeight: FontWeight.bold,
-                              color: Colors.red,
-                            ),
-                          ),
-                        ],
+                      child: _buildStatCard(
+                        'Absent',
+                        '${_attendanceController.absentCount}',
+                        Icons.cancel,
+                        Colors.red,
                       ),
                     ),
                   ],
                 ),
               ),
-              // Students List
+              const SizedBox(height: 16),
+              // Modern Students List
               Expanded(
                 child: ListView.builder(
-                  padding: const EdgeInsets.all(16),
+                  padding: const EdgeInsets.symmetric(horizontal: 16),
                   itemCount: approvedStudents.length,
                   itemBuilder: (context, index) {
                     final enrollment = approvedStudents[index];
@@ -434,14 +417,17 @@ class _AttendanceViewState extends State<AttendanceView> with SingleTickerProvid
                       valueListenable: _realtimeController.onlineStudents,
                       builder: (context, onlineStudents, child) {
                         final isOnline = onlineStudents.any((online) => online.studentId == enrollment.student.id);
-                        return AttendanceStudentTile(
-                          enrollment: enrollment,
-                          isSessionActive: _isSessionActive,
-                          attendanceStatus: _realtimeController.getStudentAttendanceStatus(enrollment.student.id),
-                          isOnline: isOnline,
-                          onMarkPresent: () => _markAttendance(enrollment.student.id, 'present'),
-                     onMarkAbsent: () => _markAttendance(enrollment.student.id, 'absent'),
-                          onJoinSession: null, // Remove join session functionality
+                        return Container(
+                          margin: const EdgeInsets.only(bottom: 12),
+                          child: AttendanceStudentTile(
+                            enrollment: enrollment,
+                            isSessionActive: _isSessionActive,
+                            attendanceStatus: _realtimeController.getStudentAttendanceStatus(enrollment.student.id),
+                            isOnline: isOnline,
+                            onMarkPresent: () => _markAttendance(enrollment.student.id, 'present'),
+                            onMarkAbsent: () => _markAttendance(enrollment.student.id, 'absent'),
+                            onJoinSession: null,
+                          ),
                         );
                       },
                     );
@@ -456,194 +442,61 @@ class _AttendanceViewState extends State<AttendanceView> with SingleTickerProvid
     );
   }
 
-  Widget _buildOnlineStudentsTab() {
-    // Request online students when tab is built
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      _realtimeController.requestOnlineStudents();
-    });
-    
-    return ValueListenableBuilder<List<OnlineStudent>>(
-      valueListenable: _realtimeController.onlineStudents,
-      builder: (context, onlineStudents, child) {
-        if (onlineStudents.isEmpty) {
-          return Center(
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                const Icon(
-                  Icons.wifi_off,
-                  size: 64,
-                  color: Colors.grey,
-                ),
-                const SizedBox(height: 16),
-                const Text(
-                  'No students online',
-                  style: TextStyle(fontSize: 16, color: Colors.grey),
-                ),
-                const SizedBox(height: 16),
-                ElevatedButton.icon(
-                  onPressed: () => _realtimeController.requestOnlineStudents(),
-                  icon: const Icon(Icons.refresh),
-                  label: const Text('Refresh'),
-                ),
-              ],
+  Widget _buildStatCard(String title, String value, IconData icon, Color color) {
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(12),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.05),
+            blurRadius: 8,
+            offset: const Offset(0, 2),
+          ),
+        ],
+      ),
+      child: Column(
+        children: [
+          Container(
+            padding: const EdgeInsets.all(8),
+            decoration: BoxDecoration(
+              color: color.withOpacity(0.1),
+              borderRadius: BorderRadius.circular(8),
             ),
-          );
-        }
-
-        return Column(
-          children: [
-            // Online Statistics Header
-            Container(
-              width: double.infinity,
-              padding: const EdgeInsets.all(16),
-              decoration: BoxDecoration(
-                color: Colors.green.shade50,
-                borderRadius: BorderRadius.circular(12),
-              ),
-              child: Column(
-                children: [
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceAround,
-                    children: [
-                      _buildStatColumn('Online', onlineStudents.length.toString(), Colors.green),
-                      _buildStatColumn('Present', onlineStudents.where((s) => _attendanceController.getStudentAttendanceStatus(s.studentId) == 'present').length.toString(), Colors.blue),
-                      _buildStatColumn('Absent', onlineStudents.where((s) => _attendanceController.getStudentAttendanceStatus(s.studentId) == 'absent').length.toString(), Colors.red),
-                    ],
-                  ),
-                  const SizedBox(height: 8),
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      TextButton.icon(
-                        onPressed: () => _realtimeController.requestOnlineStudents(),
-                        icon: const Icon(Icons.refresh, size: 16),
-                        label: const Text('Refresh'),
-                      ),
-                    ],
-                  ),
-                ],
-              ),
+            child: Icon(
+              icon,
+              color: color,
+              size: 20,
             ),
-            const SizedBox(height: 16),
-            // Online Students List
-            Expanded(
-              child: ListView.builder(
-                itemCount: onlineStudents.length,
-                itemBuilder: (context, index) {
-                  final onlineStudent = onlineStudents[index];
-                  
-                  // Find corresponding enrollment
-                   EnrollmentModel? enrollment;
-                   try {
-                     enrollment = _attendanceController.approvedStudents.firstWhere(
-                       (e) => e.student.id == onlineStudent.studentId,
-                     );
-                   } catch (e) {
-                     enrollment = null;
-                   }
-                   
-                   if (enrollment == null) {
-                     // Create a temporary enrollment-like structure for display
-                     return Card(
-                       margin: const EdgeInsets.only(bottom: 8),
-                       child: ListTile(
-                         leading: CircleAvatar(
-                           backgroundColor: Colors.green,
-                           child: Text(
-                             (onlineStudent.student?.name ?? 'U').substring(0, 1).toUpperCase(),
-                             style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
-                           ),
-                         ),
-                         title: Text(
-                           onlineStudent.student?.name ?? 'Unknown Student',
-                           style: const TextStyle(fontWeight: FontWeight.w600),
-                         ),
-                         subtitle: Column(
-                           crossAxisAlignment: CrossAxisAlignment.start,
-                           children: [
-                             Text('ID: ${onlineStudent.studentId}'),
-                             Text('Roll: ${onlineStudent.student?.roll ?? 'N/A'}'),
-                             Row(
-                               children: [
-                                 const Icon(Icons.circle, size: 8, color: Colors.green),
-                                 const SizedBox(width: 4),
-                                 Text(
-                                   'Online since ${_formatTime(onlineStudent.joinedAt)}',
-                                   style: const TextStyle(fontSize: 12, color: Colors.green),
-                                 ),
-                               ],
-                             ),
-                           ],
-                         ),
-                         trailing: PopupMenuButton<String>(
-                           onSelected: (status) => _markAttendance(onlineStudent.studentId, status),
-                           itemBuilder: (context) => [
-                             const PopupMenuItem(value: 'present', child: Text('Present')),
-                             const PopupMenuItem(value: 'absent', child: Text('Absent')),
-                             const PopupMenuItem(value: 'late', child: Text('Late')),
-                           ],
-                           child: Container(
-                             padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-                             decoration: BoxDecoration(
-                               color: _getStatusColor(_attendanceController.getStudentAttendanceStatus(onlineStudent.studentId) ?? 'absent'),
-                               borderRadius: BorderRadius.circular(12),
-                             ),
-                             child: Text(
-                               (_attendanceController.getStudentAttendanceStatus(onlineStudent.studentId) ?? 'absent').toUpperCase(),
-                               style: const TextStyle(color: Colors.white, fontSize: 12, fontWeight: FontWeight.bold),
-                             ),
-                           ),
-                         ),
-                       ),
-                     );
-                   } 
-                  
-                  return AttendanceStudentTile(
-                    enrollment: enrollment!,
-                    isSessionActive: _isSessionActive,
-                    attendanceStatus: _realtimeController.getStudentAttendanceStatus(enrollment!.student.id),
-                    isOnline: true,
-                    onMarkPresent: () => _markAttendance(enrollment!.student.id, 'present'),
-                     onMarkAbsent: () => _markAttendance(enrollment!.student.id, 'absent'),
-                    onJoinSession: null,
-                  );
-                },
-              ),
+          ),
+          const SizedBox(height: 8),
+          Text(
+            value,
+            style: TextStyle(
+              fontSize: 20,
+              fontWeight: FontWeight.bold,
+              color: color,
             ),
-          ],
-        );
-      },
+          ),
+          Text(
+            title,
+            style: TextStyle(
+              fontSize: 12,
+              color: Colors.grey.shade600,
+            ),
+          ),
+        ],
+      ),
     );
   }
 
 
 
-  Widget _buildStatColumn(String label, String value, Color color) {
-    return Column(
-      children: [
-        Text(
-          value,
-          style: TextStyle(
-            fontSize: 24,
-            fontWeight: FontWeight.bold,
-            color: color,
-          ),
-        ),
-        Text(
-          label,
-          style: const TextStyle(
-            fontSize: 12,
-            color: Colors.grey,
-          ),
-        ),
-      ],
-    );
-  }
+
 
   @override
   void dispose() {
-    _tabController.dispose();
     _attendanceController.dispose();
     _realtimeController.dispose();
     super.dispose();

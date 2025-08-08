@@ -41,7 +41,6 @@ class SocketNotificationService {
             })
             .build(),
       );
-
       _setupEventListeners();
       _socket!.connect();
     } catch (e) {

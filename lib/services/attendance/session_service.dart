@@ -15,9 +15,17 @@ class SessionService {
     required String endTime,
     String? meetingLink,
   }) async {
-    const String mutation = '''
-      mutation CreateSession(\$sessionInput: SessionInput!) {
-        createSession(sessionInput: \$sessionInput) {
+    final String mutation = '''
+      mutation CreateSession {
+        createSession(sessionInput: {
+          course_id: "${courseId.replaceAll('"', '\\"')}"
+          title: "${title.replaceAll('"', '\\"')}"
+          description: "${description.replaceAll('"', '\\"')}"
+          date: "$date"
+          start_time: "$startTime"
+          end_time: "$endTime"
+          meeting_link: "${(meetingLink ?? 'https://zoom.us/j/123456789').replaceAll('"', '\\"')}"
+        }) {
           id
           title
           description
@@ -39,17 +47,6 @@ class SessionService {
         '/',
         data: {
           'query': mutation,
-          'variables': {
-            'sessionInput': {
-              'course_id': courseId,
-              'title': title,
-              'description': description,
-              'date': date,
-              'start_time': startTime,
-              'end_time': endTime,
-              'meeting_link': meetingLink ?? 'https://zoom.us/j/123456789',
-            },
-          }
         },
       );
 

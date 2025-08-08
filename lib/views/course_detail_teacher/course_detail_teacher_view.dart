@@ -41,17 +41,14 @@ class _CourseDetailScreenState extends State<CourseDetailScreen> {
 
   void _initializeNotifications() async {
     try {
-      await _notificationService.initialize();
-      
-      // Subscribe to course notifications
-      _notificationService.subscribeToCourse(widget.courseId);
+      // await _notificationService.initialize();
       
       // Set up callback for course reschedule events
       _notificationService.setCourseRescheduledCallback((data) {
         // Handle course reschedule notification
         if (mounted && data['courseId'] == widget.courseId) {
           ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
+            const SnackBar(
               content: Text('Course schedule has been updated'),
               backgroundColor: Colors.green,
             ),
