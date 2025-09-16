@@ -1,7 +1,6 @@
 import 'package:flutter/foundation.dart';
 import 'package:classmate/services/forum/forum_services.dart';
 import 'package:classmate/entity/forum_entity.dart';
-import 'package:classmate/models/forum/forum_model.dart';
 
 enum ForumState {
   initial,
@@ -315,6 +314,58 @@ class ForumController {
   }
 
   // Dispose resources
+  // Delete forum post
+  Future<bool> deleteForumPost(String postId) async {
+    try {
+      _stateNotifier.value = ForumState.loading;
+      
+      final success = await _forumServices.deleteForumPost(postId);
+      
+      if (success) {
+        // Remove the post from the list
+        final currentPosts = _postsNotifier.value;
+        _postsNotifier.value = currentPosts.where((post) => post.id != postId).toList();
+        
+        // Also remove from search results if present
+        final currentSearchResults = _searchResultsNotifier.value;
+        _searchResultsNotifier.value = currentSearchResults.where((post) => post.id != postId).toList();
+        
+        _stateNotifier.value = ForumState.loaded;
+        return true;
+      } else {
+        _errorNotifier.value = 'Unable to delete the post. Please try again.';
+        _stateNotifier.value = ForumState.error;
+        return false;
+      }
+    } catch (e) {
+      // Parse error codes and provide user-friendly messages
+      final errorString = e.toString();
+      String userFriendlyMessage;
+      
+      if (errorString.contains('AUTHORIZATION_ERROR:')) {
+        userFriendlyMessage = errorString.split('AUTHORIZATION_ERROR: ')[1];
+      } else if (errorString.contains('POST_NOT_FOUND:')) {
+        userFriendlyMessage = errorString.split('POST_NOT_FOUND: ')[1];
+      } else if (errorString.contains('ALREADY_DELETED:')) {
+        userFriendlyMessage = errorString.split('ALREADY_DELETED: ')[1];
+      } else if (errorString.contains('NETWORK_ERROR:')) {
+        userFriendlyMessage = errorString.split('NETWORK_ERROR: ')[1];
+      } else if (errorString.contains('UNKNOWN_ERROR:')) {
+        userFriendlyMessage = errorString.split('UNKNOWN_ERROR: ')[1];
+      } else {
+        userFriendlyMessage = 'Something went wrong. Please try again later.';
+      }
+      
+      _errorNotifier.value = userFriendlyMessage;
+      _stateNotifier.value = ForumState.error;
+      
+      if (kDebugMode) {
+        print('Error deleting post: $e');
+      }
+      return false;
+    }
+  }
+
   void dispose() {
     _stateNotifier.dispose();
     _errorNotifier.dispose();

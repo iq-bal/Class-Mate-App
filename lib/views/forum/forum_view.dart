@@ -139,16 +139,8 @@ class _ForumViewState extends State<ForumView> {
         children: [
           // Header
           Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            mainAxisAlignment: MainAxisAlignment.end,
             children: [
-              Text(
-                'Forum',
-                style: GoogleFonts.poppins(
-                  fontSize: 18,
-                  fontWeight: FontWeight.bold,
-                  height: 1.2,
-                ),
-              ),
               ElevatedButton.icon(
                 onPressed: _showCreatePostDialog,
                 icon: const Icon(Icons.add, size: 18),
@@ -217,7 +209,7 @@ class _ForumViewState extends State<ForumView> {
                     child: Column(
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
-                        SizedBox(
+                        const SizedBox(
                           width: 40,
                           height: 40,
                           child: CircularProgressIndicator(
@@ -373,7 +365,7 @@ class _ForumViewState extends State<ForumView> {
                     color: const Color(0xFF6366F1).withOpacity(0.1),
                     shape: BoxShape.circle,
                   ),
-                  child: Icon(Icons.forum_outlined, size: 40, color: const Color(0xFF6366F1)),
+                  child: const Icon(Icons.forum_outlined, size: 40, color:  Color(0xFF6366F1)),
                 ),
                 const SizedBox(height: 20),
                 Text(
@@ -430,8 +422,8 @@ class _ForumViewState extends State<ForumView> {
                   valueListenable: _forumController.hasNextPageNotifier,
                   builder: (context, hasNextPage, child) {
                     if (hasNextPage) {
-                      return Padding(
-                        padding: const EdgeInsets.all(16.0),
+                      return const Padding(
+                        padding: EdgeInsets.all(16.0),
                         child: Center(
                           child: SizedBox(
                             width: 30,

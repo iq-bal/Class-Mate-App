@@ -10,10 +10,15 @@ import 'package:classmate/views/class_details_student/widgets/course_card_studen
 import 'package:classmate/views/class_details_student/widgets/custom_tab_bar.dart';
 import 'package:classmate/views/assignment/widgets/custom_app_bar.dart';
 import 'package:classmate/entity/drive_file_entity.dart';
-import 'package:classmate/views/forum/forum_view.dart';
+import 'package:classmate/views/forum/widgets/forum_post_card.dart';
+import 'package:classmate/views/forum/widgets/forum_post_detail_view.dart';
+import 'package:classmate/views/forum/widgets/create_post_dialog.dart';
+import 'package:classmate/entity/forum_entity.dart';
 import 'package:classmate/views/course_overview_student/widgets/review_bottom_sheet.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:classmate/config/app_config.dart';
+import 'package:classmate/views/chat/pdf_ai_chat_view.dart';
 
 import '../../core/helper_function.dart';
 import '../course_detail_teacher/widgets/assignment_card.dart';
@@ -278,19 +283,230 @@ class _ClassDetailsStudentState extends State<ClassDetailsStudent> {
   }
 
   Widget _buildForumContent() {
-    return Container(
-      margin: EdgeInsets.zero,
-      decoration: BoxDecoration(
-        color: Colors.transparent,
-        borderRadius: BorderRadius.circular(16),
-      ),
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 16.0),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
-        children: [          
-          // Forum content
-          SizedBox(
-            height: MediaQuery.of(context).size.height * 0.75,
-            child: ForumView(courseId: widget.courseId),
+        children: [
+          // Header with title and new post button
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              const Text(
+                'Forum',
+                style: TextStyle(
+                  fontSize: 16,
+                  fontWeight: FontWeight.bold,
+                  height: 1.2,
+                ),
+              ),
+              ElevatedButton.icon(
+                onPressed: () {
+                  showModalBottomSheet(
+                    context: context,
+                    isScrollControlled: true,
+                    backgroundColor: Colors.transparent,
+                    builder: (context) {
+                      return DraggableScrollableSheet(
+                        initialChildSize: 0.9,
+                        minChildSize: 0.5,
+                        maxChildSize: 0.95,
+                        builder: (context, scrollController) {
+                          return Container(
+                            decoration: const BoxDecoration(
+                              color: Colors.white,
+                              borderRadius: BorderRadius.only(
+                                topLeft: Radius.circular(24),
+                                topRight: Radius.circular(24),
+                              ),
+                            ),
+                            child: Column(
+                              children: [
+                                // Bottom sheet handle
+                                Container(
+                                  margin: const EdgeInsets.only(top: 12, bottom: 8),
+                                  width: 40,
+                                  height: 5,
+                                  decoration: BoxDecoration(
+                                    color: Colors.grey[300],
+                                    borderRadius: BorderRadius.circular(3),
+                                  ),
+                                ),
+                                // Content
+                                Expanded(
+                                  child: CreatePostDialog(
+                                    onCreatePost: (title, content, tags) async {
+                                      final success = await _forumController.createForumPost(
+                                        courseId: widget.courseId,
+                                        title: title,
+                                        content: content,
+                                        tags: tags,
+                                      );
+                                      
+                                      if (mounted) {
+                                        ScaffoldMessenger.of(context).showSnackBar(
+                                          SnackBar(
+                                            content: Text(success ? 'Post created successfully!' : 'Failed to create post'),
+                                            backgroundColor: success ? Colors.green : Colors.red,
+                                          ),
+                                        );
+                                      }
+                                    },
+                                  ),
+                                ),
+                              ],
+                            ),
+                          );
+                        },
+                      );
+                    },
+                  );
+                },
+                icon: const Icon(Icons.add, size: 18),
+                label: const Text('New Post'),
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: const Color(0xFF6366F1),
+                  foregroundColor: Colors.white,
+                  elevation: 0,
+                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 16),
+          // Forum posts using the controller
+          ValueListenableBuilder<ForumState>(
+            valueListenable: _forumController.stateNotifier,
+            builder: (context, state, child) {
+              if (state == ForumState.loading && _forumController.postsNotifier.value.isEmpty) {
+                return const Center(
+                  child: Padding(
+                    padding: EdgeInsets.all(32.0),
+                    child: CircularProgressIndicator(),
+                  ),
+                );
+              } else if (state == ForumState.error) {
+                return _buildModernErrorWidget(
+                  title: 'Oops! Something went wrong',
+                  message: _forumController.errorNotifier.value ?? 'Unable to load forum posts. Please check your connection and try again.',
+                  onRetry: () => _forumController.fetchForumPosts(widget.courseId, refresh: true),
+                );
+              } else {
+                return ValueListenableBuilder<List<ForumPostEntity>>(
+                  valueListenable: _forumController.postsNotifier,
+                  builder: (context, posts, child) {
+                    if (posts.isEmpty) {
+                      return Center(
+                        child: Padding(
+                          padding: const EdgeInsets.all(32.0),
+                          child: Column(
+                            children: [
+                              Container(
+                                padding: const EdgeInsets.all(20),
+                                decoration: BoxDecoration(
+                                  color: const Color(0xFF6366F1).withOpacity(0.1),
+                                  shape: BoxShape.circle,
+                                ),
+                                child: const Icon(
+                                  Icons.forum_outlined, 
+                                  size: 40, 
+                                  color: Color(0xFF6366F1)
+                                ),
+                              ),
+                              const SizedBox(height: 20),
+                              const Text(
+                                'No forum posts yet',
+                                style: TextStyle(
+                                  fontSize: 18,
+                                  fontWeight: FontWeight.w600,
+                                  color: Colors.black87,
+                                ),
+                              ),
+                              const SizedBox(height: 8),
+                              const Text(
+                                'Be the first to start a discussion with your classmates!',
+                                style: TextStyle(
+                                  fontSize: 14,
+                                  color: Colors.grey,
+                                ),
+                                textAlign: TextAlign.center,
+                              ),
+                            ],
+                          ),
+                        ),
+                      );
+                    }
+                    
+                    return Column(
+                      children: posts.map((post) {
+                        return Padding(
+                          padding: const EdgeInsets.only(bottom: 16.0),
+                          child: ForumPostCard(
+                            post: post,
+                            onTap: () {
+                              Navigator.push(
+                                context,
+                                MaterialPageRoute(
+                                  builder: (context) => ForumPostDetailView(
+                                    postId: post.id!,
+                                    forumController: _forumController,
+                                  ),
+                                ),
+                              );
+                            },
+                            onUpvote: () => _forumController.upvotePost(post.id!),
+                            onDownvote: () => _forumController.downvotePost(post.id!),
+                            onDelete: () async {
+                              final success = await _forumController.deleteForumPost(post.id!);
+                              if (mounted) {
+                                if (success) {
+                                  _showModernSuccessMessage('Post deleted successfully!');
+                                } else {
+                                  final errorMessage = _forumController.errorNotifier.value ?? 'Unable to delete the post. Please try again.';
+                                  
+                                  // Determine error type for appropriate title and icon
+                                  String title;
+                                  IconData icon;
+                                  Color iconColor;
+                                  
+                                  if (errorMessage.contains('only delete your own posts')) {
+                                    title = 'Permission Denied';
+                                    icon = Icons.lock_outline_rounded;
+                                    iconColor = Colors.orange.shade500;
+                                  } else if (errorMessage.contains('no longer exists') || errorMessage.contains('already been deleted')) {
+                                    title = 'Post Not Found';
+                                    icon = Icons.search_off_rounded;
+                                    iconColor = Colors.grey.shade500;
+                                  } else if (errorMessage.contains('internet connection')) {
+                                    title = 'Connection Error';
+                                    icon = Icons.wifi_off_rounded;
+                                    iconColor = Colors.blue.shade500;
+                                  } else {
+                                    title = 'Delete Failed';
+                                    icon = Icons.error_outline_rounded;
+                                    iconColor = Colors.red.shade500;
+                                  }
+                                  
+                                  _showModernErrorDialog(
+                                    title: title,
+                                    message: errorMessage,
+                                    icon: icon,
+                                    iconColor: iconColor,
+                                  );
+                                }
+                              }
+                            },
+                          ),
+                        );
+                      }).toList(),
+                    );
+                  },
+                );
+              }
+            },
           ),
         ],
       ),
@@ -359,7 +575,45 @@ class _ClassDetailsStudentState extends State<ClassDetailsStudent> {
                     return Column(
                       children: files.map((file) {
                         return GestureDetector(
-                          onTap: () => _openFile(file.fileUrl),
+                          behavior: HitTestBehavior.opaque,
+                          onTap: () {
+                            final fullUrl = file.fileUrl != null && file.fileUrl!.startsWith('http')
+                                ? file.fileUrl!
+                                : '${AppConfig.imageServer}${file.fileUrl ?? ''}';
+                            _openFile(fullUrl);
+                          },
+                          onLongPress: () {
+                            print('=== LONG PRESS DETECTED ===');
+                            // Debug logging
+                            print('Long press detected on file: ${file.fileName}');
+                            print('File type: ${file.fileType}');
+                            print('File type lowercase: ${file.fileType?.toLowerCase()}');
+                            
+                            // Check if file is PDF (multiple ways)
+                            final fileType = file.fileType?.toLowerCase() ?? '';
+                            final fileName = file.fileName?.toLowerCase() ?? '';
+                            final isPdf = fileType == 'pdf' || 
+                                         fileType == 'application/pdf' ||
+                                         fileName.endsWith('.pdf');
+                            
+                            print('File type: $fileType');
+                            print('File name: $fileName');
+                            print('Is PDF: $isPdf');
+                            
+                            if (isPdf) {
+                              print('PDF detected, showing chat option');
+                              _showPdfChatOption(file);
+                            } else {
+                              print('Not a PDF file, no action taken');
+                              // Show feedback for non-PDF files
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                SnackBar(
+                                  content: Text('Only PDF files can be used for chat'),
+                                  duration: const Duration(seconds: 2),
+                                ),
+                              );
+                            }
+                          },
                           child: Container(
                             margin: const EdgeInsets.only(bottom: 16),
                             decoration: BoxDecoration(
@@ -1447,6 +1701,348 @@ class _ClassDetailsStudentState extends State<ClassDetailsStudent> {
             ),
           ),
         ],
+      ),
+    );
+  }
+
+  void _showPdfChatOption(dynamic file) {
+    print('_showPdfChatOption called with file: ${file.fileName}');
+    print('File URL: ${file.fileUrl}');
+    print('File type: ${file.fileType}');
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(20),
+        ),
+        contentPadding: const EdgeInsets.all(24),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            // PDF icon
+            Container(
+              width: 80,
+              height: 80,
+              decoration: BoxDecoration(
+                color: Colors.red.shade50,
+                shape: BoxShape.circle,
+              ),
+              child: Icon(
+                Icons.picture_as_pdf_rounded,
+                size: 40,
+                color: Colors.red.shade500,
+              ),
+            ),
+            const SizedBox(height: 24),
+            
+            // Title
+            Text(
+              'Chat with PDF',
+              style: GoogleFonts.inter(
+                fontSize: 18,
+                fontWeight: FontWeight.bold,
+                color: Colors.grey.shade800,
+              ),
+              textAlign: TextAlign.center,
+            ),
+            const SizedBox(height: 12),
+            
+            // Message
+            Text(
+              'Would you like to chat with "${file.fileName ?? 'this PDF'}" using AI? You can ask questions about the content.',
+              style: GoogleFonts.inter(
+                fontSize: 14,
+                color: Colors.grey.shade600,
+                height: 1.4,
+              ),
+              textAlign: TextAlign.center,
+            ),
+            const SizedBox(height: 24),
+            
+            // Action buttons
+            Row(
+              children: [
+                Expanded(
+                  child: OutlinedButton(
+                    onPressed: () => Navigator.of(context).pop(),
+                    style: OutlinedButton.styleFrom(
+                      foregroundColor: Colors.grey.shade600,
+                      side: BorderSide(color: Colors.grey.shade300),
+                      padding: const EdgeInsets.symmetric(vertical: 12),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                    ),
+                    child: Text(
+                      'Cancel',
+                      style: GoogleFonts.inter(
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                  ),
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: ElevatedButton(
+                    onPressed: () {
+                      Navigator.of(context).pop();
+                      _navigateToPdfChat(file);
+                    },
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: Colors.red.shade500,
+                      foregroundColor: Colors.white,
+                      elevation: 0,
+                      padding: const EdgeInsets.symmetric(vertical: 12),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                    ),
+                    child: Text(
+                      'Start Chat',
+                      style: GoogleFonts.inter(
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  void _navigateToPdfChat(dynamic file) {
+    final fullUrl = file.fileUrl != null && file.fileUrl!.startsWith('http')
+        ? file.fileUrl!
+        : '${AppConfig.imageServer}${file.fileUrl ?? ''}';
+    
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => PdfAIChatView(
+          pdfUrl: fullUrl,
+          pdfFileName: file.fileName ?? 'Document',
+        ),
+      ),
+    );
+  }
+
+  void _showModernSuccessMessage(String message) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Row(
+          children: [
+            Container(
+              padding: const EdgeInsets.all(8),
+              decoration: BoxDecoration(
+                color: Colors.white.withOpacity(0.2),
+                shape: BoxShape.circle,
+              ),
+              child: const Icon(
+                Icons.check_circle_outline,
+                color: Colors.white,
+                size: 20,
+              ),
+            ),
+            const SizedBox(width: 12),
+            Expanded(
+              child: Text(
+                message,
+                style: GoogleFonts.inter(
+                  fontSize: 14,
+                  fontWeight: FontWeight.w500,
+                  color: Colors.white,
+                ),
+              ),
+            ),
+          ],
+        ),
+        backgroundColor: Colors.green.shade600,
+        behavior: SnackBarBehavior.floating,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(12),
+        ),
+        margin: const EdgeInsets.all(16),
+        duration: const Duration(seconds: 3),
+      ),
+    );
+  }
+
+  void _showModernErrorDialog({
+    required String title,
+    required String message,
+    IconData? icon,
+    Color? iconColor,
+  }) {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(20),
+        ),
+        contentPadding: const EdgeInsets.all(24),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            // Error icon
+            Container(
+              width: 80,
+              height: 80,
+              decoration: BoxDecoration(
+                color: (iconColor ?? Colors.red.shade500).withOpacity(0.1),
+                shape: BoxShape.circle,
+              ),
+              child: Icon(
+                icon ?? Icons.error_outline_rounded,
+                size: 40,
+                color: iconColor ?? Colors.red.shade500,
+              ),
+            ),
+            const SizedBox(height: 24),
+            
+            // Title
+            Text(
+              title,
+              style: GoogleFonts.inter(
+                fontSize: 18,
+                fontWeight: FontWeight.bold,
+                color: Colors.grey.shade800,
+              ),
+              textAlign: TextAlign.center,
+            ),
+            const SizedBox(height: 12),
+            
+            // Message
+            Text(
+              message,
+              style: GoogleFonts.inter(
+                fontSize: 14,
+                color: Colors.grey.shade600,
+                height: 1.4,
+              ),
+              textAlign: TextAlign.center,
+            ),
+            const SizedBox(height: 24),
+            
+            // Close button
+            SizedBox(
+              width: double.infinity,
+              child: ElevatedButton(
+                onPressed: () => Navigator.of(context).pop(),
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: iconColor ?? Colors.red.shade500,
+                  foregroundColor: Colors.white,
+                  elevation: 0,
+                  padding: const EdgeInsets.symmetric(vertical: 12),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                ),
+                child: Text(
+                  'Okay',
+                  style: GoogleFonts.inter(
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildModernErrorWidget({
+    required String title,
+    required String message,
+    required VoidCallback onRetry,
+  }) {
+    return Center(
+      child: Padding(
+        padding: const EdgeInsets.all(32.0),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            // Error illustration
+            Container(
+              width: 120,
+              height: 120,
+              decoration: BoxDecoration(
+                color: Colors.red.shade50,
+                shape: BoxShape.circle,
+              ),
+              child: Stack(
+                alignment: Alignment.center,
+                children: [
+                  Container(
+                    width: 80,
+                    height: 80,
+                    decoration: BoxDecoration(
+                      color: Colors.red.shade100,
+                      shape: BoxShape.circle,
+                    ),
+                  ),
+                  Container(
+                    width: 48,
+                    height: 48,
+                    decoration: BoxDecoration(
+                      color: Colors.red.shade200,
+                      shape: BoxShape.circle,
+                    ),
+                    child: Icon(
+                      Icons.wifi_off_rounded,
+                      size: 24,
+                      color: Colors.red.shade600,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            const SizedBox(height: 24),
+            
+            // Error title
+            Text(
+              title,
+              style: GoogleFonts.inter(
+                fontSize: 20,
+                fontWeight: FontWeight.bold,
+                color: Colors.grey.shade800,
+              ),
+              textAlign: TextAlign.center,
+            ),
+            const SizedBox(height: 12),
+            
+            // Error message
+            Text(
+              message,
+              style: GoogleFonts.inter(
+                fontSize: 14,
+                color: Colors.grey.shade600,
+                height: 1.5,
+              ),
+              textAlign: TextAlign.center,
+            ),
+            const SizedBox(height: 32),
+            
+            // Retry button
+            ElevatedButton.icon(
+              onPressed: onRetry,
+              icon: const Icon(Icons.refresh_rounded, size: 20),
+              label: const Text('Try Again'),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: const Color(0xFF6366F1),
+                foregroundColor: Colors.white,
+                elevation: 0,
+                padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(12),
+                ),
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }

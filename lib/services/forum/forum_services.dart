@@ -1,4 +1,3 @@
-import 'package:dio/dio.dart';
 import 'package:classmate/config/app_config.dart';
 import 'package:classmate/core/dio_client.dart';
 import 'package:classmate/models/forum/forum_model.dart';
@@ -431,6 +430,75 @@ class ForumServices {
       }
     } catch (e) {
       throw Exception('Error occurred: $e');
+    }
+  }
+
+  Future<bool> deleteForumPost(String postId) async {
+    const String mutation = '''
+    mutation DeleteForumPost(\$id: ID!) {
+      deleteForumPost(id: \$id)
+    }
+    ''';
+
+    try {
+      final variables = {
+        'id': postId,
+      };
+
+      final response = await dioClient
+          .getDio(AppConfig.graphqlServer)
+          .post(
+        '/',
+        data: {'query': mutation, 'variables': variables},
+      );
+
+      if (response.statusCode == 200) {
+        final data = response.data;
+        if (data['errors'] != null) {
+          // Parse GraphQL errors for user-friendly messages
+          final errors = data['errors'] as List;
+          for (final error in errors) {
+            final message = error['message'] as String? ?? '';
+            
+            // Check for authorization errors
+            if (message.contains('Not authorized to delete this post')) {
+              throw Exception('AUTHORIZATION_ERROR: You can only delete your own posts');
+            }
+            
+            // Check for other common errors
+            if (message.contains('Post not found')) {
+              throw Exception('POST_NOT_FOUND: This post no longer exists');
+            }
+            
+            if (message.contains('Post already deleted')) {
+              throw Exception('ALREADY_DELETED: This post has already been deleted');
+            }
+          }
+          
+          // If no specific error found, throw generic message
+          throw Exception('UNKNOWN_ERROR: Unable to delete this post at the moment');
+        }
+        
+        if (data['data'] != null && data['data']['deleteForumPost'] != null) {
+          return data['data']['deleteForumPost'];
+        } else {
+          return false;
+        }
+      } else {
+        throw Exception('NETWORK_ERROR: Please check your internet connection and try again');
+      }
+    } catch (e) {
+      // If it's already our formatted error, re-throw it
+      if (e.toString().contains('AUTHORIZATION_ERROR:') || 
+          e.toString().contains('POST_NOT_FOUND:') || 
+          e.toString().contains('ALREADY_DELETED:') ||
+          e.toString().contains('NETWORK_ERROR:') ||
+          e.toString().contains('UNKNOWN_ERROR:')) {
+        rethrow;
+      }
+      
+      // For unexpected errors
+      throw Exception('UNKNOWN_ERROR: Something went wrong. Please try again later');
     }
   }
 }

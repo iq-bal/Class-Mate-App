@@ -8,6 +8,7 @@ class ForumPostCard extends StatelessWidget {
   final VoidCallback onTap;
   final VoidCallback? onUpvote;
   final VoidCallback? onDownvote;
+  final VoidCallback? onDelete;
 
   const ForumPostCard({
     super.key,
@@ -15,6 +16,7 @@ class ForumPostCard extends StatelessWidget {
     required this.onTap,
     this.onUpvote,
     this.onDownvote,
+    this.onDelete,
   });
 
   @override
@@ -325,18 +327,59 @@ class ForumPostCard extends StatelessWidget {
                     const Spacer(),
                     
                     // More options
-                    Container(
-                      decoration: BoxDecoration(
-                        color: Colors.grey.withOpacity(0.05),
-                        shape: BoxShape.circle,
-                      ),
-                      child: IconButton(
-                        onPressed: () {
-                          // Show more options menu
-                        },
-                        icon: Icon(Icons.more_horiz, size: 18, color: Colors.grey.shade700),
-                        padding: const EdgeInsets.all(8),
-                        constraints: const BoxConstraints(),
+                    PopupMenuButton<String>(
+                      onSelected: (value) {
+                        if (value == 'delete' && onDelete != null) {
+                          // Show confirmation dialog
+                          showDialog(
+                            context: context,
+                            builder: (context) => AlertDialog(
+                              title: const Text('Delete Post'),
+                              content: const Text('Are you sure you want to delete this forum post? This action cannot be undone.'),
+                              actions: [
+                                TextButton(
+                                  onPressed: () => Navigator.pop(context),
+                                  child: const Text('Cancel'),
+                                ),
+                                ElevatedButton(
+                                  onPressed: () {
+                                    Navigator.pop(context);
+                                    onDelete!();
+                                  },
+                                  style: ElevatedButton.styleFrom(
+                                    backgroundColor: Colors.red,
+                                    foregroundColor: Colors.white,
+                                  ),
+                                  child: const Text('Delete'),
+                                ),
+                              ],
+                            ),
+                          );
+                        }
+                      },
+                      itemBuilder: (context) => [
+                        const PopupMenuItem<String>(
+                          value: 'delete',
+                          child: Row(
+                            children: [
+                              Icon(Icons.delete_outline, size: 20, color: Colors.red),
+                              SizedBox(width: 8),
+                              Text('Delete Post', style: TextStyle(color: Colors.red)),
+                            ],
+                          ),
+                        ),
+                      ],
+                      child: Container(
+                        decoration: BoxDecoration(
+                          color: Colors.grey.withOpacity(0.05),
+                          shape: BoxShape.circle,
+                        ),
+                        child: IconButton(
+                          onPressed: null, // PopupMenuButton handles the press
+                          icon: Icon(Icons.more_horiz, size: 18, color: Colors.grey.shade700),
+                          padding: const EdgeInsets.all(8),
+                          constraints: const BoxConstraints(),
+                        ),
                       ),
                     ),
                 ],
